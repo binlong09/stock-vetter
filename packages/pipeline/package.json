@@ -1,0 +1,18 @@
+{
+  "name": "@stock-vetter/pipeline",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "@stock-vetter/schema": "workspace:*",
+    "yahoo-finance2": "^3.14.0",
+    "youtubei.js": "^17.0.1",
+    "zod": "^3.23.8"
+  }
+}
