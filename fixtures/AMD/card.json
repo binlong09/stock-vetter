@@ -1,0 +1,793 @@
+{
+  "videoId": "qpcf_rxgCag",
+  "ticker": "AMD",
+  "channelId": "UCt-zZYpkIQMiIMhc4Kkihbg",
+  "generatedAt": "2026-05-08T14:12:05.812Z",
+  "extraction": {
+    "ticker": "AMD",
+    "companyName": "Advanced Micro Devices",
+    "analyst": "Drew Cohen",
+    "videoDate": "2026-03-07",
+    "thesisOneLiner": "AMD is a high-growth semiconductor company taking meaningful share from Intel in data center CPUs and positioning itself as a credible alternative to Nvidia in GPUs, but the business remains deeply cyclical and the stock is difficult to value conservatively given earnings volatility and execution risk.",
+    "segments": [
+      {
+        "name": "Data Center",
+        "revenue": 16800000000,
+        "growthRate": 0.3,
+        "keyDrivers": [
+          "EPYC server CPUs taking share from Intel (Intel down from ~99% to ~65% data center share)",
+          "Instinct GPUs competing with Nvidia Hopper/Blackwell",
+          "Meta and OpenAI partnerships (~$60B each, 6GW power each)",
+          "AI data center growing 80%, overall data center accelerating to ~60%",
+          "Dual-source supplier demand from hyperscalers wanting to reduce Nvidia dependence",
+          "Helios full-rack product (72 GPUs + EPYC CPUs + Pensando networking + ZT Systems cooling)",
+          "FPGA from Xilinx acquisition adds flexibility for AI workloads"
+        ],
+        "citation": {
+          "startSec": 793,
+          "endSec": 910
+        }
+      },
+      {
+        "name": "Client and Gaming",
+        "revenue": 14700000000,
+        "growthRate": 0.1,
+        "keyDrivers": [
+          "Ryzen CPUs for notebooks, desktops, business PCs (Client ~30% of total revenues)",
+          "Radeon GPUs competing with Nvidia GeForce in consumer gaming (cheaper, competitive performance)",
+          "Custom SOC for PlayStation and Xbox consoles",
+          "Console cycle volatility: $6.8B revenue in 2022 down to $2.6B in 2024",
+          "Bullwhip effect amplifies cyclicality through channel inventory dynamics"
+        ],
+        "citation": {
+          "startSec": 916,
+          "endSec": 1142
+        }
+      },
+      {
+        "name": "Embedded",
+        "revenue": 3500000000,
+        "growthRate": 0.1,
+        "keyDrivers": [
+          "Xilinx acquisition ($50B, 2022) brought FPGA leadership",
+          "FPGA (field programmable gate arrays) allow post-manufacture chip reprogramming for AI and data center",
+          "Adaptive SOC with AI DSP for edge/IoT devices (robotics, ultrasound, farming equipment, 5G towers)",
+          "Revenue fell from $5.3B (2023) to $3.4B (2025), showing same cyclicality pattern",
+          "Diversified end markets across industrials and manufacturers"
+        ],
+        "citation": {
+          "startSec": 1189,
+          "endSec": 1390
+        }
+      }
+    ],
+    "competitiveLandscape": [
+      {
+        "competitor": "Nvidia",
+        "threatLevel": "high",
+        "analystView": "Nvidia holds dominant GPU market share with $215B in revenues vs AMD's $35B, 70% gross margins and 60% operating margins, a proprietary fully-integrated ecosystem (CUDA, NVLink, NV Switch, DGX AI factory), and decades of real-world deployment. AMD's ROCm/HIP translator does not effectively port CUDA code due to fundamental 32- vs 64-thread architecture differences, making the CUDA moat very durable—though AI coding tools like Claude Code represent a potential existential risk to that moat.",
+        "citation": {
+          "startSec": 1970,
+          "endSec": 2993
+        }
+      },
+      {
+        "competitor": "Intel",
+        "threatLevel": "medium",
+        "analystView": "Intel lost significant data center CPU share (from ~99% to ~65%) due to manufacturing lag at TSMC vs. its own fabs and design disadvantages, but is receiving heavy US government funding, has customer support (e.g., Apple), and is attempting to reclaim CPU leadership with next-gen chips. If Intel achieves manufacturing parity, it could slow AMD's share gains given Intel's incumbency advantage in many data centers. Intel also has a new partnership with Nvidia for AI PCs.",
+        "citation": {
+          "startSec": 3021,
+          "endSec": 3133
+        }
+      },
+      {
+        "competitor": "Nvidia (CPU - Vera)",
+        "threatLevel": "medium",
+        "analystView": "Nvidia is developing an ARM-based CPU called Vera, which could tighten their already-integrated GPU+CPU offering and reduce incentive for customers to use AMD CPUs alongside Nvidia GPUs. Analyst notes this is a new competitive vector, though AMD was not already winning that paired CPU sale in Nvidia's stack.",
+        "citation": {
+          "startSec": 3133,
+          "endSec": 3192
+        }
+      }
+    ],
+    "risks": [
+      {
+        "risk": "Extreme earnings cyclicality: operating income fell 90% from 2021 to 2023; only one 5-year period of positive and increasing earnings in 20+ years",
+        "severity": "high",
+        "analystAddressedWell": true,
+        "citation": {
+          "startSec": 508,
+          "endSec": 623
+        }
+      },
+      {
+        "risk": "AI CapEx cycle downturn: hyperscalers are explicitly over-investing ($130-150B CapEx), which could trigger a severe down cycle when spending normalizes or AI advancement plateaus on LLM scaling",
+        "severity": "high",
+        "analystAddressedWell": true,
+        "citation": {
+          "startSec": 3264,
+          "endSec": 3390
+        }
+      },
+      {
+        "risk": "Nvidia CUDA moat: CUDA is proprietary and deeply embedded in developer workflows; AMD's ROCm/HIP translator fails to faithfully convert CUDA due to 32 vs 64 thread architecture differences, limiting GPU market share gains",
+        "severity": "high",
+        "analystAddressedWell": true,
+        "citation": {
+          "startSec": 2700,
+          "endSec": 2993
+        }
+      },
+      {
+        "risk": "Meta and OpenAI contract execution risk: neither has committed to the full $60B spend; Meta could walk away if AMD chips don't perform in practice, and OpenAI may lack the cash flow to fulfill commitments",
+        "severity": "high",
+        "analystAddressedWell": true,
+        "citation": {
+          "startSec": 3390,
+          "endSec": 3495
+        }
+      },
+      {
+        "risk": "Dilution from warrants: Meta and OpenAI each received warrants for up to ~10% of AMD at a penny, representing ~20% total dilution if fully exercised",
+        "severity": "medium",
+        "analystAddressedWell": true,
+        "citation": {
+          "startSec": 3628,
+          "endSec": 3660
+        }
+      },
+      {
+        "risk": "Intel recovery in data center CPU: Intel has government backing, customer support (Apple), and next-gen chips that on paper approach parity with AMD, potentially slowing AMD share gains",
+        "severity": "medium",
+        "analystAddressedWell": false,
+        "citation": {
+          "startSec": 3021,
+          "endSec": 3100
+        }
+      },
+      {
+        "risk": "Bullwhip effect in client/gaming: channel inventory dynamics amplify demand slowdowns well beyond underlying end-market declines",
+        "severity": "medium",
+        "analystAddressedWell": true,
+        "citation": {
+          "startSec": 963,
+          "endSec": 1065
+        }
+      },
+      {
+        "risk": "Valuation difficulty: AMD's PE has ranged from deeply negative to 300x, making any DCF or multiple-based framework highly unreliable",
+        "severity": "medium",
+        "analystAddressedWell": true,
+        "citation": {
+          "startSec": 3786,
+          "endSec": 3870
+        }
+      }
+    ],
+    "valuation": {
+      "method": "Forward earnings multiple on management-guided revenue and operating margin scenarios (3-year and 5-year)",
+      "timeHorizonYears": 5,
+      "keyAssumptions": [
+        {
+          "assumption": "Revenue growth rate per management guidance",
+          "value": "35% per year for 3-5 years",
+          "analystConfidence": "low",
+          "citation": {
+            "startSec": 3500,
+            "endSec": 3545
+          }
+        },
+        {
+          "assumption": "3-year revenue (2028)",
+          "value": "$85 billion",
+          "analystConfidence": "low",
+          "citation": {
+            "startSec": 3545,
+            "endSec": 3570
+          }
+        },
+        {
+          "assumption": "5-year revenue (2030)",
+          "value": "$155 billion",
+          "analystConfidence": "low",
+          "citation": {
+            "startSec": 3565,
+            "endSec": 3590
+          }
+        },
+        {
+          "assumption": "Operating margin target per management guidance",
+          "value": "35%",
+          "analystConfidence": "low",
+          "citation": {
+            "startSec": 3570,
+            "endSec": 3600
+          }
+        },
+        {
+          "assumption": "After-tax earnings in 3 years (2028)",
+          "value": "~$24 billion",
+          "analystConfidence": "low",
+          "citation": {
+            "startSec": 3590,
+            "endSec": 3620
+          }
+        },
+        {
+          "assumption": "After-tax earnings in 5 years (2030)",
+          "value": "~$43 billion",
+          "analystConfidence": "low",
+          "citation": {
+            "startSec": 3620,
+            "endSec": 3650
+          }
+        },
+        {
+          "assumption": "Implied forward PE at current price (3-year)",
+          "value": "~13.5x",
+          "analystConfidence": "medium",
+          "citation": {
+            "startSec": 3610,
+            "endSec": 3640
+          }
+        },
+        {
+          "assumption": "Implied forward PE at current price (5-year)",
+          "value": "~7.5x (before dilution adjustment)",
+          "analystConfidence": "medium",
+          "citation": {
+            "startSec": 3640,
+            "endSec": 3665
+          }
+        },
+        {
+          "assumption": "Dilution from Meta and OpenAI warrants",
+          "value": "~20% total dilution, adds ~2 turns to PE multiple",
+          "analystConfidence": "medium",
+          "citation": {
+            "startSec": 3655,
+            "endSec": 3680
+          }
+        },
+        {
+          "assumption": "Appropriate semiconductor PE multiple (peak earnings)",
+          "value": "10-12x, possibly high single digits",
+          "analystConfidence": "medium",
+          "citation": {
+            "startSec": 3680,
+            "endSec": 3720
+          }
+        },
+        {
+          "assumption": "Bull case PE multiple if data center is multi-decade secular growth",
+          "value": "15-25x on 5-year earnings",
+          "analystConfidence": "low",
+          "citation": {
+            "startSec": 3720,
+            "endSec": 3780
+          }
+        }
+      ],
+      "impliedReturn": {
+        "low": -0.5,
+        "high": 1
+      }
+    },
+    "qualitativeFactors": {
+      "managementQuality": "CEO Lisa Su is credited with a dramatic turnaround—the stock 100x'd since she took over—and with forward-looking acquisitions (Xilinx, Pensando, ZT Systems) anticipating AI data center demand. Analyst implicitly views her positively but does not extensively elaborate.",
+      "moat": "AMD has a strong and widening moat in server CPUs (EPYC) via chiplet architecture and TSMC manufacturing advantage over Intel. GPU moat is nascent and challenged by Nvidia's deeply entrenched CUDA ecosystem, proprietary networking (NVLink/NV Switch), and real-world performance advantages. Open-source ROCm strategy and Helios rack system are attempts to build an alternative ecosystem standard but are not yet proven at scale.",
+      "insiderOwnership": null,
+      "capitalAllocation": "AMD is investing heavily in R&D at ~50% of revenues, indicating aggressive reinvestment over near-term profitability. Three major acquisitions (Xilinx $50B, Pensando $1.9B, ZT Systems $4.9B) show strategic capital deployment toward data center and AI. The Meta and OpenAI warrant deals (10% each at a penny) are viewed skeptically by the analyst as potentially selling equity too cheaply, though the strategic rationale of locking in anchor customers is acknowledged."
+    }
+  },
+  "critiques": {
+    "consistency": [
+      {
+        "type": "disagree",
+        "topic": "Nvidia revenue figure vs AMD revenue comparison",
+        "analystClaim": "Nvidia holds dominant GPU market share with $215B in revenues vs AMD's $35B",
+        "llmPushback": "The segment revenues for AMD sum to $16.8B + $14.7B + $3.5B = $35B, which is consistent with the $35B figure cited. However, the analyst separately states AMD total revenues in the competitive section as $35B while the segment sum implies this is correct — no issue there. But the Nvidia $215B figure should be checked against the AMD $35B claim in context; no internal contradiction found here.",
+        "severity": "nit",
+        "evidence": "segments[0].revenue=$16.8B, segments[1].revenue=$14.7B, segments[2].revenue=$3.5B; sum=$35B matches competitiveLandscape[0].analystView"
+      },
+      {
+        "type": "disagree",
+        "topic": "3-year after-tax earnings math",
+        "analystClaim": "3-year revenue of $85B × 35% operating margin = ~$24B after-tax earnings",
+        "llmPushback": "$85B × 35% = $29.75B operating income. Applying a ~20% tax rate yields ~$23.8B, which rounds to ~$24B — this is internally consistent. No issue.",
+        "severity": "nit",
+        "evidence": "valuation.keyAssumptions: 3-year revenue=$85B, operating margin=35%, after-tax earnings=~$24B"
+      },
+      {
+        "type": "disagree",
+        "topic": "5-year after-tax earnings math",
+        "analystClaim": "5-year revenue of $155B × 35% operating margin = ~$43B after-tax earnings",
+        "llmPushback": "$155B × 35% = $54.25B operating income. At a ~20% tax rate that yields ~$43.4B ≈ $43B — internally consistent. No issue.",
+        "severity": "nit",
+        "evidence": "valuation.keyAssumptions: 5-year revenue=$155B, operating margin=35%, after-tax earnings=~$43B"
+      },
+      {
+        "type": "disagree",
+        "topic": "Revenue CAGR consistency with 3-year and 5-year projections",
+        "analystClaim": "35% per year growth from a ~$35B base yields $85B in 3 years and $155B in 5 years",
+        "llmPushback": "$35B × (1.35)^3 ≈ $86.3B (close to $85B, acceptable rounding). But $35B × (1.35)^5 ≈ $157B, roughly consistent with $155B. However, if we use $85B as the year-3 base and grow at 35% for 2 more years: $85B × (1.35)^2 ≈ $154.8B ≈ $155B — internally consistent.",
+        "severity": "nit",
+        "evidence": "valuation.keyAssumptions: growthRate=35%, 3-year revenue=$85B, 5-year revenue=$155B, base ~$35B"
+      },
+      {
+        "type": "disagree",
+        "topic": "Implied PE at current price (3-year) math",
+        "analystClaim": "At current price, implied forward PE on 3-year earnings (~$24B) is ~13.5x",
+        "llmPushback": "The analyst does not state the current market cap explicitly in the extracted fields. To yield 13.5x on $24B after-tax earnings, the implied market cap would need to be ~$324B. This cannot be verified for internal consistency without a stated market cap, but no contradicting figure is provided within the analysis itself.",
+        "severity": "nit",
+        "evidence": "valuation.keyAssumptions: after-tax earnings 3-year=~$24B, implied PE 3-year=~13.5x; no market cap explicitly stated"
+      },
+      {
+        "type": "partial",
+        "topic": "Dilution impact on PE — '2 turns' claim",
+        "analystClaim": "20% total dilution from Meta and OpenAI warrants adds ~2 turns to the PE multiple",
+        "llmPushback": "If the pre-dilution 5-year PE is ~7.5x on $43B earnings, a 20% share count increase raises the effective PE to ~9x (7.5 × 1.20 = 9.0x), which is an increase of ~1.5 turns, not 2 turns. The analyst's claim of '~2 turns' overstates the dilution impact by roughly 0.5 turns given the stated figures.",
+        "severity": "concern",
+        "evidence": "valuation.keyAssumptions: implied PE 5-year=~7.5x pre-dilution, dilution=~20%, stated impact=~2 turns; 7.5×1.20=9.0x implies 1.5 additional turns"
+      },
+      {
+        "type": "disagree",
+        "topic": "Segment revenue sum vs total company revenue",
+        "analystClaim": "Client and Gaming revenue is $14.7B; total segment revenues sum to ~$35B",
+        "llmPushback": "Data Center $16.8B + Client and Gaming $14.7B + Embedded $3.5B = $35.0B. The analyst separately references AMD total revenues as $35B in the competitive section. These are internally consistent.",
+        "severity": "nit",
+        "evidence": "segments[0].revenue=$16.8B + segments[1].revenue=$14.7B + segments[2].revenue=$3.5B = $35.0B; competitiveLandscape[0].analystView mentions AMD's $35B"
+      },
+      {
+        "type": "disagree",
+        "topic": "Embedded segment revenue citation mismatch",
+        "analystClaim": "Embedded revenue fell from $5.3B (2023) to $3.4B (2025); current embedded segment revenue stated as $3.5B",
+        "llmPushback": "The keyDrivers for the Embedded segment state revenue fell to '$3.4B (2025)' while the segment revenue field shows $3.5B. This is a minor internal inconsistency — the narrative says $3.4B but the structured data says $3.5B for the same period.",
+        "severity": "nit",
+        "evidence": "segments[2].revenue=$3,500,000,000; segments[2].keyDrivers states 'Revenue fell from $5.3B (2023) to $3.4B (2025)'"
+      },
+      {
+        "type": "partial",
+        "topic": "High-impact, low-confidence assumptions driving the entire return estimate",
+        "analystClaim": "All key valuation assumptions (revenue growth, operating margin, earnings) are rated low confidence, yet they drive a return range of -50% to +100%",
+        "llmPushback": "Every core assumption underpinning the valuation is explicitly marked 'low confidence' by the analyst, yet the implied return range is presented as a usable investment framework. The analysis acknowledges this difficulty but does not resolve the structural problem that the entire return estimate rests on assumptions the analyst himself does not trust.",
+        "severity": "concern",
+        "evidence": "valuation.keyAssumptions: analystConfidence='low' for revenue growth, 3-year revenue, 5-year revenue, operating margin, 3-year earnings, 5-year earnings, bull case PE; valuation.impliedReturn={low:-0.5, high:1.0}"
+      }
+    ],
+    "stressTest": [
+      {
+        "assumption": "5-year revenue (2030)",
+        "baseValue": "$155 billion",
+        "bearCase": {
+          "value": "$55 billion",
+          "rationale": "AI CapEx cycle peaks in 2026-2027 and hyperscaler spending normalizes sharply. AMD's GPU share gains stall due to CUDA moat and Nvidia's Blackwell/next-gen dominance. Intel recovers data center CPU share with government-backed fabs. Embedded stays depressed. AMD has demonstrated 50-70% revenue declines in prior down cycles; at $25B current run-rate a more modest ~20% CAGR scenario still implies only ~$62B, and a down cycle hit could mean peak-to-trough revisits $40-60B range by 2030.",
+          "impliedReturnDelta": -0.18
+        },
+        "bullCase": {
+          "value": "$200 billion",
+          "rationale": "Meta and OpenAI contracts largely execute. AMD becomes the credible #2 GPU vendor with 20-25% AI accelerator share as hyperscalers actively dual-source. EPYC continues taking CPU share toward 50% data center. Embedded recovers. This requires AMD to grow roughly in line with management's 35% CAGR guidance on data center while maintaining client/embedded. Nvidia comparable scale was achieved faster than skeptics expected.",
+          "impliedReturnDelta": 0.12
+        },
+        "sensitivity": "high"
+      },
+      {
+        "assumption": "Operating margin target per management guidance",
+        "baseValue": "35%",
+        "bearCase": {
+          "value": "22%",
+          "rationale": "AMD's actual GAAP operating margins have rarely exceeded 10% in the financial snapshot; the 35% target assumes a product mix shift to high-margin data center GPUs and CPUs at scale. If GPU competition from Nvidia forces pricing pressure, or if AMD must sustain ~50% R&D spend ratios to keep pace, realized margins land closer to historical reality. Nvidia achieves 60%+ because of monopoly pricing power AMD does not have. A 22% operating margin on $155B revenue would yield ~$27B operating income vs the implied ~$54B.",
+          "impliedReturnDelta": -0.12
+        },
+        "bullCase": {
+          "value": "40%",
+          "rationale": "If AMD's data center mix grows to 70%+ of revenues and GPU/CPU blended pricing power improves as a confirmed dual-source supplier, operating leverage on a relatively fixed R&D base could push margins above Nvidia's current blended rate for the GPU segment. Lisa Su has consistently over-delivered on margin expansion. AMD reached ~28% non-GAAP operating margins in 2024 data center alone.",
+          "impliedReturnDelta": 0.08
+        },
+        "sensitivity": "high"
+      },
+      {
+        "assumption": "Appropriate semiconductor PE multiple (peak earnings)",
+        "baseValue": "10-12x, possibly high single digits",
+        "bearCase": {
+          "value": "7x",
+          "rationale": "If 2030 earnings are perceived as peak-cycle (AI CapEx already rolling over by then), markets will assign trough-cycle multiples. Historical semiconductor cyclicals at peak earnings have traded at 7-9x. AMD's own earnings history (negative for most of 2016-2019, 90% EBIT drop 2022-2023) would justify skepticism about durability. At 7x on $43B base-case earnings the market cap is ~$300B vs current ~$710B — deeply negative return.",
+          "impliedReturnDelta": -0.1
+        },
+        "bullCase": {
+          "value": "20x",
+          "rationale": "If AI data center proves to be a multi-decade secular growth story and AMD holds 20%+ GPU share, markets could re-rate AMD closer to a growth platform (software-like recurring revenue from hyperscaler relationships) than a cyclical chip company. Analyst's own bull case allows 15-25x. At 20x on $43B that implies ~$860B market cap, roughly flat to modestly positive from today's $710B on the base revenue case — but significantly positive if revenue also beats.",
+          "impliedReturnDelta": 0.09
+        },
+        "sensitivity": "high"
+      },
+      {
+        "assumption": "Dilution from Meta and OpenAI warrants",
+        "baseValue": "~20% total dilution, adds ~2 turns to PE multiple",
+        "bearCase": {
+          "value": "25-30% total dilution if additional warrant deals are struck",
+          "rationale": "If AMD replicates the Meta/OpenAI warrant structure with additional hyperscaler anchor customers (Microsoft, Google, Amazon are plausible), total dilution could exceed the stated 20%. Each incremental 5% dilution adds roughly 0.5-0.7 turns to the effective PE. The analyst already flags this as a concern and the penny-strike warrants represent nearly free equity to counterparties.",
+          "impliedReturnDelta": -0.04
+        },
+        "bullCase": {
+          "value": "10% total dilution if warrants are not fully exercised",
+          "rationale": "Warrants are exercisable only if AMD chips perform and contracts are executed. If Meta or OpenAI underperform on their commitments (execution risk flagged as high), they may not earn or exercise the full warrant tranche. Partial exercise reduces effective dilution to 10-12%, recovering ~1 PE turn.",
+          "impliedReturnDelta": 0.03
+        },
+        "sensitivity": "medium"
+      },
+      {
+        "assumption": "3-year revenue (2028)",
+        "baseValue": "$85 billion",
+        "bearCase": {
+          "value": "$45 billion",
+          "rationale": "Nearer-term risk: AI CapEx cycle peaks in 2025-2026 (hyperscalers already at $130-150B CapEx). An inventory correction similar to 2022-2023 (where AMD EBIT fell ~90% from peak) hitting in 2027 would mean revenues could stall or decline from current ~$35B run-rate. $45B implies only ~9% CAGR from 2025 — plausible in a soft landing for AI spending with AMD holding gains already made.",
+          "impliedReturnDelta": -0.14
+        },
+        "bullCase": {
+          "value": "$110 billion",
+          "rationale": "If Meta and OpenAI contracts begin ramping materially in 2026-2027 (Helios rack deployments, Instinct MI400 series), and EPYC continues taking CPU share, $110B by 2028 is achievable at ~46% CAGR. Data center alone would need to reach ~$80B — aggressive but within the range of management's stated trajectory if GPU share reaches 20%.",
+          "impliedReturnDelta": 0.09
+        },
+        "sensitivity": "medium"
+      },
+      {
+        "assumption": "Revenue growth rate per management guidance",
+        "baseValue": "35% per year for 3-5 years",
+        "bearCase": {
+          "value": "10% per year",
+          "rationale": "AMD's actual trailing growth has been volatile — the financial snapshot shows EBIT at $401M in 2025 vs $3.6B in 2023, implying significant top-line pressure. A 10% CAGR reflects a scenario where data center GPU momentum slows materially, client/gaming stays flat, and embedded recovers slowly. This is actually AMD's historical norm outside of cyclical peaks. At 10% CAGR from ~$35B, 2030 revenue is ~$56B.",
+          "impliedReturnDelta": -0.15
+        },
+        "bullCase": {
+          "value": "40% per year",
+          "rationale": "Slightly above management guidance is plausible if AI accelerator demand accelerates faster than expected and AMD captures dual-source share faster. Nvidia's own trajectory from $27B to $130B in two years shows the addressable market can surprise to the upside. At 40% CAGR from $35B, 2030 revenue is ~$190B.",
+          "impliedReturnDelta": 0.06
+        },
+        "sensitivity": "medium"
+      }
+    ],
+    "comps": [
+      {
+        "type": "missing",
+        "topic": "Comps critique skipped",
+        "analystClaim": "N/A",
+        "llmPushback": "No peer set is configured for this ticker in packages/pipeline/src/comps.ts. Add peers to enable the comps critique.",
+        "severity": "nit",
+        "evidence": "config gap"
+      }
+    ],
+    "missingRisks": [
+      {
+        "type": "missing",
+        "topic": "Share-based compensation dilution beyond warrant dilution",
+        "analystClaim": "Analyst addressed the Meta/OpenAI warrant dilution (~20% total), but did not separately address ongoing SBC dilution from employee compensation.",
+        "llmPushback": "AMD's share count has grown from 792M (2016) to 1,622M (2025), more than doubling over nine years — a CAGR of roughly 8%. Even excluding the Xilinx deal shares (the large jump in 2023), ongoing SBC is substantial for a semiconductor company of this size. The analyst's per-share valuation framework adjusts for warrants but ignores the ~1-2% annual creep from SBC, which compounds materially over a 5-year holding period and adds additional turns to the effective PE multiple beyond what was calculated.",
+        "severity": "concern",
+        "evidence": "Shares outstanding grew from 1,207M (2022) to 1,622M (2025), a ~34% increase in three years even after the Xilinx acquisition closed. The financial snapshot explicitly flags shareCountTrend as 'growing'. FCF yield is only ~1%, meaning even modest SBC dilution is meaningful relative to returns."
+      },
+      {
+        "type": "missing",
+        "topic": "Disconnect between GAAP earnings and FCF vs. SBC magnitude",
+        "analystClaim": "Analyst uses after-tax earnings in the valuation ($24B in 2028, $43B in 2030) but does not clarify whether these are GAAP or non-GAAP, nor does he address the gap created by heavy SBC expense.",
+        "llmPushback": "AMD's GAAP net income in 2024 was $1.32B while FCF was $3.12B — a large gap in the other direction — but historically the company's non-GAAP figures (used by management in guidance) strip out substantial SBC and acquisition amortization. Management's 35% operating margin target is almost certainly non-GAAP. If the analyst is applying a semiconductor PE multiple to non-GAAP earnings that exclude SBC, the true economic earnings available to shareholders are significantly lower, making the '13.5x forward PE' characterization misleading.",
+        "severity": "concern",
+        "evidence": "2024 GAAP EBIT was $1.264B but net income was $1.32B; 2025 GAAP EBIT fell to $401M while net income was $854M. The evEbit ratio of 1,640x on GAAP EBIT confirms the gap between GAAP reality and the non-GAAP figures management guides to. The analyst's $24B after-tax earnings in 2028 implicitly assumes non-GAAP margins that are not reconciled to GAAP."
+      },
+      {
+        "type": "missing",
+        "topic": "Export control / geopolitical risk on AI chips",
+        "analystClaim": "Not addressed.",
+        "llmPushback": "U.S. export controls on advanced AI chips (BIS Entity List, October 2022 and subsequent tightening) directly restrict AMD's ability to sell Instinct GPUs to China and other restricted markets. China has historically been a significant semiconductor revenue source. If AMD's data center GPU growth thesis depends on capturing global hyperscaler demand, export restrictions create a ceiling on addressable market and could divert customer relationships to domestic Chinese alternatives (Huawei Ascend). This is especially relevant given AMD's ambition to be the #2 AI GPU supplier — the restricted TAM reduces the ceiling on that aspiration.",
+        "severity": "concern",
+        "evidence": "AMD's Instinct MI300X and successors are subject to the same export control framework as Nvidia's H100/H200. The financial snapshot shows AMD's data center revenue at ~$16.8B with 30% growth guided — any material China restriction would be a headwind to that growth rate. This risk is entirely absent from the analyst's risk enumeration despite being a live regulatory constraint."
+      },
+      {
+        "type": "missing",
+        "topic": "Accounting: large acquisition intangible amortization distorting GAAP earnings",
+        "analystClaim": "Not addressed. Analyst mentions the Xilinx ($50B), Pensando ($1.9B), and ZT Systems ($4.9B) acquisitions but does not discuss the resulting amortization drag on GAAP earnings.",
+        "llmPushback": "The $50B Xilinx acquisition and subsequent deals created massive goodwill and intangible assets that generate multi-billion dollar annual GAAP amortization charges. This is a primary reason GAAP EBIT ($401M in 2025) looks so different from what management guides to on a non-GAAP basis. A value investor must decide whether to treat this amortization as a real economic cost (it represents capital permanently deployed) or not. If real, the bull-case earnings projections look far less attractive.",
+        "severity": "concern",
+        "evidence": "2025 GAAP EBIT of $401M vs. net income of $854M (tax benefits inflating net income above EBIT) vs. FCF of $1.121B — all dramatically below what management's non-GAAP framework implies. The EV/EBIT of 1,640x on GAAP figures illustrates the magnitude of the GAAP vs. non-GAAP divergence. Xilinx alone had ~$50B purchase price with substantial intangible content."
+      },
+      {
+        "type": "missing",
+        "topic": "TSMC concentration risk as sole advanced node manufacturer",
+        "analystClaim": "The analyst credits TSMC manufacturing as a competitive advantage vs. Intel but does not discuss the single-source supplier dependency this creates.",
+        "llmPushback": "AMD is entirely dependent on TSMC for its leading-edge chips (5nm, 3nm nodes). A TSMC disruption — whether from Taiwan geopolitical conflict, natural disaster, yield problems, or capacity allocation during peak demand — would halt AMD's ability to produce EPYC and Instinct chips with no alternative supplier available. This is not a hypothetical tail risk; TSMC capacity allocation during semiconductor shortages in 2021-2022 created real supply constraints industrywide. For a company whose bull case relies on dramatically ramping GPU supply to meet hyperscaler demand, any TSMC disruption would be catastrophic.",
+        "severity": "concern",
+        "evidence": "AMD has no owned fabs (fabless model). All leading-edge CPU and GPU production is at TSMC Taiwan. The analyst explicitly notes AMD's TSMC advantage over Intel's internal fabs as a moat driver, which implicitly confirms 100% dependence. Revenue concentration in data center ($16.8B and growing) makes supply disruption increasingly impactful."
+      },
+      {
+        "type": "missing",
+        "topic": "Capital intensity of the AI GPU race — R&D and NRE costs not reflected in FCF",
+        "analystClaim": "Analyst mentions R&D at ~50% of revenues as aggressive reinvestment but does not assess whether the FCF figures used in valuation capture the true capital requirements of staying competitive in AI GPUs.",
+        "llmPushback": "Competing with Nvidia requires continuous, accelerating R&D investment across chip design, software stack (ROCm), networking (Pensando), and systems integration (ZT Systems/Helios). The analyst uses FCF of ~$1-3B in recent years as a baseline, but if AMD must sustain or increase $8-10B+ annual R&D spend to remain relevant in AI GPUs, the 35% operating margin target may be structurally unachievable without sacrificing competitive position. The bull case assumes both high margins AND sufficient R&D to defeat Nvidia — these may be in tension.",
+        "severity": "nit",
+        "evidence": "FCF was $1.121B in 2025 despite high revenues, suggesting heavy cash consumption. FCF yield of ~1% at current market cap. GAAP EBIT of $401M in 2025 on revenues of roughly $25-26B implied by segment data confirms thin GAAP profitability despite the growth narrative."
+      }
+    ],
+    "valueChecklist": {
+      "moatDurability": {
+        "score": 3,
+        "rationale": "AMD has a genuine and widening moat in server CPUs via chiplet architecture and TSMC manufacturing that has taken data center share from ~1% to ~35% against Intel, but its GPU moat is nascent and directly challenged by Nvidia's deeply entrenched CUDA ecosystem—AMD's ROCm/HIP translator fails to faithfully port CUDA code due to 32 vs 64 thread architecture differences, meaning the more valuable and faster-growing GPU segment remains highly contestable."
+      },
+      "ownerEarningsQuality": {
+        "score": 3,
+        "rationale": "FCF and net income are broadly in the same direction but with notable divergence in recent years: in 2024, FCF was $3.1B versus net income of $1.3B (FCF well above), and in 2025 FCF was $1.1B versus net income of $854M, which is reasonable; however, the historical record shows years of negative FCF alongside reported losses, and heavy stock-based compensation is likely a persistent drag on true owner earnings that is not visible in the snapshot."
+      },
+      "capitalAllocation": {
+        "score": 3,
+        "rationale": "AMD has made strategically forward-looking acquisitions (Xilinx at $50B, Pensando at $1.9B, ZT Systems at $4.9B) that anticipated AI data center demand, and R&D reinvestment at ~50% of revenues reflects aggressive but arguably appropriate prioritization; however, the Meta and OpenAI warrant deals granting each party up to ~10% of AMD at a penny represent potentially significant equity dilution that the analyst views skeptically as selling equity too cheaply, capping the capital allocation score below disciplined."
+      },
+      "insiderAlignment": {
+        "score": 2,
+        "rationale": "The extracted analysis explicitly notes insider ownership as null, and no insider buying activity is referenced; share count has been growing (1.62B in 2025 vs 1.21B in 2021), suggesting net dilution rather than buyback discipline, and the warrant deals with Meta and OpenAI could add another ~20% dilution, all of which points to weak owner-shareholder alignment."
+      },
+      "debtSustainability": {
+        "score": 5,
+        "rationale": "The financial snapshot shows net cash of $8.5B and debt-to-equity ratios near zero in recent years (0.031 in 2025), indicating AMD has essentially no net debt; with an EV of $657B well-supported by the net cash position and positive FCF of $1.1B even in a down earnings year (2025 EBIT of only $401M), there is no solvency risk under any reasonable scenario."
+      },
+      "cyclicalityAwareness": {
+        "score": 4,
+        "rationale": "The analyst explicitly identifies AMD's extreme earnings cyclicality—operating income fell ~90% between cycle peaks, the Embedded segment fell from $5.3B to $3.4B, gaming revenue collapsed from $6.8B to $2.6B—and directly flags the AI CapEx cycle risk from hyperscaler over-investment at $130-150B; however, the valuation scenario relies on management's 35% growth guidance through 2030 with low analyst confidence, stopping short of explicit trough-case earnings modeling with a defined margin of safety."
+      }
+    }
+  },
+  "scored": {
+    "scores": {
+      "businessQuality": {
+        "value": 5,
+        "rationale": "AMD has a genuine and widening moat in data center CPUs via chiplet architecture and TSMC manufacturing advantage over Intel, but its GPU moat is nascent and severely challenged by Nvidia's CUDA ecosystem. The ROCm/HIP translator failure due to 32 vs 64 thread architecture differences is a structural barrier to GPU share gains. Capital allocation is mixed: forward-looking acquisitions are strategically sound, but the Meta and OpenAI warrant deals granting each party up to 10% of AMD at a penny represent potentially excessive equity dilution. Cyclicality is extreme with operating income falling 90% between peaks. Lisa Su's track record is strong but the business remains deeply cyclical and execution-dependent.",
+        "citations": [
+          "valueChecklist.moatDurability score=3: GPU moat nascent, ROCm/HIP translation failure due to 32 vs 64 thread architecture differences",
+          "valueChecklist.capitalAllocation score=3: Meta/OpenAI warrant deals granting 10% each at a penny viewed skeptically",
+          "valueChecklist.cyclicalityAwareness score=4: EBIT fell 90% between cycle peaks, explicit AI CapEx cycle risk flagged",
+          "risks[0]: extreme earnings cyclicality, only one 5-year period of positive and increasing earnings in 20+ years"
+        ]
+      },
+      "financialHealth": {
+        "value": 5,
+        "rationale": "AMD has net cash of $8.5B and near-zero debt-to-equity in recent years, eliminating solvency risk. However, GAAP EBIT collapsed from $3.6B in 2023 to $401M in 2025, and FCF fell from $3.1B to $1.1B in the same period. Share count has grown from 792M in 2016 to 1,622M in 2025, more than doubling over nine years at roughly 8% CAGR. The evEbit ratio of 1,640x on GAAP earnings confirms the magnitude of the GAAP vs non-GAAP divergence driven by acquisition amortization. FCF yield of only 1% at current market cap leaves little margin for error. Positive FCF and no debt prevent a lower score, but the dilution trend and GAAP earnings quality are significant concerns.",
+        "citations": [
+          "financialSnapshot.netCash=$8,475,999,744: strong net cash position",
+          "financialSnapshot.annual[2025]: EBIT=$401M, FCF=$1.121B, significant deterioration from 2023 peak",
+          "financialSnapshot.shareCountTrend=growing: 792M to 1,622M over nine years",
+          "financialSnapshot.evEbit=1640x: GAAP earnings severely depressed by acquisition amortization",
+          "financialSnapshot.fcfYield=0.0101: only 1% FCF yield at current market cap",
+          "missingRisks[0]: SBC dilution beyond warrant dilution not addressed by analyst"
+        ]
+      },
+      "valuationAttractiveness": {
+        "value": 3,
+        "rationale": "At a trailing PE of 146x, EV/EBIT of 1,640x on GAAP figures, and FCF yield of only 1%, AMD is priced for an extremely optimistic scenario. The analyst's forward PE framework (13.5x on 3-year earnings, 7.5x on 5-year earnings) relies entirely on low-confidence management guidance of 35% revenue CAGR and 35% operating margins. The stress test bear cases on revenue and margin individually each produce large negative return deltas, and a 7x trough multiple on $43B of peak earnings still implies a market cap below today's. No 10-year PE or EV/EBIT medians are available for historical comparison. The comps critique is absent due to a configuration gap. The stock is pricing in near-perfect execution on aggressive assumptions.",
+        "citations": [
+          "financialSnapshot.peRatio=146.2: extremely elevated trailing multiple",
+          "financialSnapshot.evEbit=1640.2: GAAP earnings almost entirely eliminated by amortization",
+          "financialSnapshot.fcfYield=0.0101: 1% FCF yield at current market cap",
+          "stressTest[2] bear case: 7x trough multiple on $43B earnings implies ~$300B market cap vs current $710B",
+          "valuation.keyAssumptions: all core assumptions rated low confidence by analyst",
+          "financialSnapshot.peRatio10yMedian=null: no historical median available for comparison"
+        ]
+      },
+      "marginOfSafety": {
+        "value": 2,
+        "rationale": "The margin of safety is extremely thin. Every core valuation assumption is explicitly rated low confidence by the analyst himself. The stress tests show that bear cases on revenue growth, operating margin, and exit multiple each independently produce large negative return deltas, and combined they imply the stock could lose 60-80% of value. The bear case on 5-year revenue alone produces an implied return delta of -18%. The bear case on operating margin produces -12%. The trough multiple bear case produces -10%. These are additive risks. Missing risks including export controls, TSMC concentration, GAAP vs non-GAAP earnings confusion, and SBC dilution add further downside. The analyst's own stated return range of -50% to +100% with low-confidence assumptions confirms the asymmetry is not clearly in the investor's favor. Even the bull case at $200B revenue and 20x PE from current prices produces only modest upside.",
+        "citations": [
+          "consistency[8]: all core assumptions rated low confidence yet drive -50% to +100% return range",
+          "stressTest[0] bear case: $55B revenue impliedReturnDelta=-0.18",
+          "stressTest[1] bear case: 22% margin impliedReturnDelta=-0.12",
+          "stressTest[2] bear case: 7x multiple impliedReturnDelta=-0.10",
+          "stressTest[4] bear case: $45B 3-year revenue impliedReturnDelta=-0.14",
+          "stressTest[5] bear case: 10% CAGR impliedReturnDelta=-0.15",
+          "missingRisks[2]: export control risk on AI chips entirely absent from analysis",
+          "missingRisks[4]: TSMC concentration as sole advanced node manufacturer not addressed"
+        ]
+      },
+      "analystRigor": {
+        "value": 7,
+        "rationale": "The analyst demonstrates strong rigor in several areas: explicit confidence levels on all assumptions (rare), acknowledgment that valuation is extremely difficult for AMD, detailed treatment of CUDA moat vs ROCm limitations, identification of the AI CapEx cycle risk and Meta/OpenAI execution risk, and the dilution warrant discussion. The segment analysis is detailed and the competitive landscape treatment is thorough. Weaknesses include: failure to address GAAP vs non-GAAP earnings explicitly in the valuation (a material omission given 1,640x EV/EBIT on GAAP), no treatment of export controls, no TSMC concentration risk discussion, no SBC dilution beyond warrants, and a minor math error on the dilution-adjusted PE (1.5 turns not 2 turns). The return range of -50% to +100% is honest but also reflects how little the framework resolves.",
+        "citations": [
+          "valuation.keyAssumptions: analyst explicitly marks 7 of 11 assumptions as low confidence",
+          "consistency[5] partial/concern: 20% dilution adds 1.5 PE turns not 2 turns as stated",
+          "missingRisks[2]: export controls entirely absent despite being a live regulatory constraint",
+          "missingRisks[1]: GAAP vs non-GAAP earnings disconnect not reconciled in valuation",
+          "risks[3] analystAddressedWell=true: Meta/OpenAI execution risk explicitly discussed",
+          "risks[2] analystAddressedWell=true: CUDA moat treated with technical depth including thread architecture difference"
+        ]
+      }
+    },
+    "weightedScore": 3.8,
+    "verdict": "Pass",
+    "prosConsTable": [
+      {
+        "topic": "Data Center CPU Moat (EPYC)",
+        "analystView": "AMD has taken data center CPU share from near zero to roughly 35% via chiplet architecture and TSMC manufacturing superiority over Intel, and this share gain appears durable.",
+        "llmPushback": "Intel is receiving heavy government funding and has a next-generation chip roadmap approaching parity on paper; the analyst acknowledges Intel recovery risk but rates it only medium severity and did not address it well in the risk section.",
+        "agreement": "partial"
+      },
+      {
+        "topic": "GPU Moat vs Nvidia CUDA",
+        "analystView": "AMD's ROCm/HIP translator cannot faithfully convert CUDA code due to fundamental 32 vs 64 thread architecture differences, making Nvidia's ecosystem moat very durable and AMD's GPU share gains structurally limited.",
+        "llmPushback": "The critique agrees this is the central risk and the analyst treated it with genuine technical depth; this is the strongest piece of analysis in the report and the conclusion is directionally correct.",
+        "agreement": "agree"
+      },
+      {
+        "topic": "Valuation Attractiveness",
+        "analystView": "At implied forward PE of 13.5x on 2028 earnings and 7.5x on 2030 earnings, the stock looks cheap if management guidance is achieved.",
+        "llmPushback": "These forward multiples are built on low-confidence assumptions; the current trailing PE is 146x and EV/EBIT on GAAP figures is 1,640x; the analyst does not reconcile non-GAAP guidance margins to GAAP reality, making the forward multiple characterization potentially misleading.",
+        "agreement": "disagree"
+      },
+      {
+        "topic": "Margin of Safety",
+        "analystView": "The analyst acknowledges high uncertainty and presents a return range of -50% to +100% with low-confidence assumptions, implicitly acknowledging limited margin of safety.",
+        "llmPushback": "Bear cases on revenue, margin, and exit multiple are each independently large and additive; combined with missing risks on export controls, TSMC concentration, and SBC dilution, the actual downside risk is likely larger than the stated -50% floor.",
+        "agreement": "partial"
+      },
+      {
+        "topic": "Meta and OpenAI Warrant Dilution",
+        "analystView": "The warrant deals grant each counterparty up to 10% of AMD at a penny, representing roughly 20% total dilution that adds approximately 2 PE turns to the effective forward multiple.",
+        "llmPushback": "The math is slightly off: 20% dilution on a 7.5x base PE adds 1.5 turns to reach 9x, not 2 turns as stated; more importantly, ongoing SBC dilution of roughly 1-2% per year compounds this and was not addressed.",
+        "agreement": "partial"
+      },
+      {
+        "topic": "AI CapEx Cycle Risk",
+        "analystView": "Hyperscalers are explicitly over-investing at $130-150B CapEx levels, and AMD's data center growth could reverse sharply in a down cycle as it has historically.",
+        "llmPushback": "The critique agrees this is the highest-severity risk; the stress test bear case on 5-year revenue implying only $55B vs $155B base case is plausible given AMD's historical cycle magnitude, and the analyst is correct to flag it prominently.",
+        "agreement": "agree"
+      },
+      {
+        "topic": "Export Controls on AI Chips",
+        "analystView": "Not addressed by the analyst.",
+        "llmPushback": "U.S. export controls on advanced AI chips restrict AMD's Instinct GPU sales to China and other restricted markets, directly capping the addressable market for the data center GPU thesis; this is a live regulatory constraint that was entirely omitted from the risk enumeration.",
+        "agreement": "disagree"
+      },
+      {
+        "topic": "GAAP vs Non-GAAP Earnings Quality",
+        "analystView": "The analyst applies semiconductor PE multiples to projected after-tax earnings without clarifying GAAP vs non-GAAP basis.",
+        "llmPushback": "Management's 35% operating margin target is almost certainly non-GAAP and excludes billions in annual SBC and acquisition amortization; applying a value-investor PE multiple to non-GAAP earnings inflated by these exclusions makes the forward PE appear far more attractive than GAAP reality warrants.",
+        "agreement": "disagree"
+      },
+      {
+        "topic": "Lisa Su Management Quality",
+        "analystView": "Lisa Su has delivered a 100x stock return since taking over and made forward-looking acquisitions anticipating AI data center demand, suggesting high management quality.",
+        "llmPushback": "The track record is strong and the acquisitions are strategically coherent, but the Meta/OpenAI warrant deals granting near-free equity may represent a willingness to dilute shareholders aggressively to lock in strategic relationships, which warrants scrutiny.",
+        "agreement": "partial"
+      },
+      {
+        "topic": "Financial Health and Balance Sheet",
+        "analystView": "Not explicitly highlighted by the analyst, but AMD has net cash of $8.5B and near-zero debt.",
+        "llmPushback": "The balance sheet is genuinely strong with no solvency risk, but the 1% FCF yield at current market cap and persistent share count growth mean the strong balance sheet does not compensate for valuation risk.",
+        "agreement": "agree"
+      }
+    ],
+    "thingsToVerify": [
+      "Pull AMD's latest 10-K (2025) and reconcile non-GAAP operating income to GAAP operating income — specifically quantify annual SBC expense and intangible amortization from Xilinx to determine whether the 35% operating margin management target is achievable on a GAAP basis or only on a non-GAAP basis that excludes real economic costs.",
+      "Verify the current status and structure of the Meta and OpenAI warrant agreements — specifically confirm the vesting schedule, performance milestones, and strike price from the 8-K filings to assess how much of the stated 20% dilution is already locked in versus contingent on chip performance.",
+      "Check AMD's current revenue exposure to China and restricted markets in the latest 10-K geographic revenue breakdown, and review the BIS export control rules applicable to Instinct MI300X and MI400 series to quantify the revenue ceiling created by export restrictions on the data center GPU segment.",
+      "Verify share-based compensation as a percentage of revenue from the last three annual 10-Ks — shares outstanding grew from 1,207M (2022) to 1,622M (2025), a 34% increase in three years, and the ongoing SBC run rate adds PE turns beyond the warrant dilution the analyst calculated.",
+      "Look up AMD's current ROCm adoption metrics — specifically check how many of the top-50 AI research institutions and hyperscaler workloads have successfully migrated production workloads to ROCm, as this is the single most important variable in determining whether the GPU moat gap to Nvidia is closing or widening.",
+      "Review TSMC's most recent capacity allocation announcements and AMD's disclosed supply agreements to assess concentration risk — AMD's bull case requires dramatically ramping Instinct GPU supply and any TSMC disruption or capacity reallocation would directly cap the data center GPU revenue trajectory."
+    ],
+    "realityCheck": null
+  },
+  "financialSnapshot": {
+    "ticker": "AMD",
+    "asOf": "2026-05-08",
+    "price": 435.68,
+    "marketCap": 710420070400,
+    "enterpriseValue": 657722245120,
+    "netCash": 8475999744,
+    "peRatio": 146.20134,
+    "evEbit": 1640.2051000498752,
+    "evSales": null,
+    "fcfYield": 0.010097370942745256,
+    "peRatio10yMedian": null,
+    "evEbit10yMedian": null,
+    "annual": [
+      {
+        "year": 2016,
+        "revenue": 0,
+        "ebit": -155000000,
+        "netIncome": -403000000,
+        "fcf": -193000000,
+        "sharesOutstanding": 792000000,
+        "roic": null,
+        "debtToEquity": 3.6893382352941178
+      },
+      {
+        "year": 2017,
+        "revenue": 0,
+        "ebit": -481000000,
+        "netIncome": -660000000,
+        "fcf": -322000000,
+        "sharesOutstanding": 935000000,
+        "roic": null,
+        "debtToEquity": 7.67379679144385
+      },
+      {
+        "year": 2018,
+        "revenue": 0,
+        "ebit": -373000000,
+        "netIncome": -498000000,
+        "fcf": 4000000,
+        "sharesOutstanding": 967000000,
+        "roic": null,
+        "debtToEquity": null
+      },
+      {
+        "year": 2019,
+        "revenue": 0,
+        "ebit": 127000000,
+        "netIncome": -33000000,
+        "fcf": -101000000,
+        "sharesOutstanding": 1005000000,
+        "roic": null,
+        "debtToEquity": 1.8691275167785235
+      },
+      {
+        "year": 2020,
+        "revenue": 0,
+        "ebit": 451000000,
+        "netIncome": 337000000,
+        "fcf": -129000000,
+        "sharesOutstanding": 1170000000,
+        "roic": null,
+        "debtToEquity": 0.38388625592417064
+      },
+      {
+        "year": 2021,
+        "revenue": 0,
+        "ebit": 631000000,
+        "netIncome": 341000000,
+        "fcf": 276000000,
+        "sharesOutstanding": 1211000000,
+        "roic": null,
+        "debtToEquity": 0.11673151750972763
+      },
+      {
+        "year": 2022,
+        "revenue": 0,
+        "ebit": 1369000000,
+        "netIncome": 2490000000,
+        "fcf": 777000000,
+        "sharesOutstanding": 1207000000,
+        "roic": null,
+        "debtToEquity": 0.00017132088401576153
+      },
+      {
+        "year": 2023,
+        "revenue": 0,
+        "ebit": 3648000000,
+        "netIncome": 3162000000,
+        "fcf": 3220000000,
+        "sharesOutstanding": 1612000000,
+        "roic": null,
+        "debtToEquity": 0.32906495931706015
+      },
+      {
+        "year": 2024,
+        "revenue": 0,
+        "ebit": 1264000000,
+        "netIncome": 1320000000,
+        "fcf": 3115000000,
+        "sharesOutstanding": 1616000000,
+        "roic": null,
+        "debtToEquity": 0.031360730593607306
+      },
+      {
+        "year": 2025,
+        "revenue": 0,
+        "ebit": 401000000,
+        "netIncome": 854000000,
+        "fcf": 1121000000,
+        "sharesOutstanding": 1622000000,
+        "roic": null,
+        "debtToEquity": 0.0307915265154226
+      }
+    ],
+    "isProfitable": true,
+    "hasPositiveFcf": true,
+    "shareCountTrend": "growing"
+  }
+}

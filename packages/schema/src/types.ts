@@ -83,9 +83,9 @@ export const ExtractedAnalysis = z.object({
   segments: z.array(
     z.object({
       name: z.string(),
-      revenue: z.number().optional(),
-      ebit: z.number().optional(),
-      growthRate: z.number().optional(),
+      revenue: z.number().nullable().optional(),
+      ebit: z.number().nullable().optional(),
+      growthRate: z.number().nullable().optional(),
       keyDrivers: z.array(z.string()),
       citation: Citation,
     }),
