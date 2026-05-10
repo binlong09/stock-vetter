@@ -1,0 +1,82 @@
+{
+  "ticker": "JPM",
+  "cik": "0000019617",
+  "accession": "0001628280-26-029344",
+  "form": "10-Q",
+  "filingDate": "2026-05-01",
+  "primaryDocument": "jpm-20260331.htm",
+  "parsedAt": "2026-05-09T06:29:10.855Z",
+  "cleanedTextLength": 712427,
+  "sections": [
+    {
+      "id": "financial-statements",
+      "label": "Financial Statements",
+      "itemNumber": "1",
+      "charLength": 250,
+      "confidence": "failed",
+      "warnings": [
+        "incorporation-by-reference: real content lives elsewhere in the filing"
+      ],
+      "chosenAnchor": {
+        "text": "Item 1. Legal Proceedings.",
+        "score": 0,
+        "signals": []
+      }
+    },
+    {
+      "id": "risk-factors",
+      "label": "Risk Factors (updates)",
+      "itemNumber": "1A",
+      "charLength": 396,
+      "confidence": "failed",
+      "warnings": [
+        "incorporation-by-reference: real content lives elsewhere in the filing"
+      ],
+      "chosenAnchor": {
+        "text": "Item 1A. Risk Factors.",
+        "score": 0,
+        "signals": []
+      }
+    },
+    {
+      "id": "mda",
+      "label": "Management's Discussion and Analysis",
+      "itemNumber": "2",
+      "charLength": 1154,
+      "confidence": "failed",
+      "warnings": [
+        "incorporation-by-reference: real content lives elsewhere in the filing"
+      ],
+      "chosenAnchor": {
+        "text": "Item 2. Unregistered Sales of Equity Securities and Use of Proceeds.",
+        "score": 0,
+        "signals": []
+      }
+    },
+    {
+      "id": "quant-risk",
+      "label": "Quantitative and Qualitative Disclosures About Market Risk",
+      "itemNumber": "3",
+      "charLength": 4112,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "Item 3.    Defaults Upon Senior Securities.",
+        "score": 2,
+        "signals": [
+          "top-level-body-descendant"
+        ]
+      }
+    }
+  ],
+  "parserWarnings": [
+    "Item not extracted cleanly: financial-statements",
+    "Item not extracted cleanly: risk-factors",
+    "Item not extracted cleanly: mda"
+  ],
+  "missing": [
+    "financial-statements",
+    "risk-factors",
+    "mda"
+  ]
+}

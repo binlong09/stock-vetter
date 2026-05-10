@@ -1,0 +1,57 @@
+{
+  "ticker": "KO",
+  "asOf": "2026-05-09",
+  "currentPrice": 78.42,
+  "sharesOutstanding": 4313,
+  "startingFcfMillions": 5296,
+  "actualFcfCagr3y": -0.17796380006831702,
+  "actualFcfCagr5y": -0.09381715561220638,
+  "grid": [
+    {
+      "discountRate": 0.08,
+      "terminalMultiple": 15,
+      "impliedFcfCagr": 0.20468750000000002
+    },
+    {
+      "discountRate": 0.08,
+      "terminalMultiple": 20,
+      "impliedFcfCagr": 0.1771484375
+    },
+    {
+      "discountRate": 0.08,
+      "terminalMultiple": 25,
+      "impliedFcfCagr": 0.15546875000000002
+    },
+    {
+      "discountRate": 0.1,
+      "terminalMultiple": 15,
+      "impliedFcfCagr": 0.22695312500000003
+    },
+    {
+      "discountRate": 0.1,
+      "terminalMultiple": 20,
+      "impliedFcfCagr": 0.19882812500000002
+    },
+    {
+      "discountRate": 0.1,
+      "terminalMultiple": 25,
+      "impliedFcfCagr": 0.17685546875000002
+    },
+    {
+      "discountRate": 0.12,
+      "terminalMultiple": 15,
+      "impliedFcfCagr": 0.24921875000000002
+    },
+    {
+      "discountRate": 0.12,
+      "terminalMultiple": 20,
+      "impliedFcfCagr": 0.22080078125000002
+    },
+    {
+      "discountRate": 0.12,
+      "terminalMultiple": 25,
+      "impliedFcfCagr": 0.1982421875
+    }
+  ],
+  "narrative": "At a current price of $78.42 per share and trailing FCF of $5.3B, the reverse DCF asks: what 10-year FCF growth rate would justify this price under various assumptions?\n\nUnder the central assumptions (10% discount rate, 20× terminal P/FCF), the market is pricing in approximately 19.9% annual FCF growth for 10 years.\nFor comparison, actual FCF CAGR has been -9.4% over the past 5 years and -17.8% over the past 3 years.\nThe implied growth meaningfully exceeds the historical pace — the price requires acceleration the company has not yet demonstrated.\n\nRead the sensitivity grid below to see how this implied growth shifts under different discount rates and terminal multiples. A value-investing skeptic would ask whether the highest-implied-growth cells in the grid are achievable, and whether the assumptions that produce a more attractive picture are themselves reasonable."
+}

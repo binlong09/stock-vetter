@@ -1,0 +1,147 @@
+{
+  "ticker": "JPM",
+  "cik": "0000019617",
+  "accession": "0001628280-26-008131",
+  "form": "10-K",
+  "filingDate": "2026-02-13",
+  "primaryDocument": "jpm-20251231.htm",
+  "parsedAt": "2026-05-09T06:29:09.446Z",
+  "cleanedTextLength": 1380597,
+  "sections": [
+    {
+      "id": "business",
+      "label": "Business",
+      "itemNumber": "1",
+      "charLength": 38968,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "Item 1. Business.",
+        "score": 4,
+        "signals": [
+          "larger-font",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "risk-factors",
+      "label": "Risk Factors",
+      "itemNumber": "1A",
+      "charLength": 111749,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "Item 1A. Risk Factors.",
+        "score": 2,
+        "signals": [
+          "larger-font"
+        ]
+      }
+    },
+    {
+      "id": "properties",
+      "label": "Properties",
+      "itemNumber": "2",
+      "charLength": 2065,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "Item 2. Properties.",
+        "score": 2,
+        "signals": [
+          "larger-font"
+        ]
+      }
+    },
+    {
+      "id": "legal-proceedings",
+      "label": "Legal Proceedings",
+      "itemNumber": "3",
+      "charLength": 2778,
+      "confidence": "high",
+      "warnings": [
+        "incorporation-by-reference: real content lives elsewhere in the filing",
+        "bundled into \"financial-statements\" (994,249 chars vs threshold 204,000)"
+      ],
+      "bundled": [
+        "financial-statements"
+      ],
+      "chosenAnchor": {
+        "text": "Item 3. Legal Proceedings.",
+        "score": 2,
+        "signals": [
+          "larger-font"
+        ]
+      }
+    },
+    {
+      "id": "mda",
+      "label": "Management's Discussion and Analysis",
+      "itemNumber": "7",
+      "charLength": 394,
+      "confidence": "failed",
+      "warnings": [
+        "incorporation-by-reference: real content lives elsewhere in the filing",
+        "bundled into \"financial-statements\" (994,249 chars vs threshold 230,000)"
+      ],
+      "bundled": [
+        "financial-statements"
+      ],
+      "chosenAnchor": {
+        "text": "Item 7. Management’s Discussion and Analysis of Financial Condition and Results of Operations.",
+        "score": 2,
+        "signals": [
+          "larger-font"
+        ]
+      }
+    },
+    {
+      "id": "quant-risk",
+      "label": "Quantitative and Qualitative Disclosures About Market Risk",
+      "itemNumber": "7A",
+      "charLength": 266,
+      "confidence": "failed",
+      "warnings": [
+        "incorporation-by-reference: real content lives elsewhere in the filing",
+        "bundled into \"financial-statements\" (994,249 chars vs threshold 215,000)"
+      ],
+      "bundled": [
+        "financial-statements"
+      ],
+      "chosenAnchor": {
+        "text": "Item 7A. Quantitative and Qualitative Disclosures About Market Risk.Refer to the Market Risk Management section of Management’s discussion and analysis on pages 133-142 for a discussion of quantitativ",
+        "score": 2,
+        "signals": [
+          "larger-font"
+        ]
+      }
+    },
+    {
+      "id": "financial-statements",
+      "label": "Financial Statements",
+      "itemNumber": "8",
+      "charLength": 994249,
+      "confidence": "high",
+      "warnings": [
+        "absorbed bundled content from \"legal-proceedings\"",
+        "absorbed bundled content from \"mda\"",
+        "absorbed bundled content from \"quant-risk\""
+      ],
+      "bundled": [
+        "legal-proceedings",
+        "mda",
+        "quant-risk"
+      ],
+      "chosenAnchor": {
+        "text": "Item 8. Financial Statements and Supplementary Data.",
+        "score": 2,
+        "signals": [
+          "larger-font"
+        ]
+      }
+    }
+  ],
+  "parserWarnings": [],
+  "missing": []
+}

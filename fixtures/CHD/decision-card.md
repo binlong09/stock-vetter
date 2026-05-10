@@ -1,0 +1,57 @@
+# CHD — Decision Card
+
+**Verdict:** 🔴 Pass  •  **Weighted score:** 5.9 / 10
+
+*Generated:* 2026-05-09  •  *10-K:* `0001193125-26-048139`  •  *Analyst videos:* 0
+
+> *No analyst content configured for this ticker — verdict based on primary sources only.*
+
+## Summary
+
+Church & Dwight is a Pass at current prices. The business is a decent consumer staples compounder with real brand durability and manageable leverage, but the weighted score of 5.88 reflects genuine structural weaknesses: capital allocation is the heaviest drag, as a long acquisition-led growth model has left the balance sheet carrying ~$2.2B in debt and an intangibles-heavy asset base, while the new CEO transition adds uncertainty to future capital deployment decisions. The reverse DCF implies the market is pricing in 5.3% annual FCF growth — slightly above the 5-year actual of 4.2% but well below the 3-year spike of 15.7% — suggesting the stock is not obviously cheap nor obviously expensive, but offers little margin of safety for a business that scores below average on moat durability and insider alignment. At ~30.7x earnings versus a 10-year median of 28.9x, investors are paying a modest premium for what is essentially a mid-single-digit growth staples portfolio.
+
+## Dimension scores
+
+| Dimension | Score | Range | Uncertainty | Effective weight |
+|---|---|---|---|---|
+| Moat durability | **5.5** | 0.0 | tight | 0.20 |
+| Owner earnings quality | **6.0** | 0.0 | tight | 0.20 |
+| Capital allocation | **5.0** | 0.0 | tight | 0.20 |
+| Debt sustainability | **6.5** | 0.0 | tight | 0.15 |
+| Insider alignment | **5.5** | 0.0 | tight | 0.10 |
+| Cyclicality awareness | **7.0** | 0.0 | tight | 0.15 |
+
+### Dimension reasoning
+
+**Moat durability (5.5):** Pass 2 explicitly recommends no adjustment and its rebuttal confirms that Pass 1 already accounted for all material evidence — the multiple #1/#2 brand positions, the Waterpik share loss, private-label inroads, business exits, and retailer concentration. Pass 2 raises the Walmart 23% concentration point as a structural concern but correctly characterizes it as standard consumer staples risk already disclosed in the filing. No new evidence materially changes the balanced picture Pass 1 captured at 5.5.
+
+**Owner earnings quality (6.0):** Pass 2's rebuttal raises two points — the SCF program and the step-up in forward amortization from Touchland — but neither materially changes the score. The SCF program ($84.7M, declining, clearly disclosed) was already implicitly covered by Pass 1's factoring discussion and Pass 2 itself concedes it is 'not an escalating concern.' The forward amortization step-up (~$135M guided for 2026) is a real consideration, but Pass 2 correctly notes the FCF yield of 5.1% already reflects post-amortization cash generation, and Pass 1 already addressed the Touchland trade name amortization dynamic directly in its citations. Pass 2 recommended 0 adjustment and provided no citation that overturns Pass 1's balanced assessment; the score of 6 remains well-calibrated.
+
+**Capital allocation (5.0):** Pass 2 surfaces two genuinely incremental concerns not fully addressed in Pass 1's counter-evidence: (1) the all-in Touchland consideration of ~$865M+ ($656M + $159M earnout + $50M equity grants) versus Pass 1's $815M figure, refining the revenue multiple to ~7.5x rather than ~7x — a real but modest refinement; and (2) the Waterpik impairment risk, which the primary source explicitly flags as a critical audit matter with fair value at only 117% of a $644.7M carrying value, down from 135%, representing a large prior capital allocation decision that has meaningfully deteriorated. Pass 1 acknowledged the VMS destruction but did not flag the Waterpik impairment risk as a capital allocation concern. Both items are genuinely supported by the primary source text. However, neither item is severe enough to warrant the full -0.5 adjustment independently, and together they justify roughly half the recommended adjustment, as Pass 1's overall framing of a mixed-but-functional capital allocator remains accurate.
+
+**Debt sustainability (6.5):** Pass 2 recommended zero adjustment and its rebuttal explicitly confirmed Pass 1's assessment was well-calibrated. Pass 2's only incremental contribution was quantifying the Waterpik impairment headroom decline (135% to 117%), but both analysts correctly characterized this as a balance-sheet/equity risk rather than a debt service risk given $1.2B+ annual operating cash flow covering $95M interest expense by ~12.8x. No new material debt sustainability concerns were surfaced beyond what Pass 1 already acknowledged in its counter-evidence section.
+
+**Insider alignment (5.5):** Pass 2 explicitly recommended zero adjustment and confirmed that Pass 1 already identified the key limitation (missing beneficial ownership data for new CEO Dierker) and correctly characterized all available evidence. Pass 2 added no new material citations or concerns beyond what Pass 1 had already addressed. The score of 5.5 appropriately reflects conventional large-cap consumer goods governance with structural but not exceptional insider alignment.
+
+**Cyclicality awareness (7.0):** Pass 2 recommended zero adjustment and explicitly agreed that the score of 7 is appropriate given CHD's staples-dominant core and the 2025 divestitures of the most discretionary units. Pass 2's sole citation — the 'increasing number of products more discretionary in nature' passage — was already cited and addressed by Pass 1 as its primary basis for capping the score below the highest tier. No new evidence was surfaced that materially changes the cyclicality profile.
+
+## Valuation context
+
+- Reverse DCF (10% discount, 20× terminal): market is pricing in **5.3%** annual FCF growth for 10 years.
+- Actual delivered 5-year FCF CAGR: **4.2%**
+- Gap: roughly aligned — price implies similar growth to delivered.
+
+See `reverse-dcf.md` for full sensitivity grid.
+
+## Things to verify before acting
+
+- Review the most recent 10-K (2025) intangibles and goodwill schedule to understand what portion of the asset base is acquisition-derived — if goodwill and intangibles exceed 50% of total assets, owner earnings quality is more fragile than the OCF-to-net-income comparison suggests, because future impairments could materially distort reported earnings.
+- Track the new CEO Richard Dierker's first two or three major capital allocation decisions (acquisitions, buyback pace, dividend policy) once he is fully in seat. Listen to the next one or two earnings calls specifically for language around acquisition pipeline appetite and leverage tolerance — the prior management team built the franchise through serial M&A, and it is not yet clear whether Dierker will continue or moderate that approach.
+- Run the reverse DCF at both 4% and 8% FCF CAGR (bracketing the 5-year actual and 3-year spike) to see what entry price would provide a genuine margin of safety. At 10% discount rate and 20x terminal multiple, check whether a 4% growth scenario produces an intrinsic value meaningfully below the current share price — if so, the downside scenario is unprotected.
+- Examine the WATERPIK and THERABREATH acquisition economics specifically: pull the purchase prices paid versus the incremental EBIT those brands are now generating, and compare to what was projected at acquisition. This is the clearest test of whether CHD's M&A track record actually creates value or merely grows revenues at the cost of returns on capital.
+- Check the FCF yield trend over the past five years. The current 5.1% FCF yield is reasonable in isolation, but if it has been declining as the stock re-rated upward while underlying FCF growth was modest, that compression signals further valuation risk on any growth disappointment — particularly relevant given that the 5-year FCF CAGR of 4.2% does not obviously justify a 30x+ P/E multiple.
+- Assess tariff and input cost exposure in the next 10-Q. CHD sources ingredients and packaging globally; any re-acceleration of commodity or freight costs — or tariff pass-through friction in mass-market retail channels — would compress margins in a portfolio that already earns thin absolute margins relative to its premium valuation.
+
+---
+
+*This card is a synthesis of the primary-source value-investing checklist (3 LLM passes per dimension, triple-sampled), reverse DCF, historical valuation context, and no analyst content. Citations and full reasoning live in `primary-source-checklist.md` and `reverse-dcf.md`. The tool produces this card to inform your judgment, not to substitute for it.*

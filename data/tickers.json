@@ -1,0 +1,33 @@
+{
+  "_doc": "Ticker → analyst content URLs. Hand-curated. Add tickers/URLs as you build out your watchlist. Each ticker key is uppercase. videos = list of YouTube URLs to run through the per-video pipeline. notes = optional human reminder.",
+  "META": {
+    "videos": [
+      "https://www.youtube.com/watch?v=idbNBq-xO2w"
+    ],
+    "notes": "Drew Cohen analysis from Feb 2026 — already in fixtures/META/"
+  },
+  "AMD": {
+    "videos": [
+      "https://www.youtube.com/watch?v=qpcf_rxgCag"
+    ],
+    "notes": "Already in fixtures/AMD/"
+  },
+  "INTU": {
+    "videos": [
+      "https://www.youtube.com/watch?v=sxM55ihFKNg"
+    ]
+  },
+  "RDDT": {
+    "videos": [
+      "https://www.youtube.com/watch?v=mZ-XavKNBMw"
+    ]
+  },
+  "KO": {
+    "videos": [],
+    "notes": "Coca-Cola — no analyst videos configured; primary-source only"
+  },
+  "CHD": {
+    "videos": [],
+    "notes": "Church & Dwight — mid-cap consumer staples, no analyst videos configured"
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "ticker": "CHD",
+  "cik": "0000313927",
+  "accession": "0001193125-26-048139",
+  "form": "10-K",
+  "filingDate": "2026-02-12",
+  "primaryDocument": "chd-20251231.htm",
+  "parsedAt": "2026-05-09T07:44:42.353Z",
+  "cleanedTextLength": 412280,
+  "sections": [
+    {
+      "id": "business",
+      "label": "Business",
+      "itemNumber": "1",
+      "charLength": 54745,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "ITEM 1. BUSINESS",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "all-caps"
+        ]
+      }
+    },
+    {
+      "id": "risk-factors",
+      "label": "Risk Factors",
+      "itemNumber": "1A",
+      "charLength": 106967,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "ITEM 1A.\tRISK FACTORS",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "all-caps"
+        ]
+      }
+    },
+    {
+      "id": "properties",
+      "label": "Properties",
+      "itemNumber": "2",
+      "charLength": 935,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "ITEM 2. PROPERTIES",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "all-caps"
+        ]
+      }
+    },
+    {
+      "id": "legal-proceedings",
+      "label": "Legal Proceedings",
+      "itemNumber": "3",
+      "charLength": 3731,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "ITEM 3. LEGAL PROCEEDINGS",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "all-caps"
+        ]
+      }
+    },
+    {
+      "id": "mda",
+      "label": "Management's Discussion and Analysis",
+      "itemNumber": "7",
+      "charLength": 57597,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "ITEM 7. MANAGEMENT’S DISCUSSION AND ANALYSIS OF FINANCIAL CONDITION AND RESULTS OF OPERATIONS",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "all-caps"
+        ]
+      }
+    },
+    {
+      "id": "quant-risk",
+      "label": "Quantitative and Qualitative Disclosures About Market Risk",
+      "itemNumber": "7A",
+      "charLength": 221,
+      "confidence": "failed",
+      "warnings": [
+        "incorporation-by-reference: real content lives elsewhere in the filing"
+      ],
+      "chosenAnchor": {
+        "text": "ITEM 7A. QUANTITATIVE AND QUALITATIVE DISCLOSURES ABOUT MARKET RISK",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "all-caps"
+        ]
+      }
+    },
+    {
+      "id": "financial-statements",
+      "label": "Financial Statements",
+      "itemNumber": "8",
+      "charLength": 142610,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "ITEM 8. FINANCIAL STATEMENTS AND SUPPLEMENTARY DATA",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "all-caps"
+        ]
+      }
+    }
+  ],
+  "parserWarnings": [
+    "Item not extracted cleanly: quant-risk"
+  ],
+  "missing": [
+    "quant-risk"
+  ]
+}

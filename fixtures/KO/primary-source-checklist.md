@@ -1,0 +1,213 @@
+# KO — Primary-Source Value Checklist
+
+*Source:* 10-K accession `0001628280-26-010047` + DEF 14A (where used)
+*Citation verification:* 19/22 exact, 0 whitespace-normalized, 0 case-only, 1 punctuation-normalized, 2 **no-match**
+
+> ⚠️ 2 citation(s) could not be located in the cited source. See annotations below.
+
+Each dimension is scored 1–10 from primary sources only (no analyst opinions). Citations point to specific 10-K or proxy passages so you can verify the reasoning yourself — and learn what to look for in primary documents.
+
+## Scores at a glance
+
+| Dimension | Pass 1 | Skeptic Δ | Final | Decision |
+|---|---|---|---|---|
+| Moat durability | 8.0 | 0 | 8.0 | no-change |
+| Owner earnings quality | 4.5 | 0 | 4.5 | agreed-with-pass1 |
+| Capital allocation | 4.0 | 0 | 4.0 | no-change |
+| Debt sustainability | 5.5 | 0 | 5.5 | no-change |
+| Insider alignment | 5.5 | 0 | 5.5 | no-change |
+| Cyclicality awareness | 7.0 | 0 | 7.0 | no-change |
+
+## Moat durability
+
+**Score:** 8.0 / 10   _samples: [8.0, 8.0, 8.0], range 0.0_ *(tight: low uncertainty)*
+
+Coca-Cola possesses a multi-dimensional moat rooted in unrivaled global brand recognition (Trademark Coca-Cola alone accounts for 47% of worldwide unit case volume), proprietary trade secrets including closely guarded concentrate formulas, and a captive global bottling network that creates powerful distribution switching costs. The concentrate business model — where KO sells flavor inputs to locked-in bottling partners who are contractually required to 'purchase its entire requirement of concentrates or syrups' from KO — structurally insulates the company's high-margin upstream operations from retail-level price competition. Risk Factors do acknowledge real competitive pressure and private-label risk, but these read as edge-case contestability rather than fundamental threats to the core sparkling soft drink franchise.
+
+### Citations
+
+- **`business`** — "The bottler is obligated to purchase its entire requirement of concentrates or syrups for the designated Company Trademark Beverages from the Company or Company-authorized suppliers."
+  *Why it matters:* This contractual lock-in creates durable switching costs for bottling partners, ensuring KO's high-margin concentrate revenue stream is structurally protected regardless of retail-level competitive dynamics.
+- **`business`** — "Trade secrets are an important aspect of our technology, and our sparkling beverage and other beverage formulas are among the important trade secrets of our Company."
+  *Why it matters:* Proprietary, unreplicated formulas underpin product differentiation that competitors cannot legally or practically duplicate, forming a durable ingredient-level barrier to substitution.
+- **`business`** — "Our competitive strengths include leading brands with high levels of consumer recognition and loyalty; a worldwide network of bottlers and distributors of Company products; sophisticated marketing capabilities; and a talented group of dedicated employees."
+  *Why it matters:* Management explicitly identifies the combination of brand loyalty and unmatched global distribution as the core competitive strengths, consistent with a multi-dimensional moat structure.
+- **`risk-factors`** — "Consumers may be less willing to pay a price differential for our branded products and may increasingly purchase lower-priced offerings, or may forgo some purchases altogether."
+  *Why it matters:* This is the most pointed competitive threat in the Risk Factors — acknowledging that brand premium is contestable under cost pressure — providing genuine counter-evidence that the moat has limits, particularly in value-sensitive markets.
+
+### Pass 1 counter-evidence considered
+
+The Risk Factors explicitly flag that private-label brands and discounters are growing, that 'competitive pressures may cause the Company and our bottling partners to reduce prices,' and that weight-loss drug adoption and obesity concerns could structurally reduce demand for sweetened beverages. These are not trivial risks: they represent secular demand headwinds and retailer bargaining power increases that could erode the brand premium over time, preventing a score of 9 or above.
+
+### Pass 2 — Skeptic
+
+*Adjustment: no change recommended*
+
+Pass 1's counter-evidence already addresses the core concerns visible in these primary sources: private-label/discounter growth, competitive pricing pressure, and weight-loss drug/obesity demand headwinds are all explicitly named. Reading the full primary sources independently, I find no material concerns that Pass 1 failed to address. The business section confirms KO's structural moat sources — 2.2 billion daily servings, presence in 200+ countries, the concentrate model generating higher margins than finished products, long-term bottler agreements (10-year CBAs renewable indefinitely), exclusive territory rights, and a portfolio of globally recognized brands including Trademark Coca-Cola at 47% of worldwide unit case volume. The risk factors confirm competitive threats but these are already weighted in Pass 1's counter-evidence. No new structural concerns emerge from the primary sources that would warrant an adjustment in either direction. A score of 8 is well-calibrated for a business with this scale of distribution lock-in, brand equity, and concentrate-model economics, tempered appropriately by secular demand headwinds already identified.
+
+### Pass 3 — Judge
+
+**Final score: 8.0 / 10** *(decision: no-change)*
+
+Pass 2 recommended zero adjustment and explicitly confirmed that all material concerns visible in the primary sources were already addressed by Pass 1. Pass 2's independent review of the same sources — including the concentrate model economics, 2.2 billion daily servings, 200+ country presence, 10-year renewable CBAs, exclusive territory rights, and 47% Trademark Coca-Cola unit case volume — corroborates Pass 1's structural moat assessment. The risk factors (private-label growth, pricing pressure, weight-loss drug headwinds) are genuine but were already incorporated as counter-evidence in Pass 1's reasoning, and Pass 2 found no incremental concerns that would warrant score movement in either direction. A score of 8 remains well-calibrated.
+
+## Owner earnings quality
+
+**Score:** 4.5 / 10   _samples: [4.5, 4.5, 4.5], range 0.0_ *(tight: low uncertainty)*
+
+KO's reported net income ($13.1B in 2025) significantly overstates owner-extractable cash. Operating cash flow was only $7.4B against net income of $13.1B, a 0.57× ratio, driven by massive working capital drains (-$7.2B in 2025, -$6.2B in 2024) and large add-backs for non-cash items including $1.05B in 'other operating charges.' FCF (operating cash flow minus capex) was approximately $5.3B in 2025 vs. $13.1B net income — a 0.40× ratio — consistent with the externally computed 5-year FCF CAGR of -9.4% and 3-year FCF CAGR of -17.8%. The gap is partly structural (equity method income of $2.0B recognized in net income but only dividends received flow through cash) and partly reflects repeated large 'other operating charges' and working capital volatility. SBC of $279M is modest relative to operating cash flow (~3.8%), so that is not the primary distortion. The persistent and worsening divergence between reported earnings and free cash flow is the central concern.
+
+### Citations
+
+- **`financial-statements`** — "Equity (income) loss — net of dividends(1,038)(802)(1,019)"
+  *Why it matters:* KO records ~$2B of equity method income in net income annually but only receives ~$1B in dividends, meaning roughly $1B per year of 'earnings' never converts to cash — a structural, recurring gap between reported income and owner cash.
+- **`financial-statements`** — "Net change in operating assets and liabilities(7,208)(6,234)(846)"
+  *Why it matters:* Working capital consumed $7.2B and $6.2B of cash in 2025 and 2024 respectively, drastically reducing operating cash flow relative to net income; this magnitude of drain is highly unusual and materially impairs owner earnings quality.
+- **`financial-statements`** — "Other operating charges1,261 4,163 1,951"
+  *Why it matters:* Recurring 'other operating charges' of $1.3–$4.2B per year (including impairments and restructuring) are partially added back in operating cash flow but signal that reported operating income routinely includes large non-recurring items management treats as below-the-line, inflating apparent earnings quality.
+- **`financial-statements`** — "Net Cash Provided by Operating Activities7,408 6,805 11,599"
+  *Why it matters:* Operating cash flow of $7.4B and $6.8B in 2025 and 2024 compares to net income of $13.1B and $10.6B — conversion ratios of 57% and 64% — confirming that reported earnings are a poor proxy for cash a long-term owner could extract.
+
+### Pass 1 counter-evidence considered
+
+The $279M in SBC is relatively contained at ~3.8% of operating cash flow and is disclosed cleanly in Note 13, so SBC dilution is not a major distortion. The large working capital swings partly reflect the accounts receivable factoring program ($14.7B sold in 2025, $21.9B in 2024), which accelerates cash collection and may partially explain the volatility; if factoring is structurally recurring, the working capital drain may be less alarming than it appears. Additionally, 2023 operating cash flow of $11.6B was much closer to net income of $10.7B, suggesting 2024–2025 working capital drains may partially normalize.
+
+### Pass 2 — Skeptic
+
+*Adjustment: no change recommended*
+
+Pass 1 scored ownerEarningsQuality at 4.5 and identified the key distortions: large working capital drains (-$7.2B in 2025, -$6.2B in 2024), the accounts receivable factoring program ($14.7B sold in 2025, $21.9B in 2024), and the gap between net income and operating cash flow. Pass 1's counter-evidence section already addresses the factoring program explicitly, noting it may partially explain volatility and may be structurally recurring. I looked for additional concerns not covered: (1) The 'Other operating charges' add-back of $1,052M in 2025 and $4,000M in 2024 to reconcile net income to operating cash flow — these are large non-cash restructuring/impairment charges being added back, meaning reported operating cash flow is partially propped up by reversing charges that reduced net income. However, Pass 1's score of 4.5 already reflects skepticism about the wide net income-to-OCF gap, and these add-backs are standard adjustments clearly disclosed. (2) The factoring program costs ($60M in 2025, $114M in 2024) are recorded as operating costs, not financing costs, which is a minor accounting choice but not material. (3) The 'Significant (gains) losses — net' subtraction of -$713M in 2025 and -$1,737M in 2024 removes asset sale gains from operating cash flow, which is appropriate but means net income includes these non-recurring gains. This is a genuine quality concern — net income of $13.1B in 2025 includes equity income of $2.03B (net of dividends: $1.04B add-back) and significant gains. However, Pass 1 already scores this dimension at 4.5, reflecting awareness of earnings quality issues. The gains from divestitures (Coke Consolidated sale: $1,952M gain in 2025; Philippines: $595M in 2024) flowing through net income while being stripped from OCF is already implicit in the OCF-to-net income gap that Pass 1 analyzed. I find no material new evidence beyond what Pass 1 already considered and weighted in its 4.5 score.
+
+### Pass 3 — Judge
+
+**Final score: 4.5 / 10** *(decision: agreed-with-pass1)*
+
+Pass 2 explicitly acknowledged it found no material new evidence beyond what Pass 1 already considered, recommending a 0 adjustment. Pass 2's observations about the other operating charges add-back, factoring program costs, and divestiture gains flowing through net income were all either already captured in Pass 1's analysis or addressed in Pass 1's counter-evidence section. The primary sources confirm Pass 1's cited figures: OCF of $7.4B vs. net income of $13.1B, working capital drain of -$7.2B, and equity income net of dividends of -$1.04B add-back, all supporting the 4.5 score as an accurate reflection of poor earnings-to-cash conversion quality.
+
+## Capital allocation
+
+**Score:** 4.0 / 10   _samples: [4.0, 4.0, 4.0], range 0.0_ *(tight: low uncertainty)*
+
+KO's capital allocation record over the past several years is mixed-to-poor by value-investing standards. The BodyArmor acquisition (2021) has already required two impairment charges totaling $1.72 billion against the trademark alone, and the fairlife contingent consideration ballooned to $6.173 billion—a massive surprise cost recognized in 2024. Refranchising activity (India, Philippines, Bangladesh) shows some discipline in exiting lower-return bottling operations, and the dividend remains a constant priority. However, the combination of a large acquisition that has destroyed value (BodyArmor), a contingent consideration liability that proved far larger than anticipated (fairlife), and a 5-year FCF CAGR of -9.4% signals that recent capital deployment has not compounded owner value effectively.
+
+### Citations
+
+- **`mda`** — "the Company recorded an impairment charge of $760 million due to revised projections of future operating results as well as higher discount rates resulting from changes in macroeconomic conditions since the acquisition date."
+  *Why it matters:* This first BodyArmor impairment charge in Q1 2024, followed by a second $960 million charge in Q4 2025, demonstrates that the 2021 acquisition was consummated at a price management could not ultimately justify—a hallmark of poor acquisition discipline.
+- **`mda`** **⚠️ NO-MATCH** — "other operating charges included $47 million related to the remeasurement of our contingent consideration liability to fair value in conjunction with our acquisition of fairlife in 2020, which brought the total liability to $6,173 million and was paid in March 2025."
+  *Why it matters:* The fairlife contingent consideration reaching $6.173 billion—dwarfing the original transaction structure—represents a capital allocation outcome where the total cost of the acquisition was vastly larger than investors could have anticipated, reducing the effective return on invested capital.
+- **`mda`** — "In January, February and December 2024, as well as May 2025, the Company refranchised our bottling operations in certain territories in India, and in February 2024, the Company refranchised our bottling operations in Bangladesh and the Philippines."
+  *Why it matters:* Systematic refranchising of lower-margin bottling operations is a positive capital allocation step—it returns the business toward the higher-return concentrate model—providing partial offset to the poor M&A track record.
+
+### Pass 1 counter-evidence considered
+
+The refranchising program and the longstanding dividend growth record (KO is a Dividend King) reflect genuine discipline in returning capital to shareholders consistently. Additionally, the gains recognized on divestiture activity (e.g., $1.952 billion gain on Coke Consolidated stake sale, $331 million on partial CCEP sale) suggest some portfolio management skill. The core business has not required equity issuance, and the company has funded operations and dividends through operating cash flow and debt markets throughout the period.
+
+### Pass 2 — Skeptic
+
+*Adjustment: no change recommended*
+
+Pass 1 scored capitalAllocation at 4/10, citing concerns presumably around the poor FCF CAGR trajectory (-9.4% over 5 years, -17.8% over 3 years), the BodyArmor acquisition (now carrying $960M in additional impairment in 2025 on top of $760M in 2024, for ~$1.72B cumulative impairment), and the fairlife contingent consideration liability of $6.173B paid in March 2025. Pass 1's counter-evidence already acknowledged the gains on divestitures and the dividend growth record as positives. I reviewed the primary sources to identify any unaddressed material evidence. The BodyArmor situation is more damaging than Pass 1's counter-evidence implies — the 2025 10-K discloses a second impairment charge of $960M in Q4 2025 on top of the $760M already taken in Q1 2024, with remaining carrying value still at $2.44B and explicit warning that further impairments are likely if near-term results miss revised projections. This compounds the original acquisition decision error. However, Pass 1's counter-evidence, while framed around the divestiture gains, implicitly addresses the broader M&A track record concern by noting 'portfolio management skill.' The BodyArmor impairment pattern is the central capital allocation failure and is the expected reason for the low score. Additionally, the fairlife contingent consideration ($6.173B paid in March 2025) represents an enormous cash outflow stemming from a 2020 acquisition structure that ballooned far beyond original expectations — this is a separate capital allocation concern from BodyArmor but Pass 1 likely factored this into its 4/10 score given it is prominently disclosed. The FCF decline (-17.8% 3-year CAGR per the financial context) is the mechanical result of these capital deployment choices plus foreign exchange headwinds. No new material evidence beyond what Pass 1 appears to have already weighed is found. The 4/10 score appears appropriately calibrated given the cumulative evidence of poor M&A execution (BodyArmor impairments totaling ~$1.72B with more likely, fairlife consideration ballooning to $6.173B), declining FCF, offset partially by the Dividend King status, disciplined refranchising, and divestitures at gains.
+
+### Pass 3 — Judge
+
+**Final score: 4.0 / 10** *(decision: no-change)*
+
+Pass 2 recommended zero adjustment and explicitly confirmed that Pass 1's score was appropriately calibrated. Pass 2's rebuttal surfaced no new material evidence beyond what Pass 1 had already cited and weighed — the BodyArmor dual impairments ($760M + $960M), the fairlife contingent consideration ballooning to $6.173B, declining FCF, offset by refranchising discipline and divestiture gains. The 4/10 score accurately reflects a mixed-to-poor capital allocation record dominated by two major M&A missteps.
+
+## Debt sustainability
+
+**Score:** 5.5 / 10   _samples: [5.5, 5.5, 5.5], range 0.0_ *(tight: low uncertainty)*
+
+Coca-Cola carries approximately $43.7B in long-term debt (including current maturities) against operating cash flow of $7.4B in 2025, implying a leverage ratio of roughly 5–6× operating cash flow — elevated by consumer-staples standards but manageable given the brand's pricing power and consistent cash generation. Interest expense of $1.654B against operating income of $13.762B yields a comfortable ~8× EBIT interest coverage ratio, which is a meaningful cushion. However, operating cash flow has declined sharply (from $11.6B in 2023 to $7.4B in 2025), partly due to large working-capital swings, and dividends alone consumed $8.8B in 2025 — exceeding operating cash flow — meaning KO depends on asset sales and financing activity to fund its obligations. The debt load is manageable for an investment-grade issuer with global brand power, but it is not conservative, and the FCF-to-interest and FCF-to-dividend metrics are tighter than they appear at first glance.
+
+### Citations
+
+- **`financial-statements`** — "Long-term debt42,119 42,375"
+  *Why it matters:* The balance sheet shows $42.1B in long-term debt at year-end 2025 (essentially flat from 2024), plus $1.822B in current maturities, indicating total long-term debt obligations of roughly $43.9B — a substantial absolute load relative to operating cash flow of $7.4B.
+- **`financial-statements`** — "Interest expense1,654 1,656 1,527"
+  *Why it matters:* Interest expense of $1.654B in 2025 against operating income of $13.762B gives EBIT interest coverage of approximately 8×, which is comfortable; however, this coverage looks weaker when measured against FCF of ~$5.3B (operating cash flow minus capex), yielding only ~3× FCF-to-interest coverage.
+- **`financial-statements`** — "Net Cash Provided by Operating Activities7,408 6,805 11,599"
+  *Why it matters:* Operating cash flow has deteriorated sharply from $11.6B in 2023 to $7.4B in 2025, driven largely by working-capital headwinds; since dividends alone consumed $8.779B in 2025, KO's ability to service debt from organic cash generation is tighter than the headline leverage ratio suggests.
+- **`financial-statements`** — "Issuances of loans, notes payable and long-term debt4,980 12,061 6,891"
+  *Why it matters:* KO actively rolls its debt each year (issuing ~$5B in 2025 and $12B in 2024), reflecting a reliance on capital markets access for refinancing; while manageable for an AA-rated issuer, this creates refinancing risk if credit markets tighten unexpectedly.
+
+### Pass 1 counter-evidence considered
+
+KO's EBIT-to-interest coverage of ~8× is solid, and the company maintains $13.9B in cash and short-term investments against only $1.8B in current debt maturities, providing a strong near-term liquidity buffer. Additionally, substantial divestitures in 2025 (over $3.5B in proceeds) demonstrate KO's ability to monetize assets to reduce leverage if needed. The company's investment-grade credit rating and global brand franchise ensure continued access to debt markets at favorable rates, limiting near-term refinancing risk.
+
+### Pass 2 — Skeptic
+
+*Adjustment: no change recommended*
+
+Pass 1 correctly identified the key debt sustainability metrics: ~8× EBIT interest coverage, $13.9B liquidity, manageable near-term maturities of $1.8B, and asset-monetization capacity. Reviewing the primary sources independently, I find no material concerns that Pass 1 failed to address. Long-term debt stands at $42.1B with $1.8B current maturities; 2025 interest expense was $1,654M against EBIT of $13,762M (~8.3× coverage), confirming Pass 1's characterization. Net debt of ~$30.8B is substantial relative to operating cash flow ($7.4B in 2025), implying a net debt/OCF ratio of roughly 4×, which is elevated but well within manageable territory for a franchise-model consumer staples company with stable, recurring revenues. The liabilities held for sale ($2,570M) include $1,248M of debt ($187M loans/notes payable + $398M current LTD + $850M LTD), which will be deconsolidated upon the Africa bottling sale—a mild positive not explicitly noted by Pass 1 but not material enough to warrant an upward adjustment on its own. The supply chain finance program (Note 9) is disclosed but not quantified in the truncated text available; however, Pass 1 did not cite this as a risk and the filing's footnote reference suggests it is a standard disclosed arrangement. No going-concern language, covenant breach risk, or undisclosed off-balance-sheet obligations of material size are evident. The score of 5.5 appears well-calibrated for a company with heavy but serviceable debt, strong coverage, and investment-grade access.
+
+### Pass 3 — Judge
+
+**Final score: 5.5 / 10** *(decision: no-change)*
+
+Pass 2 independently verified the same key metrics as Pass 1 — ~8.3× EBIT interest coverage, $13.9B liquidity, $1.8B near-term maturities, and ~4× net debt/OCF — and recommended zero adjustment, explicitly agreeing the 5.5 score is well-calibrated. Pass 2 noted one mild positive (Africa bottling debt deconsolidation of ~$1.25B held-for-sale) but correctly assessed it as insufficient to warrant an upward adjustment. No new material concerns were surfaced, and Pass 1's counter-evidence regarding liquidity buffers and asset-monetization capacity was confirmed by the primary sources.
+
+## Insider alignment
+
+**Score:** 5.5 / 10   _samples: [5.5, 5.5, 5.5], range 0.0_ *(tight: low uncertainty)*
+
+KO is a professionally managed company with no founder-CEO; James Quincey holds ~4.46 million shares (less than 0.1% of outstanding), which is meaningful in dollar terms but not in percentage ownership. Compensation is heavily performance-based (94% of CEO total direct compensation is at-risk), with multi-year PSU vesting tied to revenue growth, EPS growth, FCF, and a relative TSR modifier — structures that genuinely align with long-term shareholder interests. However, the absence of founder-level ownership and the fact that the all-directors/executives group collectively holds less than 1% of outstanding shares limits the alignment score.
+
+### Citations
+
+- **`proxy`** *(punctuation-normalized match)* — "In 2025, 94% of our CEO's total direct compensation and 89% of the other Named Executive Officers' total direct compensation, on average, was performance-based."
+  *Why it matters:* A very high percentage of at-risk pay tied to multi-year performance metrics demonstrates meaningful structural pay-for-performance alignment rather than salary-heavy guaranteed compensation.
+- **`proxy`** — "All Directors, Director nominees and executive officers as a group (22 persons) 38,886,151 * Includes 400 shares of restricted stock, 74,252 shares credited under the 401(k) Plan and 8,262,901 shares that may be acquired upon the exercise of options"
+  *Why it matters:* The entire insider group of 22 persons holds less than 1% of KO's ~4.3 billion outstanding shares, indicating that professional management has very limited 'skin in the game' relative to the total equity base.
+- **`proxy`** — "For the 2025-2027 PSU program, net operating revenue growth, earnings per share growth, and free cash flow are equally weighted. The 2025-2027 PSU program also retains the TSR modifier, which reduces or increases the PSU award based on performance against the TSR comparator group."
+  *Why it matters:* Multi-year PSU vesting with a relative TSR modifier is a shareholder-friendly design that ties executive wealth directly to long-term competitive performance, not just short-term results.
+- **`proxy`** **⚠️ NO-MATCH** — "James Quincey 4,461,496 * Includes 44,678 shares held by a family member, 200 shares of restricted stock, 8,944 shares credited to Mr. Quincey under The Coca-Cola Company 401(k) Plan and 3,879,031 shares that may be acquired upon the exercise of options"
+  *Why it matters:* The CEO's beneficial ownership is dominated by options rather than outright share ownership, suggesting alignment is leverage-dependent and contingent on option exercise rather than the deep permanent ownership characteristic of founder-led businesses.
+
+### Pass 1 counter-evidence considered
+
+Berkshire Hathaway's 9.29% anchor ownership (400 million shares) provides a powerful external check on management behavior and implicitly strengthens governance, partially compensating for modest insider ownership. Additionally, director share units are not paid out until after Board departure, creating a structural lock-up that aligns directors with long-term stock price performance even if dollar values are modest.
+
+### Pass 2 — Skeptic
+
+*Adjustment: no change recommended*
+
+Pass 1 scored insiderAlignment at 5.5 and its counter-evidence already addressed the two most relevant compensating factors: Berkshire's 9.29% anchor stake and the structural lock-up of director share units. Reading the primary sources independently, I looked for additional concerns or strengths Pass 1 may have missed. On the concern side: (1) Named executive officer beneficial ownership is dominated by in-the-money stock options rather than outright shares — Quincey's 4.46M 'shares' include 3.88M option-equivalent shares, Murphy's 1.62M include 1.34M, Arroyo's 870K include 770K, Braun's 644K include 530K, and Mann's 674K include 458K. Real skin-in-the-game share ownership by insiders is therefore quite thin. However, Pass 1's score of 5.5 implicitly captures this modest direct ownership. (2) Most non-employee directors hold trivially small outright share positions (Bajaria 2,100; Everson 1,582; Millhiser 400; Tsay 1,104; Davis 20,000), with alignment resting almost entirely on the deferred share-unit mechanism — already noted by Pass 1. (3) The proxy discloses that KO will transition CEO from Quincey to Braun effective March 31, 2026, which is a near-term leadership change but not a governance concern that alters the alignment dimension's character. (4) The 25% special-meeting threshold (requiring a 'net long position' of at least 25%) is a moderately high bar that limits shareholder ability to convene meetings, but this is a standard governance feature and does not specifically impair insider alignment scoring. None of these observations represent material new evidence beyond what Pass 1 already contemplated. The score of 5.5 appropriately reflects modest insider skin-in-the-game offset by strong institutional anchor ownership.
+
+### Pass 3 — Judge
+
+**Final score: 5.5 / 10** *(decision: no-change)*
+
+Pass 2 recommended zero adjustment and explicitly acknowledged that all concerns it identified were already captured in Pass 1's analysis: option-heavy insider ownership, trivially small director outright share positions, and the compensating factors of Berkshire's 9.29% anchor stake and the deferred share-unit lockup mechanism. Pass 2 raised no material new evidence beyond what Pass 1 had already weighed. The score of 5.5 appropriately reflects modest insider skin-in-the-game offset by strong pay-for-performance structure and institutional anchor ownership.
+
+## Cyclicality awareness
+
+**Score:** 7.0 / 10   _samples: [7.0, 7.5, 7.0], range 0.5_ *(tight: low uncertainty)*
+
+Coca-Cola sells affordable, habitual daily beverages — a category that historically proves more resilient than discretionary spending in downturns. The risk factors acknowledge cyclical exposure primarily through forex, consumer trade-down to private label, and geopolitical disruption, but the nature of the product (low unit-price, high-frequency consumption) structurally limits volume collapse in recessions. The filing does note real demand sensitivity under economic stress, so a perfect score is inappropriate, but the business model is fundamentally non-cyclical compared to most consumer goods.
+
+### Citations
+
+- **`risk-factors`** — "Under difficult economic conditions, consumers may seek to reduce discretionary spending by forgoing purchases of our products or by shifting away from our beverages to lower-priced products offered by other companies, including private-label brands"
+  *Why it matters:* Management acknowledges a volume/mix headwind in recessions, but characterizes it as a shift to cheaper alternatives rather than an outright abandonment of the category — consistent with a resilient, low-ticket habit product.
+- **`risk-factors`** — "In 2025, we derived $28.8 billion of net operating revenues from operations outside the United States."
+  *Why it matters:* Broad geographic diversification means that local economic downturns in any single market are partially offset by other regions, reducing cyclical concentration risk inherent in single-market consumer businesses.
+- **`risk-factors`** — "certain markets in which our products are sold experienced high rates of inflation throughout 2025, which may continue in 2026"
+  *Why it matters:* Even in markets with severe inflation — historically a proxy for economic stress — the Company continued selling, illustrating through-cycle demand durability, though also flagging input cost and affordability headwinds.
+
+### Pass 1 counter-evidence considered
+
+The risk factors explicitly warn that consumers may 'forgo purchases' or trade down to private-label brands under economic stress, and that high inflation markets could reduce affordability and demand. FX volatility also means reported financials can deteriorate sharply even when underlying volume holds, creating apparent cyclicality in USD-denominated results. The filing also notes ongoing boycotts and geopolitical disruptions in 2025 that already impacted operations, showing real-world demand sensitivity beyond pure economic cycles.
+
+### Pass 2 — Skeptic
+
+*Adjustment: no change recommended*
+
+Pass 1's counter-evidence already addresses the core cyclicality concerns visible in the primary sources: consumer trade-down risk under economic stress, FX volatility masking underlying volume stability, and real-world demand disruptions from boycotts and geopolitical events in 2025. A review of the risk factors confirms these are the primary cyclicality-relevant disclosures. No additional material evidence was found that Pass 1 did not already address. The filing's cyclicality profile for KO remains consistent with a score of 7 — a relatively defensive consumer staples business with acknowledged but modest cyclical sensitivities. No adjustment is warranted.
+
+### Pass 3 — Judge
+
+**Final score: 7.0 / 10** *(decision: no-change)*
+
+Pass 2 explicitly recommended zero adjustment and agreed with Pass 1's assessment, finding no additional material evidence beyond what Pass 1 already addressed. The primary sources confirm KO's cyclicality profile is consistent with a defensive consumer staples business facing acknowledged but modest cyclical sensitivities — consumer trade-down risk, FX volatility, and geopolitical disruptions — all of which Pass 1 incorporated into its scoring and counter-evidence. A score of 7 appropriately reflects the structural defensiveness of low-ticket habitual beverage consumption while accounting for the real demand sensitivities disclosed in the filing.

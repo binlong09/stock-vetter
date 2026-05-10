@@ -58,30 +58,70 @@ function pickConcept(
   candidates: string[],
   unit = 'USD',
 ): SecFactValue[] {
+  // Merge across candidate concept names. Companies frequently change which
+  // GAAP concept they report — META switched from `Revenues` to
+  // `RevenueFromContractWithCustomerExcludingAssessedTax` in 2018 when
+  // ASC 606 took effect. Returning only the first concept that exists
+  // misses years reported under a different concept name. Instead, take
+  // values from all candidate concepts, in priority order, and keep the
+  // first one that has data for each fiscal year.
   const ns = facts.facts?.['us-gaap'] ?? facts.facts?.ifrs ?? {};
+  const byYearAndPeriod = new Map<string, SecFactValue>();
   for (const name of candidates) {
     const concept = ns[name];
     const units = concept?.units?.[unit];
-    if (units && units.length) return units;
+    if (!units) continue;
+    for (const v of units) {
+      // Key by (fy, fp) so we don't conflate FY annual entries with quarterly.
+      // Earlier-priority candidates win because we only set if not present.
+      const key = `${v.fy ?? '?'}_${v.fp ?? '?'}_${v.start ?? ''}_${v.end ?? ''}`;
+      if (!byYearAndPeriod.has(key)) byYearAndPeriod.set(key, v);
+    }
   }
-  return [];
+  return Array.from(byYearAndPeriod.values());
 }
 
 function annualValues(values: SecFactValue[]): SecFactValue[] {
-  // Annual = full-year (FY, fp=FY) entries, prefer 10-K.
-  const byYear = new Map<number, SecFactValue>();
+  // SEC company-facts has two kinds of FY entries:
+  //   - period values (income statement, cash flow): have both `start` and
+  //     `end`; the reporting period must span fiscal year `fy`.
+  //   - instant values (balance sheet): have only `end` (no `start`); the
+  //     end-of-period balance must fall in fiscal year `fy`.
+  //
+  // For both kinds, each year typically has multiple entries (one per 10-K
+  // that re-reported that year as comparative data) — we keep the most
+  // authoritative one. Without the year-must-match guard, comparative
+  // entries from later filings get assigned to the wrong fy.
+  const byKey = new Map<string, SecFactValue>();
   for (const v of values) {
     if (v.fp !== 'FY') continue;
     if (!v.fy) continue;
-    const existing = byYear.get(v.fy);
+    if (!v.end) continue;
+    if (v.start) {
+      // Period value — start year must equal fy.
+      const startYear = parseInt(v.start.slice(0, 4), 10);
+      if (startYear !== v.fy) continue;
+    } else {
+      // Instant value (balance sheet) — end year must equal fy.
+      const endYear = parseInt(v.end.slice(0, 4), 10);
+      if (endYear !== v.fy) continue;
+    }
+    const key = `${v.fy}_${v.start ?? 'instant'}_${v.end}`;
+    const existing = byKey.get(key);
     if (!existing) {
-      byYear.set(v.fy, v);
+      byKey.set(key, v);
       continue;
     }
-    // Prefer 10-K over 10-K/A over others
     const rank = (form?: string) =>
       form === '10-K' ? 3 : form === '10-K/A' ? 2 : form === '20-F' ? 2 : 1;
-    if (rank(v.form) > rank(existing.form)) byYear.set(v.fy, v);
+    if (rank(v.form) > rank(existing.form)) byKey.set(key, v);
+  }
+  // Dedupe by fy: pick the entry with the latest end date (most recent
+  // restatement of that year's figure).
+  const byYear = new Map<number, SecFactValue>();
+  for (const v of byKey.values()) {
+    const cur = byYear.get(v.fy!);
+    if (!cur || (v.end ?? '') > (cur.end ?? '')) byYear.set(v.fy!, v);
   }
   return Array.from(byYear.values()).sort((a, b) => (a.fy ?? 0) - (b.fy ?? 0));
 }
@@ -134,8 +174,22 @@ function buildAnnualRows(facts: SecCompanyFacts): AnnualRow[] {
       'PaymentsForCapitalImprovements',
     ]),
   );
+  // Diluted weighted-average shares is the right denominator for per-share
+  // metrics like P/E. It's reported per fiscal year (unlike instantaneous
+  // CommonStockSharesOutstanding which is point-in-time and doesn't show up
+  // for many filers including META). Fall through to other concepts in
+  // priority order.
   const sharesUnit = annualValues(
-    pickConcept(facts, ['CommonStockSharesOutstanding', 'EntityCommonStockSharesOutstanding'], 'shares'),
+    pickConcept(
+      facts,
+      [
+        'WeightedAverageNumberOfDilutedSharesOutstanding',
+        'WeightedAverageNumberOfSharesOutstandingBasic',
+        'CommonStockSharesOutstanding',
+        'EntityCommonStockSharesOutstanding',
+      ],
+      'shares',
+    ),
   );
   const longTermDebt = annualValues(
     pickConcept(facts, ['LongTermDebtNoncurrent', 'LongTermDebt']),
@@ -193,6 +247,7 @@ function buildAnnualRows(facts: SecCompanyFacts): AnnualRow[] {
       netIncome: cur.netIncome ?? 0,
       fcf: cur.fcf ?? 0,
       sharesOutstanding: cur.sharesOutstanding ?? 0,
+      longTermDebt: debt ?? null,
       roic: null,
       debtToEquity,
     });
@@ -232,6 +287,93 @@ async function fetchYahoo(ticker: string): Promise<YahooQuote | null> {
   }
 }
 
+// Year-end close prices for the past `years` years. Returns the last close
+// of each calendar year that has data. Used to build historical valuation
+// multiples (P/E and EV/EBIT) joined with SEC annual rows.
+//
+// We use yahoo's `chart()` (the v3-replacement for the deprecated
+// `historical()`) with monthly intervals — sufficient resolution for
+// year-end snapshots, fewer round trips than daily.
+export async function fetchHistoricalYearEndCloses(
+  ticker: string,
+  years = 10,
+): Promise<{ year: number; date: string; close: number }[]> {
+  const now = new Date();
+  const start = new Date(now.getUTCFullYear() - years - 1, 0, 1);
+  try {
+    const result = await yahooFinance.chart(ticker, {
+      period1: start,
+      period2: now,
+      interval: '1mo',
+    });
+    const quotes = (result.quotes ?? []) as Array<{ date?: Date; close?: number | null }>;
+    const yearEnds = new Map<number, { date: Date; close: number }>();
+    for (const q of quotes) {
+      if (!q.date || q.close == null) continue;
+      const y = q.date.getUTCFullYear();
+      // Always overwrite — we want the *last* monthly close for each year.
+      yearEnds.set(y, { date: q.date, close: q.close });
+    }
+    const sorted = [...yearEnds.entries()].sort((a, b) => a[0] - b[0]);
+    return sorted.map(([year, v]) => ({
+      year,
+      date: v.date.toISOString().slice(0, 10),
+      close: v.close,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+// Compute trailing-10y P/E and EV/EBIT medians by joining year-end closes
+// with the SEC AnnualRow time series. Returns null medians when fewer than
+// 5 years of paired data are available — a 3-year median isn't a "10y
+// median" in any meaningful sense and would be misleading.
+export function computeHistoricalMultiples(
+  annual: AnnualRow[],
+  closes: { year: number; close: number }[],
+): { peRatio10yMedian: number | null; evEbit10yMedian: number | null; pairedYears: number } {
+  const closeByYear = new Map<number, number>();
+  for (const c of closes) closeByYear.set(c.year, c.close);
+  const peValues: number[] = [];
+  const evEbitValues: number[] = [];
+  let paired = 0;
+  for (const row of annual) {
+    const close = closeByYear.get(row.year);
+    if (close == null) continue;
+    paired++;
+    // P/E: close / EPS. EPS = netIncome / sharesOutstanding.
+    if (row.netIncome > 0 && row.sharesOutstanding > 0) {
+      const eps = row.netIncome / row.sharesOutstanding;
+      const pe = close / eps;
+      // Filter pathological values (negative earnings flipped to large positive,
+      // or PE > 200 which is essentially zero earnings). These corrupt medians.
+      if (pe > 0 && pe < 200) peValues.push(pe);
+    }
+    // EV/EBIT: (market cap + long-term debt) / EBIT.
+    // Market cap = close * shares. We use longTermDebt as a proxy for net debt;
+    // we don't have historical cash, so this is slightly understated for
+    // cash-heavy filers but the year-over-year comparisons are still sensible.
+    if (row.ebit > 0 && row.sharesOutstanding > 0) {
+      const marketCap = close * row.sharesOutstanding;
+      const ev = marketCap + (row.longTermDebt ?? 0);
+      const evEbit = ev / row.ebit;
+      if (evEbit > 0 && evEbit < 100) evEbitValues.push(evEbit);
+    }
+  }
+  const median = (vs: number[]): number | null => {
+    if (vs.length < 5) return null;
+    const sorted = [...vs].sort((a, b) => a - b);
+    const mid = sorted.length >>> 1;
+    return sorted.length % 2 === 0 ? (sorted[mid - 1]! + sorted[mid]!) / 2 : sorted[mid]!;
+  };
+  return {
+    peRatio10yMedian: median(peValues),
+    evEbit10yMedian: median(evEbitValues),
+    pairedYears: paired,
+  };
+}
+
 export async function fetchFinancialSnapshot(
   ticker: string,
 ): Promise<FinancialSnapshot | null> {
@@ -266,14 +408,26 @@ export async function fetchFinancialSnapshot(
   const isProfitable = annual.length > 0 ? annual[annual.length - 1]!.netIncome > 0 : false;
   const hasPositiveFcf = annual.length > 0 ? annual[annual.length - 1]!.fcf > 0 : (fcf ?? 0) > 0;
 
-  // EV/EBIT and historical medians require historical EV time-series, which
-  // is non-trivial. Best-effort: if we have annual EBIT and current EV, use
-  // most-recent EBIT for current EV/EBIT; leave 10-yr medians null for v1.
   const lastEbit = annual.length ? annual[annual.length - 1]!.ebit : 0;
   const evEbit = lastEbit > 0 ? ev / lastEbit : null;
   const lastRevenue = annual.length ? annual[annual.length - 1]!.revenue : 0;
   const evSales = lastRevenue > 0 ? ev / lastRevenue : null;
   const fcfYield = fcf && marketCap > 0 ? fcf / marketCap : null;
+
+  // Historical valuation medians: pull year-end closes from Yahoo, join with
+  // SEC annual rows, compute trailing P/E and EV/EBIT per year, take medians.
+  // Best-effort — when Yahoo is unavailable or shares/EBIT history is sparse,
+  // medians remain null. The downstream consumer (primary-source checklist
+  // valuation reasoning, reverse DCF) treats null as "no historical context
+  // available; reason from absolute multiples only."
+  let peRatio10yMedian: number | null = null;
+  let evEbit10yMedian: number | null = null;
+  if (annual.length >= 5) {
+    const closes = await fetchHistoricalYearEndCloses(upper, 10);
+    const meds = computeHistoricalMultiples(annual, closes);
+    peRatio10yMedian = meds.peRatio10yMedian;
+    evEbit10yMedian = meds.evEbit10yMedian;
+  }
 
   return {
     ticker: upper,
@@ -286,8 +440,8 @@ export async function fetchFinancialSnapshot(
     evEbit,
     evSales,
     fcfYield,
-    peRatio10yMedian: null,
-    evEbit10yMedian: null,
+    peRatio10yMedian,
+    evEbit10yMedian,
     annual,
     isProfitable,
     hasPositiveFcf,

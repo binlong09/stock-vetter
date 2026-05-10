@@ -1,0 +1,594 @@
+{
+  "pass1": {
+    "ticker": "CHD",
+    "filingAccession": "0001193125-26-048139",
+    "scores": {
+      "moatDurability": {
+        "score": 5.5,
+        "rationale": "Church & Dwight holds a portfolio of #1 or #2 market-share brands across multiple categories (ARM & HAMMER, TROJAN, WATERPIK, HERO, BATISTE, THERABREATH, TOUCHLAND), providing meaningful brand moats and consumer recognition built over 178 years. However, the competitive landscape is severe: Risk Factors explicitly acknowledge that many competitors have greater financial resources, that private-label incursion is accelerating across multiple categories, and that the company has already seen market-share erosion in products like Waterpik and condoms. The moat is real but narrow and category-dependent rather than fortress-like across the whole portfolio.",
+        "citations": [
+          {
+            "section": "business",
+            "quote": "ARM & HAMMER Baking Soda remains the number one leading brand of baking soda in terms of consumer recognition of the brand name and reputation for quality and value.",
+            "whyItMatters": "Demonstrates durable brand equity in a core franchise dating to 1867, suggesting genuine consumer lock-in and pricing anchor across multiple derivative product categories."
+          },
+          {
+            "section": "risk-factors",
+            "quote": "Many of our competitors have greater financial resources than we do, and these competitors, as well as new market entrants, may therefore, have the capacity to outspend us on advertising and promotional activities and introduce competing products or adopt new technologies, such as artificial intelligence and machine learning, more quickly, successfully and effectively.",
+            "whyItMatters": "Management legally acknowledges a structural resource disadvantage versus P&G, Colgate, Reckitt and others, directly undercutting the strength of the brand moat in contested categories."
+          },
+          {
+            "section": "risk-factors",
+            "quote": "In 2025, some of our largest customers launched private label brands that compete with our products and may continue to expand those offerings in the future.",
+            "whyItMatters": "Retailer-owned private label competition is intensifying at the point of sale, directly threatening pricing power and shelf placement for CHD's mid-tier brands."
+          },
+          {
+            "section": "risk-factors",
+            "quote": "We believe that inflation drove a decline in consumer spending for our Waterpik brand, as a growing number of water flosser consumers switched to competitors' value-branded products.",
+            "whyItMatters": "Concrete evidence that the Waterpik brand moat failed under consumer price pressure, demonstrating that several CHD brands lack durable pricing power in downturns."
+          }
+        ],
+        "counterEvidence": "The Risk Factors section explicitly notes category declines in condoms and oral analgesics, the loss of Waterpik market share to value brands, private-label inroads in diagnostic kits and stain fighters, and the need to exit Flawless, Spinbrush and Waterpik showerhead businesses due to poor performance — all of which indicate the moat is meaningful only in select categories rather than portfolio-wide.",
+        "samples": [
+          5.5,
+          5.5,
+          5.5
+        ],
+        "range": 0,
+        "representativeSampleIndex": 0
+      },
+      "ownerEarningsQuality": {
+        "score": 6,
+        "rationale": "CHD's operating cash flow tracks net income reasonably well — OCF of $1,215M vs. net income of $737M in 2025, with the gap driven by non-cash D&A ($247M combined) and amortization of acquisition intangibles, all defensible reinvestment-related items. However, the SBC charge (~$57-58M/year) is modest relative to OCF (~4.7%), and capex has been declining (from $223M in 2023 to $122M in 2025), partly due to divestitures. The main concern is the heavy use of acquisition-driven goodwill and intangibles ($6.1B on balance sheet) that generates large non-cash amortization flowing back into OCF — this flatters cash conversion but reflects real economic costs paid in prior acquisitions. The Touchland deal ($815M total including earnout) at roughly 7× prior-year sales, plus a $730M trade name, raises questions about whether acquisition economics will hold. Several impairments (VMS $357M in 2024, Spinbrush/Flawless/Waterpik exits in 2025) and a $58.5M loss on VMS sale reveal that some prior acquisitions did not deliver expected returns, meaning prior 'owner earnings' were partly illusory.",
+        "citations": [
+          {
+            "section": "financial-statements",
+            "quote": "Non-cash compensation expense 58.0 59.2 63.6",
+            "whyItMatters": "SBC runs ~$58M annually against ~$1.2B OCF (~4.8%), a contained but real dilution cost that reduces true owner earnings relative to reported figures."
+          },
+          {
+            "section": "financial-statements",
+            "quote": "The Company's global WATERPIK business is experiencing customer distribution losses and a decline in consumer demand, mainly due to lower consumer spending and more customers choosing value brands amid inflation.",
+            "whyItMatters": "This passage, alongside the VMS full impairment in 2024 and multiple business exits in 2025, shows that acquisition-generated intangibles periodically prove worthless, meaning historical FCF was partly funding capital destruction that only surfaces years later."
+          },
+          {
+            "section": "financial-statements",
+            "quote": "Loss on sale of vitamin business 58.5 0.0 0.0",
+            "whyItMatters": "The $58.5M pre-tax loss on the VMS divestiture — a business that also suffered a $357M impairment in 2024 — illustrates that reported earnings in prior years overstated true owner economics by embedding acquisition costs that weren't recovered."
+          },
+          {
+            "section": "financial-statements",
+            "quote": "The trade name and customer relationship intangible assets were valued using a discounted cash flow model and have a useful life of 20 years.",
+            "whyItMatters": "Touchland's $730M trade name will generate ~$36M/year amortization for 20 years, flowing back through OCF as a non-cash add-back — this makes OCF look better than true economic owner earnings since the $815M purchase price was real cash paid."
+          }
+        ],
+        "counterEvidence": "Capex has been running well below depreciation in 2025 ($122M capex vs. $90M D&A), and the 3-year FCF CAGR of 15.7% suggests improving cash generation quality in recent years. Working capital movements are modest and not obviously manipulated. The SBC percentage (~4.7% of OCF) is lower than many consumer peers, and revenue recognition is straightforward (point-of-sale delivery). The factoring program ($100.5M in 2025) is disclosed cleanly and has been consistently sized, posing no hidden acceleration of cash timing.",
+        "samples": [
+          6,
+          6,
+          6
+        ],
+        "range": 0,
+        "representativeSampleIndex": 0
+      },
+      "capitalAllocation": {
+        "score": 5.5,
+        "rationale": "CHD has a well-established acquisition strategy that has built its brand portfolio over two decades, and the 2025 buyback timing shows some opportunistic purchasing as shares dipped to ~$83-84 in the Nov-Dec tranche. However, the Touchland acquisition at roughly $815M total consideration for a brand with ~$115M in 2024 sales implies a very rich revenue multiple of ~7x, and the simultaneous exit of Flawless/Spinbrush/Waterpik showerheads and the VMS divestiture at a loss ($58.5M charge) reveal a pattern of buying brands at high multiples that sometimes fail to deliver, requiring subsequent portfolio cleanup. Dividend growth is steady but modest, and the $900M buyback in 2025 was executed at prices near current levels rather than at deep discounts.",
+        "citations": [
+          {
+            "section": "mda",
+            "quote": "We paid $656.0 to the bank, inclusive of fees, and received 2.8 million shares in May 2025 and 0.3 million shares in August 2025 at an average total share price of $95.71.",
+            "whyItMatters": "The first ASR tranche was executed at $95.71, near current price of $93.44, suggesting buybacks were not concentrated at trough valuations, limiting the accretion benefit to shareholders."
+          },
+          {
+            "section": "mda",
+            "quote": "In November and December 2025, we executed open market purchases of 3.6 million shares for $300.0, inclusive of fees, of which all 3.6 million shares were purchased under the 2021 Share Repurchase Program. The shares were purchased at an average share price of $83.59",
+            "whyItMatters": "The final $300M tranche at $83.59 shows management did accelerate buybacks when the stock dipped, which is a positive sign of price discipline, though the overall 2025 program averaged out near fair value."
+          },
+          {
+            "section": "mda",
+            "quote": "On December 9, 2025, the Company announced a definitive agreement to sell the VitaFusion and L'il Critters brands to Piping Rock Health Products, Inc.",
+            "whyItMatters": "The VMS divestiture at a $58.5M pre-tax loss, after a $357.1M impairment in 2024, illustrates that prior acquisition capital was destroyed, undermining the long-term capital allocation track record."
+          },
+          {
+            "section": "mda",
+            "quote": "We paid $656.0, net of cash acquired, at closing and entered an agreement to pay an additional amount based on 2025 net sales thresholds which will result in a cash payment of $159.0 to be paid in the first half of 2026.",
+            "whyItMatters": "Total Touchland consideration of ~$815M for a brand with $115M in 2024 sales implies a ~7x revenue multiple, a very high price that requires exceptional growth to earn an adequate return."
+          }
+        ],
+        "counterEvidence": "CHD has a genuine multi-decade track record of successful brand acquisitions (TheraBreath, Hero, OxiClean, Waterpik) that did contribute materially to sales and profits, and the company returned $1,187M to shareholders in 2025 ($900M buybacks plus $287M dividends) from $1,215M operating cash flow, demonstrating strong cash generation discipline. The dividend has been raised consistently, including a 4.2% increase declared in January 2026, and capex fell sharply to $122M in 2025 from $180M in 2024, preserving cash for shareholder returns.",
+        "samples": [
+          5.5,
+          5.5,
+          5.5
+        ],
+        "range": 0,
+        "representativeSampleIndex": 0
+      },
+      "debtSustainability": {
+        "score": 6.5,
+        "rationale": "CHD carries approximately $2.2B in long-term debt against trailing operating cash flow of ~$1.2B, implying net debt/EBITDA of roughly 1.5-2x — manageable but not conservative. The debt is entirely fixed-rate senior notes with no near-term maturity wall (the earliest tranche is $425M due August 2027, with the remainder laddered out to 2052), providing good structural protection. Interest expense of ~$95M is covered ~11x by operating cash flow ($1,215M), a strong coverage ratio. However, the company just spent $656M cash on the Touchland acquisition plus owes $159M in contingent consideration due in H1 2026, and executed a $900M share repurchase in 2025, reducing cash from $964M to $409M. This elevated near-term cash outflow (Touchland earnout + ongoing buybacks + dividends) slightly pressures the otherwise comfortable leverage profile.",
+        "citations": [
+          {
+            "section": "financial-statements",
+            "quote": "3.15% Senior notes due August 1, 2027 $ 425.0 $ 425.0",
+            "whyItMatters": "The earliest senior note maturity is August 2027 at $425M — no near-term maturity wall — and the table shows all five tranches are fixed-rate, laddered from 2027 through 2052, reducing refinancing risk."
+          },
+          {
+            "section": "financial-statements",
+            "quote": "Net Cash Provided By Operating Activities 1,215.4 1,156.2 1,030.6",
+            "whyItMatters": "Operating cash flow of $1.215B against interest expense of ~$95M produces ~12.8x interest coverage, demonstrating comfortable debt service capacity even after the Touchland acquisition spend."
+          },
+          {
+            "section": "financial-statements",
+            "quote": "the Company paid $656.0, net of cash acquired, at closing and entered an agreement to pay an additional amount based on 2025 net sales thresholds which will result in a cash payment of $159.0 to be paid in the first half of 2026",
+            "whyItMatters": "The $159M contingent earnout due in H1 2026 is a discrete near-term cash obligation that, combined with the $900M buyback and reduced cash balance of $409M, represents a meaningful short-term liquidity draw."
+          },
+          {
+            "section": "financial-statements",
+            "quote": "Long-term Debt 2,205.1 2,204.6",
+            "whyItMatters": "Long-term debt is essentially flat year-over-year at ~$2.2B with no new debt issuance in 2025, confirming the Touchland acquisition was funded entirely with cash on hand rather than incremental leverage."
+          }
+        ],
+        "counterEvidence": "The cash balance dropped sharply from $964M to $409M in 2025 due to the Touchland acquisition ($656M) plus $900M in share repurchases, leaving a thinner liquidity cushion heading into 2026 when $159M of Touchland earnout is payable. Additionally, the $2.2B debt sits alongside $3.5B in intangibles and $2.6B in goodwill — if impairments accelerate (as occurred with VMS in 2024 at $357M), book equity could erode materially, though this does not directly affect debt service ability given strong operating cash flows.",
+        "samples": [
+          6.5,
+          6.5,
+          6.5
+        ],
+        "range": 0,
+        "representativeSampleIndex": 0
+      },
+      "insiderAlignment": {
+        "score": 5.5,
+        "rationale": "CHD shows standard professional-management alignment: meaningful stock ownership guidelines for directors (5× annual retainer) and equity-based director compensation, but the new CEO Richard Dierker is a hired professional with no disclosed founder-level or exceptional personal ownership stake. The company recently transitioned from long-tenured CEO Matthew Farrell to Dierker in 2025, so there is no multi-cycle track record for the new leadership. Compensation structure includes multi-year vesting for equity awards, which is positive, but the overall picture is conventional large-cap consumer goods governance rather than exceptional owner-operator alignment.",
+        "citations": [
+          {
+            "section": "proxy",
+            "quote": "it is expected that each non-employee director will have, within five years from the date on which they join the Board, a number of shares having a value of at least five times the standard annual retainer",
+            "whyItMatters": "The 5× retainer stock ownership requirement for directors ($600,000 threshold in 2025) shows a structural mechanism to align board members with shareholders, though it applies to directors rather than the CEO."
+          },
+          {
+            "section": "proxy",
+            "quote": "The stock options will vest in full on the earlier of (i) the third anniversary of the date of grant, or (ii) the third annual meeting of the Company's stockholders following the date of grant, provided that the director continues to serve on the Board until such date.",
+            "whyItMatters": "Multi-year vesting for equity awards links director compensation to sustained stock performance rather than short-term metrics, a positive alignment feature."
+          },
+          {
+            "section": "proxy",
+            "quote": "In 2025, the Board appointed Richard Dierker, our Executive Vice President, Chief Financial Officer and Head of Business Operations, to succeed Matthew Farrell as our President and Chief Executive Officer.",
+            "whyItMatters": "The CEO transition from Farrell (a long-tenured insider) to Dierker (promoted CFO) signals professional management succession rather than founder or large-ownership-stake leadership, limiting the top-tier alignment score."
+          }
+        ],
+        "counterEvidence": "The provided proxy window does not include the full Beneficial Ownership table showing exact share counts for the new CEO Dierker or other named executive officers, which is the most critical data point for scoring insider alignment. Former CEO Matthew Farrell holds 2,274,760 stock options as of December 31, 2025, suggesting meaningful legacy ownership, but his ownership as an operating CEO is no longer relevant. The absence of disclosed CEO ownership percentages in the provided sections limits confidence in this score.",
+        "samples": [
+          5.5,
+          5.5,
+          5.5
+        ],
+        "range": 0,
+        "representativeSampleIndex": 0
+      },
+      "cyclicalityAwareness": {
+        "score": 7,
+        "rationale": "Church & Dwight sells predominantly everyday consumer staples — laundry detergents, toothpaste, deodorizers, condoms, and household cleaning products — categories characterized by high household penetration and largely non-discretionary demand. The risk factors acknowledge some exposure to consumer spending cycles (particularly for more discretionary products like Waterpik and vitamins), but the core portfolio is centered on repeat-purchase necessities that hold up across economic downturns. However, management explicitly concedes that an increasing portion of the portfolio is 'more discretionary in nature,' which modestly limits a top-tier score.",
+        "citations": [
+          {
+            "section": "risk-factors",
+            "quote": "U.S. markets for consumer products are considered mature and commonly characterized by high household penetration, particularly with respect to our most significant product categories, such as laundry detergents, deodorizers, household cleaning products, toothpastes, antiperspirants and deodorants.",
+            "whyItMatters": "High household penetration in non-discretionary categories like laundry and toothpaste signals demand stability across economic cycles, a key indicator of low cyclicality."
+          },
+          {
+            "section": "risk-factors",
+            "quote": "An increasing number of our products are more discretionary in nature and, therefore, are more likely to be affected by consumer decisions to control spending.",
+            "whyItMatters": "Management explicitly acknowledges a growing discretionary component in the portfolio, which introduces modest cyclical exposure and caps the score below the highest tier."
+          },
+          {
+            "section": "risk-factors",
+            "quote": "We believe that inflation drove a decline in consumer spending for our Waterpik brand, as a growing number of water flosser consumers switched to competitors' value-branded products.",
+            "whyItMatters": "This concrete example shows that certain CHD product lines do soften during inflationary/recessionary consumer stress, confirming limited but real cyclical vulnerability in newer growth categories."
+          }
+        ],
+        "counterEvidence": "The risk factors note that CHD divested its VMS business and exited Flawless, Spinbrush, and Waterpik showerhead businesses in 2025, suggesting management is actively pruning more cyclical/discretionary units, which would incrementally reduce cyclical exposure going forward. Additionally, approximately 82% of sales are in the U.S. in mature, high-penetration categories, anchoring the portfolio in relatively stable demand.",
+        "samples": [
+          7,
+          7,
+          7
+        ],
+        "range": 0,
+        "representativeSampleIndex": 0
+      }
+    }
+  },
+  "pass2": {
+    "ticker": "CHD",
+    "filingAccession": "0001193125-26-048139",
+    "rebuttals": {
+      "moatDurability": {
+        "rebuttal": "Pass 1's counter-evidence already addresses the core moat concerns: category declines (condoms, oral analgesics), Waterpik share loss to value brands, private-label inroads in diagnostic kits and stain fighters, and the exit of Flawless, Spinbrush, and Waterpik showerhead businesses. I reviewed the primary sources for evidence Pass 1 did not address. The Business section confirms multiple '#1 brand' positions (Trojan, Waterpik, Nair, Orajel, Zicam, Batiste, TheraBreath, Hero, Touchland) across large categories, and the power brands (~70% of sales) represent genuine brand equity. The Risk Factors confirm the same competitive pressures Pass 1 cited. One structural point worth noting is the 23% Walmart concentration (top 4 customers = ~44% of sales), which creates retailer leverage that can compress the effective value of brand moats — but this is a standard consumer staples risk and the filing discloses it prominently. No material new evidence was found that Pass 1 failed to consider. The 5.5 score appropriately reflects a mixed portfolio: strong moats in select categories (ARM & HAMMER, Batiste, Hero, TheraBreath) offset by meaningful moat erosion in others. No adjustment is warranted.",
+        "citations": [],
+        "recommendedAdjustment": 0
+      },
+      "ownerEarningsQuality": {
+        "rebuttal": "Pass 1 scored ownerEarningsQuality at 6 and its counter-evidence already addressed the key quality drivers: capex vs. D&A relationship, 3-year FCF CAGR, SBC as a percentage of OCF, working capital behavior, and the factoring program. Reviewing the primary sources independently, I looked for additional concerns or strengths not captured in Pass 1's analysis. Two items merit brief consideration: (1) The Supply Chain Finance (SCF) program has obligations of $84.7M outstanding at year-end 2025 (down from $98.5M in 2024), classified within Accounts Payable. While the filing states payment terms are not impacted and the program does not affect days outstanding, SCF programs of this structure can obscure operating cash flow quality by effectively financing payables through a third party. However, the program is clearly disclosed, has been consistently sized, and is declining — not an escalating concern. (2) The $157.7M total amortization expense in 2025 (vs. $155.9M in 2024) is a significant non-cash add-back to OCF, and with the Touchland trade name ($730M, 20-year life) now on the books, forward amortization expense will step up materially (~$135M guided for 2026 just for intangibles). This creates a persistent and growing wedge between reported OCF and true owner earnings, as these amortization charges represent real economic costs of prior acquisitions. Pass 1 did not quantify this wedge or note the step-up in future amortization from the Touchland acquisition. That said, the magnitude is within normal bounds for an acquisitive consumer staples company, and the FCF yield of 5.1% already reflects post-amortization cash generation. The score of 6 remains well-calibrated for a business with clean revenue recognition, modest SBC, disclosed factoring, and improving FCF trends — offset by the acquisition-heavy balance sheet inflating OCF via amortization add-backs. No adjustment is warranted beyond what Pass 1 already weighed.",
+        "citations": [
+          {
+            "section": "financial-statements",
+            "quote": "The obligations outstanding related to the SCF program amount to $84.7 and $98.5 as of December 31, 2025 and 2024, respectively, and were recorded within Accounts Payable in the consolidated balance sheets.",
+            "whyItMatters": "SCF obligations classified in AP can inflate operating cash flow vs. true owner earnings; the program is disclosed and declining, limiting concern, but confirms a structural OCF enhancement Pass 1 did not quantify separately from factoring."
+          },
+          {
+            "section": "financial-statements",
+            "quote": "The Company estimates that intangible amortization expense will be approximately $135.0 in 2026 and approximately $134.0 declining to $120.0 annually over the next five years.",
+            "whyItMatters": "Touchland's $730M trade name (20-year life) increases forward amortization, widening the gap between reported OCF (which adds back amortization) and true owner earnings. Pass 1 did not address this step-up in future amortization as a quality consideration."
+          }
+        ],
+        "recommendedAdjustment": 0
+      },
+      "capitalAllocation": {
+        "rebuttal": "Pass 1 already addressed the key elements of capital allocation: the strong shareholder return ($1,187M vs $1,215M operating cash flow), buyback pricing, dividend growth, capex reduction, and the multi-decade acquisition track record. One item not explicitly addressed in Pass 1's counter-evidence is the total consideration structure for the Touchland acquisition, which is materially more expensive than the headline $656M closing price suggests. The 10-K discloses a $159M earnout payable in H1 2026 (already triggered by 2025 net sales thresholds), $50M in equity grants to the founder vesting over two years, and a $5M deferred indemnification amount — bringing total economic consideration to approximately $870M+ for a brand with ~$115M in 2024 annual net sales, implying a revenue multiple of roughly 7.5x on 2024 sales. Additionally, the $159M earnout liability appears on the balance sheet as 'Business acquisition liabilities' of $178.9M (which also includes the change in fair value of $19M recognized as expense). This structural complexity and the all-in price was not discussed in Pass 1's counter-evidence. However, the Touchland brand was designated a new 'power brand' with premium margin characteristics, and CHD has historically generated accretive returns on similar acquisitions (TheraBreath, Hero). The Waterpik trade name impairment risk (fair value at 117% of carrying value of $644.7M, down from 135%) is noted in the filing as a potential future impairment trigger — this reflects a capital allocation decision (the 2017 Waterpik acquisition at ~$1.0B) that has deteriorated in value. Pass 1 did not address the Waterpik impairment risk in the counter-evidence section specifically as a capital allocation concern. Taken together, these two items — the elevated all-in Touchland price and the Waterpik impairment risk on a large prior acquisition — represent modest but real concerns not raised by Pass 1. Neither is severe enough to warrant a large adjustment, but together they support a modest downward nudge of -0.5.",
+        "citations": [
+          {
+            "section": "mda",
+            "quote": "We paid $656.0, net of cash acquired, at closing and entered an agreement to pay an additional amount based on 2025 net sales thresholds which will result in a cash payment of $159.0 to be paid in the first half of 2026. In addition, the Company granted rights to Touchland's founder to receive shares of our Common Stock valued at $50.0, with 50% of such shares vesting at each of the first and second year anniversaries of the closing.",
+            "whyItMatters": "Total economic consideration for Touchland is approximately $865M+ ($656M + $159M earnout + $50M equity grants), not the $656M headline figure. Against ~$115M in 2024 annual net sales, this implies a ~7.5x revenue multiple — a rich price that Pass 1's counter-evidence did not separately analyze."
+          },
+          {
+            "section": "mda",
+            "quote": "Our global WATERPIK business is experiencing customer distribution losses and a decline in consumer demand, mainly due to lower consumer spending and more customers choosing value brands amid inflation. This has reduced sales, profits, and expected cash flows, eroding much of the excess fair value over carrying value for the WATERPIK trade name. As of October 1, 2025, the trade name's carrying value was $644.7, with fair value at 117% of carrying value, down from 135% in 2024, reflecting falling sales, rising competition, business exits, and margin pressure from higher costs and tariffs.",
+            "whyItMatters": "Waterpik represents a large prior capital allocation decision (2017 acquisition) where value has deteriorated significantly. At 117% of carrying value ($644.7M carrying), a further decline could trigger a material impairment — a capital allocation outcome Pass 1's counter-evidence did not specifically flag."
+          }
+        ],
+        "recommendedAdjustment": -0.5
+      },
+      "debtSustainability": {
+        "rebuttal": "Pass 1 already addressed the primary debt sustainability concerns: thinner cash cushion post-Touchland ($409M vs $964M), the $159M earnout payable in H1 2026, and goodwill/intangible impairment risk. Reviewing the primary sources, I find the debt structure itself is well-documented and does not reveal material new concerns. The five senior note tranches total $2.221B with no debt maturing until August 2027 ($425M), providing a clean near-term maturity profile. Operating cash flow of $1,215M in 2025 covers interest expense of $95.2M by roughly 12.8x, and the debt/EBITDA implied by these figures remains moderate. The Waterpik trade name carrying value ($644.7M, fair value at only 117% of carrying) does present incremental impairment risk not fully quantified by Pass 1 beyond a general mention of potential impairments, but this is fundamentally a balance-sheet/equity concern rather than a debt service concern, consistent with Pass 1's own framing. The $178.9M current business acquisition liabilities on the balance sheet (principally the Touchland earnout) are already captured in Pass 1's counter-evidence. The SCF program obligations ($84.7M) are modest and disclosed transparently. Operating lease obligations ($176.9M total) are manageable against cash flows. No covenant breach language, no going-concern language, and no material new off-balance-sheet obligations were found. The 6.5 score appears well-calibrated.",
+        "citations": [
+          {
+            "section": "financial-statements",
+            "quote": "3.15% Senior notes due August 1, 2027 $ 425.0 $ 425.0",
+            "whyItMatters": "Nearest maturity is August 2027 at $425M — well within operating cash flow generation capacity of ~$1.2B annually, confirming no near-term refinancing pressure that Pass 1 may have understated."
+          },
+          {
+            "section": "financial-statements",
+            "quote": "As of October 1, 2025, the trade name's carrying value was $644.7, with fair value at 117% of carrying value, down from 135% in 2024, reflecting falling sales, rising competition, business exits, and margin pressure from higher costs and tariffs.",
+            "whyItMatters": "Waterpik impairment headroom has narrowed materially (135% to 117%), but this is a balance-sheet/equity erosion risk, not a debt service risk. Pass 1 addressed impairment risk generically; this quantifies the specific Waterpik exposure, but it does not change the debt sustainability assessment given $1.2B+ annual operating cash flow."
+          }
+        ],
+        "recommendedAdjustment": 0
+      },
+      "insiderAlignment": {
+        "rebuttal": "Pass 1 already identified the core limitation: the beneficial ownership table showing new CEO Dierker's exact share count is not in the provided window. The proxy window does, however, contain two pieces of information Pass 1 did not specifically address: (1) Director stock ownership guidelines require non-employee directors to hold shares worth 5x the $120,000 standard retainer ($600,000) within five years, and all directors are confirmed on track — a meaningful structural alignment mechanism; and (2) Dierker receives no additional compensation for his board service, which is standard but confirms he is treated as an employee director. Neither of these meaningfully changes the score, as the fundamental gap — CEO/NEO beneficial ownership data — is already noted by Pass 1. The window also confirms that Farrell's 2,274,760 options are listed under the Director Compensation table footnote as a non-employee director holding, not as an active CEO, consistent with Pass 1's observation. No new material evidence is present that Pass 1 failed to address.",
+        "citations": [],
+        "recommendedAdjustment": 0
+      },
+      "cyclicalityAwareness": {
+        "rebuttal": "Pass 1 scored cyclicalityAwareness at 7, noting CHD's portfolio is predominantly everyday consumer staples with ~82% U.S. sales in high-penetration mature categories, and that recent divestitures of more discretionary/cyclical units (VMS, Flawless, Spinbrush, Waterpik showerhead) incrementally reduce cyclical exposure. These points are well-supported by the primary sources. The risk factors do contain one passage that Pass 1 did not explicitly address in its counter-evidence: the filing states 'An increasing number of our products are more discretionary in nature and, therefore, are more likely to be affected by consumer decisions to control spending.' This is a direct management acknowledgment that the remaining portfolio contains a growing discretionary component. However, this concern is relatively contained given the simultaneous divestitures of the most discretionary units and the dominant staples core (ARM & HAMMER, OxiClean, toothpaste, antiperspirant). The risk factors also note demand declines in condoms due to demographic shifts and Waterpik due to inflation-driven trading down, but these are legacy issues largely resolved through the 2025 portfolio pruning that Pass 1 already flagged. The discretionary-growth acknowledgment is a modest concern not explicitly named in Pass 1's counter-evidence, but it is minor in the context of the overall portfolio and does not materially change the cyclicality profile that justifies a 7. No adjustment is warranted.",
+        "citations": [
+          {
+            "section": "risk-factors",
+            "quote": "An increasing number of our products are more discretionary in nature and, therefore, are more likely to be affected by consumer decisions to control spending.",
+            "whyItMatters": "Management's own language acknowledges a trend toward greater discretionary exposure within the remaining portfolio, which is a nuance Pass 1's counter-evidence did not explicitly address. However, this is a modest concern given the simultaneous pruning of the most discretionary units and the staples-dominant core, so it does not materially alter the cyclicality assessment."
+          }
+        ],
+        "recommendedAdjustment": 0
+      }
+    }
+  },
+  "pass3": {
+    "ticker": "CHD",
+    "filingAccession": "0001193125-26-048139",
+    "finalScores": {
+      "moatDurability": {
+        "finalScore": 5.5,
+        "decision": "no-change",
+        "justification": "Pass 2 explicitly recommends no adjustment and its rebuttal confirms that Pass 1 already accounted for all material evidence — the multiple #1/#2 brand positions, the Waterpik share loss, private-label inroads, business exits, and retailer concentration. Pass 2 raises the Walmart 23% concentration point as a structural concern but correctly characterizes it as standard consumer staples risk already disclosed in the filing. No new evidence materially changes the balanced picture Pass 1 captured at 5.5."
+      },
+      "ownerEarningsQuality": {
+        "finalScore": 6,
+        "decision": "agreed-with-pass1",
+        "justification": "Pass 2's rebuttal raises two points — the SCF program and the step-up in forward amortization from Touchland — but neither materially changes the score. The SCF program ($84.7M, declining, clearly disclosed) was already implicitly covered by Pass 1's factoring discussion and Pass 2 itself concedes it is 'not an escalating concern.' The forward amortization step-up (~$135M guided for 2026) is a real consideration, but Pass 2 correctly notes the FCF yield of 5.1% already reflects post-amortization cash generation, and Pass 1 already addressed the Touchland trade name amortization dynamic directly in its citations. Pass 2 recommended 0 adjustment and provided no citation that overturns Pass 1's balanced assessment; the score of 6 remains well-calibrated."
+      },
+      "capitalAllocation": {
+        "finalScore": 5,
+        "decision": "split",
+        "justification": "Pass 2 surfaces two genuinely incremental concerns not fully addressed in Pass 1's counter-evidence: (1) the all-in Touchland consideration of ~$865M+ ($656M + $159M earnout + $50M equity grants) versus Pass 1's $815M figure, refining the revenue multiple to ~7.5x rather than ~7x — a real but modest refinement; and (2) the Waterpik impairment risk, which the primary source explicitly flags as a critical audit matter with fair value at only 117% of a $644.7M carrying value, down from 135%, representing a large prior capital allocation decision that has meaningfully deteriorated. Pass 1 acknowledged the VMS destruction but did not flag the Waterpik impairment risk as a capital allocation concern. Both items are genuinely supported by the primary source text. However, neither item is severe enough to warrant the full -0.5 adjustment independently, and together they justify roughly half the recommended adjustment, as Pass 1's overall framing of a mixed-but-functional capital allocator remains accurate."
+      },
+      "debtSustainability": {
+        "finalScore": 6.5,
+        "decision": "no-change",
+        "justification": "Pass 2 recommended zero adjustment and its rebuttal explicitly confirmed Pass 1's assessment was well-calibrated. Pass 2's only incremental contribution was quantifying the Waterpik impairment headroom decline (135% to 117%), but both analysts correctly characterized this as a balance-sheet/equity risk rather than a debt service risk given $1.2B+ annual operating cash flow covering $95M interest expense by ~12.8x. No new material debt sustainability concerns were surfaced beyond what Pass 1 already acknowledged in its counter-evidence section."
+      },
+      "insiderAlignment": {
+        "finalScore": 5.5,
+        "decision": "no-change",
+        "justification": "Pass 2 explicitly recommended zero adjustment and confirmed that Pass 1 already identified the key limitation (missing beneficial ownership data for new CEO Dierker) and correctly characterized all available evidence. Pass 2 added no new material citations or concerns beyond what Pass 1 had already addressed. The score of 5.5 appropriately reflects conventional large-cap consumer goods governance with structural but not exceptional insider alignment."
+      },
+      "cyclicalityAwareness": {
+        "finalScore": 7,
+        "decision": "no-change",
+        "justification": "Pass 2 recommended zero adjustment and explicitly agreed that the score of 7 is appropriate given CHD's staples-dominant core and the 2025 divestitures of the most discretionary units. Pass 2's sole citation — the 'increasing number of products more discretionary in nature' passage — was already cited and addressed by Pass 1 as its primary basis for capping the score below the highest tier. No new evidence was surfaced that materially changes the cyclicality profile."
+      }
+    }
+  },
+  "pass1Verification": {
+    "total": 22,
+    "exact": 16,
+    "whitespaceNormalized": 0,
+    "caseInsensitive": 1,
+    "punctuationNormalized": 3,
+    "noMatch": 2,
+    "details": [
+      {
+        "dimension": "moatDurability",
+        "citationIndex": 0,
+        "section": "business",
+        "quote": "ARM & HAMMER Baking Soda remains the number one leading brand of baking soda in terms of consumer recognition of the brand name and reputation for quality and value.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "ARM & HAMMER Baking Soda remains the number one leading brand of baking soda in "
+      },
+      {
+        "dimension": "moatDurability",
+        "citationIndex": 1,
+        "section": "risk-factors",
+        "quote": "Many of our competitors have greater financial resources than we do, and these competitors, as well as new market entrants, may therefore, have the capacity to outspend us on advertising and promotional activities and introduce competing products or adopt new technologies, such as artificial intelligence and machine learning, more quickly, successfully and effectively.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "no-match",
+        "quotePreview": "Many of our competitors have greater financial resources than we do, and these c"
+      },
+      {
+        "dimension": "moatDurability",
+        "citationIndex": 2,
+        "section": "risk-factors",
+        "quote": "In 2025, some of our largest customers launched private label brands that compete with our products and may continue to expand those offerings in the future.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "In 2025, some of our largest customers launched private label brands that compet"
+      },
+      {
+        "dimension": "moatDurability",
+        "citationIndex": 3,
+        "section": "risk-factors",
+        "quote": "We believe that inflation drove a decline in consumer spending for our Waterpik brand, as a growing number of water flosser consumers switched to competitors' value-branded products.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "We believe that inflation drove a decline in consumer spending for our Waterpik "
+      },
+      {
+        "dimension": "ownerEarningsQuality",
+        "citationIndex": 0,
+        "section": "financial-statements",
+        "quote": "Non-cash compensation expense 58.0 59.2 63.6",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "Non-cash compensation expense 58.0 59.2 63.6"
+      },
+      {
+        "dimension": "ownerEarningsQuality",
+        "citationIndex": 1,
+        "section": "financial-statements",
+        "quote": "The Company's global WATERPIK business is experiencing customer distribution losses and a decline in consumer demand, mainly due to lower consumer spending and more customers choosing value brands amid inflation.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "punctuation-normalized",
+        "quotePreview": "The Company's global WATERPIK business is experiencing customer distribution los"
+      },
+      {
+        "dimension": "ownerEarningsQuality",
+        "citationIndex": 2,
+        "section": "financial-statements",
+        "quote": "Loss on sale of vitamin business 58.5 0.0 0.0",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "Loss on sale of vitamin business 58.5 0.0 0.0"
+      },
+      {
+        "dimension": "ownerEarningsQuality",
+        "citationIndex": 3,
+        "section": "financial-statements",
+        "quote": "The trade name and customer relationship intangible assets were valued using a discounted cash flow model and have a useful life of 20 years.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "The trade name and customer relationship intangible assets were valued using a d"
+      },
+      {
+        "dimension": "capitalAllocation",
+        "citationIndex": 0,
+        "section": "mda",
+        "quote": "We paid $656.0 to the bank, inclusive of fees, and received 2.8 million shares in May 2025 and 0.3 million shares in August 2025 at an average total share price of $95.71.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "no-match",
+        "quotePreview": "We paid $656.0 to the bank, inclusive of fees, and received 2.8 million shares i"
+      },
+      {
+        "dimension": "capitalAllocation",
+        "citationIndex": 1,
+        "section": "mda",
+        "quote": "In November and December 2025, we executed open market purchases of 3.6 million shares for $300.0, inclusive of fees, of which all 3.6 million shares were purchased under the 2021 Share Repurchase Program. The shares were purchased at an average share price of $83.59",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "In November and December 2025, we executed open market purchases of 3.6 million "
+      },
+      {
+        "dimension": "capitalAllocation",
+        "citationIndex": 2,
+        "section": "mda",
+        "quote": "On December 9, 2025, the Company announced a definitive agreement to sell the VitaFusion and L'il Critters brands to Piping Rock Health Products, Inc.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "punctuation-normalized",
+        "quotePreview": "On December 9, 2025, the Company announced a definitive agreement to sell the Vi"
+      },
+      {
+        "dimension": "capitalAllocation",
+        "citationIndex": 3,
+        "section": "mda",
+        "quote": "We paid $656.0, net of cash acquired, at closing and entered an agreement to pay an additional amount based on 2025 net sales thresholds which will result in a cash payment of $159.0 to be paid in the first half of 2026.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "We paid $656.0, net of cash acquired, at closing and entered an agreement to pay"
+      },
+      {
+        "dimension": "debtSustainability",
+        "citationIndex": 0,
+        "section": "financial-statements",
+        "quote": "3.15% Senior notes due August 1, 2027 $ 425.0 $ 425.0",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "3.15% Senior notes due August 1, 2027 $ 425.0 $ 425.0"
+      },
+      {
+        "dimension": "debtSustainability",
+        "citationIndex": 1,
+        "section": "financial-statements",
+        "quote": "Net Cash Provided By Operating Activities 1,215.4 1,156.2 1,030.6",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "Net Cash Provided By Operating Activities 1,215.4 1,156.2 1,030.6"
+      },
+      {
+        "dimension": "debtSustainability",
+        "citationIndex": 2,
+        "section": "financial-statements",
+        "quote": "the Company paid $656.0, net of cash acquired, at closing and entered an agreement to pay an additional amount based on 2025 net sales thresholds which will result in a cash payment of $159.0 to be paid in the first half of 2026",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "case-insensitive",
+        "quotePreview": "the Company paid $656.0, net of cash acquired, at closing and entered an agreeme"
+      },
+      {
+        "dimension": "debtSustainability",
+        "citationIndex": 3,
+        "section": "financial-statements",
+        "quote": "Long-term Debt 2,205.1 2,204.6",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "Long-term Debt 2,205.1 2,204.6"
+      },
+      {
+        "dimension": "insiderAlignment",
+        "citationIndex": 0,
+        "section": "proxy",
+        "quote": "it is expected that each non-employee director will have, within five years from the date on which they join the Board, a number of shares having a value of at least five times the standard annual retainer",
+        "lookedIn": "fixtures-fallback",
+        "matchTier": "exact",
+        "quotePreview": "it is expected that each non-employee director will have, within five years from"
+      },
+      {
+        "dimension": "insiderAlignment",
+        "citationIndex": 1,
+        "section": "proxy",
+        "quote": "The stock options will vest in full on the earlier of (i) the third anniversary of the date of grant, or (ii) the third annual meeting of the Company's stockholders following the date of grant, provided that the director continues to serve on the Board until such date.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "punctuation-normalized",
+        "quotePreview": "The stock options will vest in full on the earlier of (i) the third anniversary "
+      },
+      {
+        "dimension": "insiderAlignment",
+        "citationIndex": 2,
+        "section": "proxy",
+        "quote": "In 2025, the Board appointed Richard Dierker, our Executive Vice President, Chief Financial Officer and Head of Business Operations, to succeed Matthew Farrell as our President and Chief Executive Officer.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "In 2025, the Board appointed Richard Dierker, our Executive Vice President, Chie"
+      },
+      {
+        "dimension": "cyclicalityAwareness",
+        "citationIndex": 0,
+        "section": "risk-factors",
+        "quote": "U.S. markets for consumer products are considered mature and commonly characterized by high household penetration, particularly with respect to our most significant product categories, such as laundry detergents, deodorizers, household cleaning products, toothpastes, antiperspirants and deodorants.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "U.S. markets for consumer products are considered mature and commonly characteri"
+      },
+      {
+        "dimension": "cyclicalityAwareness",
+        "citationIndex": 1,
+        "section": "risk-factors",
+        "quote": "An increasing number of our products are more discretionary in nature and, therefore, are more likely to be affected by consumer decisions to control spending.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "An increasing number of our products are more discretionary in nature and, there"
+      },
+      {
+        "dimension": "cyclicalityAwareness",
+        "citationIndex": 2,
+        "section": "risk-factors",
+        "quote": "We believe that inflation drove a decline in consumer spending for our Waterpik brand, as a growing number of water flosser consumers switched to competitors' value-branded products.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "We believe that inflation drove a decline in consumer spending for our Waterpik "
+      }
+    ]
+  },
+  "pass2Verification": {
+    "total": 7,
+    "exact": 4,
+    "whitespaceNormalized": 0,
+    "caseInsensitive": 0,
+    "punctuationNormalized": 3,
+    "noMatch": 0,
+    "details": [
+      {
+        "dimension": "ownerEarningsQuality",
+        "citationIndex": 0,
+        "section": "financial-statements",
+        "quote": "The obligations outstanding related to the SCF program amount to $84.7 and $98.5 as of December 31, 2025 and 2024, respectively, and were recorded within Accounts Payable in the consolidated balance sheets.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "The obligations outstanding related to the SCF program amount to $84.7 and $98.5"
+      },
+      {
+        "dimension": "ownerEarningsQuality",
+        "citationIndex": 1,
+        "section": "financial-statements",
+        "quote": "The Company estimates that intangible amortization expense will be approximately $135.0 in 2026 and approximately $134.0 declining to $120.0 annually over the next five years.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "The Company estimates that intangible amortization expense will be approximately"
+      },
+      {
+        "dimension": "capitalAllocation",
+        "citationIndex": 0,
+        "section": "mda",
+        "quote": "We paid $656.0, net of cash acquired, at closing and entered an agreement to pay an additional amount based on 2025 net sales thresholds which will result in a cash payment of $159.0 to be paid in the first half of 2026. In addition, the Company granted rights to Touchland's founder to receive shares of our Common Stock valued at $50.0, with 50% of such shares vesting at each of the first and second year anniversaries of the closing.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "punctuation-normalized",
+        "quotePreview": "We paid $656.0, net of cash acquired, at closing and entered an agreement to pay"
+      },
+      {
+        "dimension": "capitalAllocation",
+        "citationIndex": 1,
+        "section": "mda",
+        "quote": "Our global WATERPIK business is experiencing customer distribution losses and a decline in consumer demand, mainly due to lower consumer spending and more customers choosing value brands amid inflation. This has reduced sales, profits, and expected cash flows, eroding much of the excess fair value over carrying value for the WATERPIK trade name. As of October 1, 2025, the trade name's carrying value was $644.7, with fair value at 117% of carrying value, down from 135% in 2024, reflecting falling sales, rising competition, business exits, and margin pressure from higher costs and tariffs.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "punctuation-normalized",
+        "quotePreview": "Our global WATERPIK business is experiencing customer distribution losses and a "
+      },
+      {
+        "dimension": "debtSustainability",
+        "citationIndex": 0,
+        "section": "financial-statements",
+        "quote": "3.15% Senior notes due August 1, 2027 $ 425.0 $ 425.0",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "3.15% Senior notes due August 1, 2027 $ 425.0 $ 425.0"
+      },
+      {
+        "dimension": "debtSustainability",
+        "citationIndex": 1,
+        "section": "financial-statements",
+        "quote": "As of October 1, 2025, the trade name's carrying value was $644.7, with fair value at 117% of carrying value, down from 135% in 2024, reflecting falling sales, rising competition, business exits, and margin pressure from higher costs and tariffs.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "punctuation-normalized",
+        "quotePreview": "As of October 1, 2025, the trade name's carrying value was $644.7, with fair val"
+      },
+      {
+        "dimension": "cyclicalityAwareness",
+        "citationIndex": 0,
+        "section": "risk-factors",
+        "quote": "An increasing number of our products are more discretionary in nature and, therefore, are more likely to be affected by consumer decisions to control spending.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "An increasing number of our products are more discretionary in nature and, there"
+      }
+    ]
+  }
+}

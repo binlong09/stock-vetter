@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import type { Message, MessageCreateParamsNonStreaming } from '@anthropic-ai/sdk/resources/messages';
 import { z } from 'zod';
 import { LLMValidationError } from './errors.js';
 
@@ -49,6 +50,35 @@ export type LLMCallResult = {
   cost: number;
 };
 
+// Retry transient API errors (429 rate-limit, 529 overloaded, 5xx). Anthropic
+// returns these as `APIError` with `status` set. We back off exponentially
+// up to 5 attempts: 4s, 8s, 16s, 32s. Anything past that and the issue is
+// likely user-facing (e.g. extended outage); fail loudly.
+async function callWithRetry(
+  body: MessageCreateParamsNonStreaming,
+  stage: string,
+): Promise<Message> {
+  const maxAttempts = 5;
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      return await client().messages.create(body);
+    } catch (e) {
+      lastErr = e;
+      const err = e as { status?: number; message?: string };
+      const status = err.status ?? 0;
+      const isRetryable = status === 429 || status === 529 || (status >= 500 && status < 600);
+      if (!isRetryable || attempt === maxAttempts - 1) throw e;
+      const delayMs = 4000 * Math.pow(2, attempt);
+      process.stderr.write(
+        `[llm:${stage}] ${status} ${err.message?.slice(0, 80) ?? 'transient error'}; retrying in ${delayMs / 1000}s (attempt ${attempt + 1}/${maxAttempts})\n`,
+      );
+      await new Promise((r) => setTimeout(r, delayMs));
+    }
+  }
+  throw lastErr;
+}
+
 export async function llmCall(opts: {
   stage: string;
   systemPrompt: string;
@@ -56,12 +86,15 @@ export async function llmCall(opts: {
   maxTokens?: number;
   tracker: CostTracker;
 }): Promise<LLMCallResult> {
-  const resp = await client().messages.create({
-    model: MODEL,
-    max_tokens: opts.maxTokens ?? 4096,
-    system: opts.systemPrompt,
-    messages: [{ role: 'user', content: opts.userMessage }],
-  });
+  const resp = await callWithRetry(
+    {
+      model: MODEL,
+      max_tokens: opts.maxTokens ?? 4096,
+      system: opts.systemPrompt,
+      messages: [{ role: 'user', content: opts.userMessage }],
+    },
+    opts.stage,
+  );
   const inputTokens = resp.usage.input_tokens;
   const outputTokens = resp.usage.output_tokens;
   const cost = priceCall(inputTokens, outputTokens);

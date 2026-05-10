@@ -40,6 +40,11 @@ export const AnnualRow = z.object({
   netIncome: z.number(),
   fcf: z.number(),
   sharesOutstanding: z.number(),
+  // Long-term debt at year end. Used (with year-end share count and historical
+  // close price) to compute approximate historical enterprise value, which in
+  // turn feeds peRatio10yMedian and evEbit10yMedian. Null when SEC didn't
+  // disclose a clean LongTermDebtNoncurrent figure for the year.
+  longTermDebt: z.number().nullable().optional(),
   roic: z.number().nullable(),
   debtToEquity: z.number().nullable(),
 });
@@ -258,6 +263,236 @@ export const DEFAULT_WEIGHTS = {
   analystRigor: 0.1,
 } as const;
 export type ScoreWeights = typeof DEFAULT_WEIGHTS;
+
+// ---- Primary-source value checklist (ticker-first workflow, Weekend 2+) ----
+
+export const PrimarySourceCitation = z.object({
+  section: z.string(),     // e.g. "risk-factors", "financial-statements", "proxy"
+  quote: z.string(),       // 10-30 words verbatim from that section
+  whyItMatters: z.string(),
+});
+export type PrimarySourceCitation = z.infer<typeof PrimarySourceCitation>;
+
+export const ScoredPrimaryDimension = z.object({
+  // Median score across N independent Pass 1 samples (typically N=3).
+  score: z.number().min(1).max(10),
+  rationale: z.string(),
+  citations: z.array(PrimarySourceCitation).min(2),
+  counterEvidence: z.string(),
+  // Triple-sampling fields. Optional for backward compatibility with old
+  // single-sample cached outputs.
+  // - samples: every numeric score returned by the 3 samples (insufficient
+  //   samples are excluded). Length 1 means single-sample fallback.
+  // - range: max - min across `samples`. Range > 1.5 = "high uncertainty"
+  //   per the meta-card weighting policy.
+  // - representativeSampleIndex: which sample's rationale/citations were
+  //   surfaced (the one whose score is closest to the median). 0-indexed.
+  samples: z.array(z.number()).optional(),
+  range: z.number().optional(),
+  representativeSampleIndex: z.number().int().min(0).optional(),
+});
+export const InsufficientPrimaryDimension = z.object({
+  score: z.literal('insufficient'),
+  reason: z.string(),
+});
+export const PrimaryDimensionScore = z.union([
+  ScoredPrimaryDimension,
+  InsufficientPrimaryDimension,
+]);
+export type PrimaryDimensionScore = z.infer<typeof PrimaryDimensionScore>;
+
+export const PrimarySourceChecklist = z.object({
+  ticker: z.string(),
+  filingAccession: z.string(),
+  scores: z.object({
+    moatDurability: PrimaryDimensionScore,
+    ownerEarningsQuality: PrimaryDimensionScore,
+    capitalAllocation: PrimaryDimensionScore,
+    debtSustainability: PrimaryDimensionScore,
+    insiderAlignment: PrimaryDimensionScore,
+    cyclicalityAwareness: PrimaryDimensionScore,
+  }),
+});
+export type PrimarySourceChecklist = z.infer<typeof PrimarySourceChecklist>;
+
+export const PRIMARY_DIMENSION_KEYS = [
+  'moatDurability',
+  'ownerEarningsQuality',
+  'capitalAllocation',
+  'debtSustainability',
+  'insiderAlignment',
+  'cyclicalityAwareness',
+] as const;
+export type PrimaryDimensionKey = (typeof PRIMARY_DIMENSION_KEYS)[number];
+
+export function isInsufficientPrimary(
+  d: PrimaryDimensionScore,
+): d is { score: 'insufficient'; reason: string } {
+  return d.score === 'insufficient';
+}
+
+// ---- Pass 2: skeptic rebuttals ----
+
+export const SkepticRebuttal = z.object({
+  rebuttal: z.string(),
+  citations: z.array(PrimarySourceCitation),
+  recommendedAdjustment: z.number().min(-3).max(1.5),
+});
+export type SkepticRebuttal = z.infer<typeof SkepticRebuttal>;
+
+export const PrimarySourceSkeptic = z.object({
+  ticker: z.string(),
+  filingAccession: z.string(),
+  rebuttals: z.object({
+    moatDurability: SkepticRebuttal,
+    ownerEarningsQuality: SkepticRebuttal,
+    capitalAllocation: SkepticRebuttal,
+    debtSustainability: SkepticRebuttal,
+    insiderAlignment: SkepticRebuttal,
+    cyclicalityAwareness: SkepticRebuttal,
+  }),
+});
+export type PrimarySourceSkeptic = z.infer<typeof PrimarySourceSkeptic>;
+
+// ---- Pass 3: judge reconciliation ----
+
+export const JudgedDimension = z.object({
+  finalScore: z.number().min(1).max(10),
+  // The judge's call. "agreed-with-pass1" / "agreed-with-pass2" / "split"
+  // are the three outcomes for a scoring decision; "no-change" means the
+  // skeptic recommended 0 and the judge confirmed.
+  decision: z.enum(['agreed-with-pass1', 'agreed-with-pass2', 'split', 'no-change']),
+  justification: z.string(),
+});
+export type JudgedDimension = z.infer<typeof JudgedDimension>;
+
+export const PrimarySourceJudgment = z.object({
+  ticker: z.string(),
+  filingAccession: z.string(),
+  finalScores: z.object({
+    moatDurability: JudgedDimension,
+    ownerEarningsQuality: JudgedDimension,
+    capitalAllocation: JudgedDimension,
+    debtSustainability: JudgedDimension,
+    insiderAlignment: JudgedDimension,
+    cyclicalityAwareness: JudgedDimension,
+  }),
+});
+export type PrimarySourceJudgment = z.infer<typeof PrimarySourceJudgment>;
+
+// ---- Meta-card (per-ticker synthesis, Weekend 4) ----
+//
+// The meta-card is the top-level user-facing artifact for the ticker-first
+// workflow. It aggregates: (a) primary-source value-checklist final scores
+// from Pass 3 (median + variance), (b) reverse-DCF summary, (c) historical
+// valuation context, and (d) optional analyst-video DecisionCards. The
+// output is one verdict + one weighted score, with consensus/divergence
+// sections explaining where sources agree or disagree.
+
+export const MetaCardVerdict = z.enum(['Strong Candidate', 'Watchlist', 'Pass', 'Insufficient Data']);
+export type MetaCardVerdict = z.infer<typeof MetaCardVerdict>;
+
+// Per-dimension entry in the meta-card. Carries the median, range, and
+// uncertainty flag so the user can see at a glance where the system is
+// confident vs not.
+export const MetaCardDimension = z.object({
+  finalScore: z.number().min(1).max(10),
+  range: z.number().min(0).optional(),
+  uncertainty: z.enum(['tight', 'moderate', 'high']),
+  // The dimension's effective weight in the composite score. Tight/moderate
+  // dimensions get full weight (1.0); high-uncertainty dimensions get 0.7.
+  effectiveWeight: z.number(),
+  rationale: z.string(),
+});
+export type MetaCardDimension = z.infer<typeof MetaCardDimension>;
+
+// One row in the consensus/divergence cross-source table. Surfaces points
+// where analyst content and primary-source analysis agree or disagree.
+// Empty array when no analyst content is configured for the ticker.
+export const CrossSourceFinding = z.object({
+  topic: z.string(),
+  analystView: z.string(),
+  primarySourceView: z.string(),
+  agreement: z.enum(['agree', 'partial', 'disagree']),
+});
+export type CrossSourceFinding = z.infer<typeof CrossSourceFinding>;
+
+export const MetaCard = z.object({
+  ticker: z.string(),
+  generatedAt: z.string(),
+  verdict: MetaCardVerdict,
+  weightedScore: z.number().min(1).max(10),
+  // Headline summary — 2-4 sentences distilling the verdict for the user.
+  // Generated by the meta-card prompt; should explain the score in plain
+  // English without restating the dimension table.
+  summary: z.string(),
+  // Six dimensions, mirroring the primary-source checklist.
+  dimensions: z.object({
+    moatDurability: MetaCardDimension,
+    ownerEarningsQuality: MetaCardDimension,
+    capitalAllocation: MetaCardDimension,
+    debtSustainability: MetaCardDimension,
+    insiderAlignment: MetaCardDimension,
+    cyclicalityAwareness: MetaCardDimension,
+  }),
+  // Source-input summary so the user knows what fed the verdict.
+  inputs: z.object({
+    primarySourceFiling: z.string(),       // 10-K accession used
+    proxyFiling: z.string().nullable(),    // DEF 14A accession or null
+    analystVideoCount: z.number().int(),   // 0 when no videos configured
+    reverseDcfCentralImpliedCagr: z.number().nullable(),
+    actualFcf5yCagr: z.number().nullable(),
+  }),
+  // Consensus and divergence between analyst views and primary-source
+  // analysis. Empty when no analyst content. Otherwise: surface the most
+  // material agreements and disagreements with explicit explanation.
+  crossSourceFindings: z.array(CrossSourceFinding),
+  // 3-7 specific things the user should verify themselves before acting.
+  // Always populated regardless of analyst content.
+  thingsToVerify: z.array(z.string()),
+  // Plain-English explanation of what disagreements between sources tell
+  // the user. Surfaces the meta-card's "where to focus your own judgment"
+  // signal. Optional — empty string when there are no notable disagreements.
+  divergenceCommentary: z.string(),
+});
+export type MetaCard = z.infer<typeof MetaCard>;
+
+// ---- Reverse DCF (teaching module) ----
+//
+// Given current price and FCF, solve for the FCF growth rate the market is
+// implicitly pricing in across a grid of (discount rate, terminal multiple)
+// assumptions. Output is a sensitivity table the user reads to understand
+// "what does the current price assume about the future?" — not a valuation
+// the tool issues, but the inverse question.
+
+export const ReverseDcfCell = z.object({
+  discountRate: z.number(),       // e.g. 0.08, 0.10, 0.12
+  terminalMultiple: z.number(),   // e.g. 15, 20, 25 (P/FCF on year-10 FCF)
+  // The 10-year FCF CAGR at which DCF(...) = currentPrice * sharesOutstanding.
+  // Null when no plausible CAGR makes the math work (e.g. extremely high
+  // discount + low terminal at a price far above any reasonable FCF
+  // assumption — the implied growth would be unbounded).
+  impliedFcfCagr: z.number().nullable(),
+});
+export type ReverseDcfCell = z.infer<typeof ReverseDcfCell>;
+
+export const ReverseDcfReport = z.object({
+  ticker: z.string(),
+  asOf: z.string(),
+  currentPrice: z.number(),
+  sharesOutstanding: z.number(),  // diluted, in millions
+  startingFcfMillions: z.number(),
+  // 3-year and 5-year actual FCF CAGR for context — the user compares these
+  // to the implied CAGRs in the grid to gauge plausibility.
+  actualFcfCagr3y: z.number().nullable(),
+  actualFcfCagr5y: z.number().nullable(),
+  grid: z.array(ReverseDcfCell),
+  // Plain-English narrative explaining what the grid says. Generated by the
+  // reverse-DCF module deterministically (no LLM call), so it remains stable
+  // and inspectable.
+  narrative: z.string(),
+});
+export type ReverseDcfReport = z.infer<typeof ReverseDcfReport>;
 
 export function isInsufficient(
   d: ScoredDimension,

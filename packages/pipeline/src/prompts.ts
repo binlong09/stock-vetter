@@ -16,7 +16,11 @@ export type PromptName =
   | 'critique-comps'
   | 'critique-missing-risks'
   | 'critique-value-checklist'
-  | 'score';
+  | 'score'
+  | 'primary-source-checklist'
+  | 'primary-source-skeptic'
+  | 'primary-source-judge'
+  | 'meta-card';
 
 const cache = new Map<PromptName, string>();
 
