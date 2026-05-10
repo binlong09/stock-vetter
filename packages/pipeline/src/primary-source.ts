@@ -24,6 +24,13 @@ import { fetchAndParseFiling, fetchLatestProxy, type FilingMeta } from './sec-fi
 import { fetchFinancialSnapshot } from './financials.js';
 import { buildReverseDcf } from './reverse-dcf.js';
 import { getLlmOutput, putLlmOutput, hashInputs } from './cache.js';
+import {
+  decideSampleCount,
+  loadVarianceHistory,
+  recordVariance,
+  type DimensionVariance,
+} from './variance-history.js';
+import { createHash } from 'node:crypto';
 
 // Dimensions where valuation context (current vs historical multiples,
 // reverse DCF) materially informs reasoning. Insider-alignment, moat, and
@@ -201,6 +208,15 @@ export async function runPrimarySourcePass1(
   options: PrimarySourceRunOptions & {
     snapshot?: FinancialSnapshot | null;
     dcf?: ReverseDcfReport | null;
+    // Force triple-sampling for every dimension regardless of variance
+    // history. Default is adaptive: tight dimensions (range ≤ 0.5 in the
+    // prior run with this prompt) drop to single-sample; everything else
+    // triple-samples.
+    forceTriple?: boolean;
+    // Model override for Pass 1 only (defaults to Sonnet 4.6). Tested with
+    // Haiku 4.5 — see `scripts/compare-pass1-models.ts` for the comparison
+    // harness used to validate Haiku's quality before switching.
+    pass1Model?: string;
   } = {},
 ): Promise<PrimarySourceChecklist> {
   const tracker = options.tracker ?? newCostTracker(options.onProgress
@@ -210,26 +226,32 @@ export async function runPrimarySourcePass1(
   const proxy = await fetchLatestProxy(ticker);
   const proxyText = proxy?.cleanedText ?? null;
   const promptText = await loadPrompt('primary-source-checklist');
+  const promptHash = createHash('sha1').update(promptText).digest('hex').slice(0, 12);
+  // Load prior variance history for this ticker. Used to decide adaptive
+  // sample counts per dimension. Null on the first run for a ticker.
+  const varianceHistory = await loadVarianceHistory(ticker);
+  const forceTriple = options.forceTriple === true;
   // Pre-load financial context if not provided (callers from analyze-ticker
   // already have it; standalone callers don't).
   const snapshot = options.snapshot ?? (await fetchFinancialSnapshot(ticker));
   const dcf = options.dcf ?? (snapshot ? buildReverseDcf(snapshot) : null);
   const financialContext = renderFinancialContext(snapshot, dcf);
 
-  // Triple-sample Pass 1: each dimension is scored 3x in parallel. The
-  // returned value uses the median score and the rationale/citations from
-  // whichever sample's score was closest to the median ("representative
-  // sample"). The range (max - min across the 3 numeric samples) is
-  // surfaced as a confidence indicator. Subsequent passes (skeptic, judge)
-  // see only the median — they treat Pass 1's output as a single score, as
-  // before, but the meta-card consumes the variance to weight dimensions.
-  const SAMPLES_PER_DIMENSION = 3;
+  // Adaptive Pass 1 sampling: dimensions whose prior run had tight
+  // variance (range ≤ 0.5) single-sample on subsequent runs; everything
+  // else (uncertain, or no prior history, or prompt changed) triple-samples.
+  // The returned value uses the median score and the rationale/citations
+  // from the representative sample (closest to median; the only sample
+  // when single-sampled). The range across numeric samples is surfaced as
+  // a confidence indicator (range = 0 for single-sample dimensions).
+  const MAX_SAMPLES = 3;
 
   type SingleSampleOutput = z.infer<typeof SingleDimensionSchema>;
 
   async function runOneSample(
     key: PrimaryDimensionKey,
     sampleIndex: number,
+    totalSamples: number,
     context: string,
     sourcesUsed: string[],
     includeFinancial: boolean,
@@ -243,31 +265,48 @@ export async function runPrimarySourcePass1(
       contextLength: context.length,
       financialContextDate: includeFinancial ? snapshot?.asOf : null,
       sampleIndex,
+      totalSamples,
+      model: options.pass1Model ?? 'default',
     });
     const cached = await getLlmOutput<SingleSampleOutput>(`ps1-${key}`, inputHash, promptText);
     if (cached) return cached;
-    // Add a "Sample N of 3" marker to the user message so the model isn't
-    // pattern-matching to identical prompts. The variance we want comes from
-    // the model's natural sampling stochasticity, not from prompt drift, so
-    // the marker is the only difference between samples.
-    const userMessage =
-      `Score the following dimension only: **${key}** (independent sample ${sampleIndex + 1} of ${SAMPLES_PER_DIMENSION})\n\n` +
+    // Split the user message into:
+    //   - sharedPrefix: identical across the 3 samples of this dimension
+    //     (sources, ticker info, dimension name). Marked cacheable so
+    //     samples 2 and 3 hit cache for ~90% of input tokens.
+    //   - sampleTail: the per-sample marker. Uncached.
+    // The sample marker is what creates the variance we want — samples 1/2/3
+    // produce different LLM outputs even with identical-but-cached context.
+    const sharedPrefix =
+      `Score the following dimension only: **${key}**\n\n` +
       `Ticker: ${ticker.toUpperCase()}\n` +
       `Filing: 10-K accession ${meta.accession} (${meta.filingDate})\n` +
       (proxy ? `Proxy: DEF 14A accession ${proxy.accession} (${proxy.filingDate})\n` : '') +
       (includeFinancial ? `\n${financialContext}` : '') +
-      `\nPrimary-source sections (do not invent content from sections not provided):\n\n${context}\n\n` +
+      `\nPrimary-source sections (do not invent content from sections not provided):\n\n${context}`;
+    const sampleTail =
+      (totalSamples > 1
+        ? `\n\nThis is independent sample ${sampleIndex + 1} of ${totalSamples}.\n\n`
+        : `\n\n`) +
       `Return JSON for ONLY this dimension, in the shape:\n` +
       `{ "score": <1-10 number or "insufficient">, "rationale": "...", "citations": [{"section": "...", "quote": "...", "whyItMatters": "..."}], "counterEvidence": "..." }\n` +
       `(Or for insufficient: { "score": "insufficient", "reason": "..." })\n` +
       `Output JSON only.`;
     const result = await llmCallJson({
       stage: `primary-source-${key}-s${sampleIndex}`,
-      systemPrompt: promptText,
-      userMessage,
+      // System prompt is identical across all 18 calls; cache it.
+      systemPrompt: [{ text: promptText, cache: true }],
+      // User message: cache the shared prefix (sources etc.), append the
+      // uncached sample-specific tail. Two cache breakpoints total per call
+      // (system + user-prefix), well under the 4-block limit.
+      userMessage: [
+        { text: sharedPrefix, cache: true },
+        { text: sampleTail },
+      ],
       schema: SingleDimensionSchema,
       maxTokens: 4096,
       tracker,
+      model: options.pass1Model,
     });
     await putLlmOutput(`ps1-${key}`, inputHash, promptText, result);
     return result;
@@ -283,6 +322,8 @@ export async function runPrimarySourcePass1(
   }
 
   const dimensionResults: Record<string, unknown> = {};
+  // Track variance updates for persistence at the end of the run.
+  const varianceUpdates: Record<string, DimensionVariance> = {};
   for (const key of PRIMARY_DIMENSION_KEYS) {
     options.onProgress?.(`primary-source:${key}`, tracker.total);
     const { context, sourcesUsed } = await loadDimensionContext(meta, getSection, proxyText, key);
@@ -291,16 +332,25 @@ export async function runPrimarySourcePass1(
       continue;
     }
     const includeFinancial = VALUATION_AWARE_DIMENSIONS.has(key) && financialContext.length > 0;
-    // Run all 3 samples in parallel. Cache hits return immediately; only
-    // un-cached samples actually call the API. The 30K-input-tokens-per-min
-    // rate limit applies to the parallel calls; at ~20K tokens per call ×
-    // 3 = 60K, we'll trigger the 429 retry-with-backoff for the 2nd or 3rd
-    // sample if all are fresh — this is fine, they retry automatically.
-    const samples = await Promise.all(
-      Array.from({ length: SAMPLES_PER_DIMENSION }, (_, i) =>
-        runOneSample(key, i, context, sourcesUsed, includeFinancial),
-      ),
-    );
+    // Decide sample count. Tight prior history (range ≤ 0.5 with the same
+    // prompt) → 1 sample. Otherwise (no history, prompt changed, or prior
+    // wide variance) → 3 samples. forceTriple overrides to 3.
+    const totalSamples = decideSampleCount(varianceHistory, key, promptHash, forceTriple);
+    let samples: SingleSampleOutput[];
+    if (totalSamples === 1) {
+      samples = [await runOneSample(key, 0, 1, context, sourcesUsed, includeFinancial)];
+    } else {
+      // For triple-sampling: sample 0 runs first to populate the prompt
+      // cache, then samples 1 and 2 run in parallel and read from cache.
+      // Running all 3 in parallel would race to write the cache, defeating
+      // the purpose. Serialization adds ~5s but halves Pass 1 input cost.
+      const sample0 = await runOneSample(key, 0, MAX_SAMPLES, context, sourcesUsed, includeFinancial);
+      const [sample1, sample2] = await Promise.all([
+        runOneSample(key, 1, MAX_SAMPLES, context, sourcesUsed, includeFinancial),
+        runOneSample(key, 2, MAX_SAMPLES, context, sourcesUsed, includeFinancial),
+      ]);
+      samples = [sample0, sample1, sample2];
+    }
     // Partition samples into numeric scores vs insufficient.
     const numericIndices: number[] = [];
     const numericScores: number[] = [];
@@ -341,6 +391,19 @@ export async function runPrimarySourcePass1(
       range,
       representativeSampleIndex: bestIdx,
     };
+    // Record this dimension's variance for the persisted history. Even
+    // single-sample dimensions are recorded (range = 0) — that's the
+    // current "best estimate" of variance, and re-runs will keep using
+    // single-sample as long as the score stays consistent.
+    varianceUpdates[key] = {
+      range,
+      samples: numericScores,
+      asOf: new Date().toISOString(),
+    };
+  }
+  // Persist variance history so subsequent runs can adaptive-sample.
+  if (Object.keys(varianceUpdates).length > 0) {
+    await recordVariance(ticker, promptHash, varianceUpdates);
   }
 
   const checklist: PrimarySourceChecklist = {
@@ -446,7 +509,9 @@ export async function runPrimarySourcePass2(
       `Output JSON only.`;
     const result = await llmCallJson({
       stage: `primary-source-skeptic-${key}`,
-      systemPrompt: promptText,
+      // Skeptic system prompt is the same across all 6 dimension calls.
+      // Cache it so the second-through-sixth calls hit cache for the rubric.
+      systemPrompt: [{ text: promptText, cache: true }],
       userMessage,
       schema: SkepticDimensionSchema,
       maxTokens: 3072,
@@ -558,7 +623,8 @@ export async function runPrimarySourcePass3(
       `Output JSON only.`;
     const result = await llmCallJson({
       stage: `primary-source-judge-${key}`,
-      systemPrompt: promptText,
+      // Judge system prompt is the same across all 6 dimension calls; cache it.
+      systemPrompt: [{ text: promptText, cache: true }],
       userMessage,
       schema: JudgeDimensionSchema,
       maxTokens: 1024,
@@ -584,6 +650,7 @@ export async function runPrimarySourceFull(
   options: PrimarySourceRunOptions & {
     snapshot?: FinancialSnapshot | null;
     dcf?: ReverseDcfReport | null;
+    forceTriple?: boolean;
   } = {},
 ): Promise<{
   pass1: PrimarySourceChecklist;

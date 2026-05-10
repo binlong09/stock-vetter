@@ -443,6 +443,11 @@ export const MetaCard = z.object({
     reverseDcfCentralImpliedCagr: z.number().nullable(),
     actualFcf5yCagr: z.number().nullable(),
   }),
+  // Total LLM spend across all stages (analyst-video pipeline, primary-source
+  // 3 passes including triple-sampling, meta-card synthesis). USD. Optional
+  // for backward compatibility with cards generated before this field was
+  // added; absent values render as "n/a" in the markdown.
+  totalLlmCost: z.number().min(0).optional(),
   // Consensus and divergence between analyst views and primary-source
   // analysis. Empty when no analyst content. Otherwise: surface the most
   // material agreements and disagreements with explicit explanation.

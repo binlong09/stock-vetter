@@ -31,6 +31,7 @@ import { join, dirname } from 'node:path';
 import { fetchAndParseFiling, fetchLatestProxy, type FilingMeta } from '../packages/pipeline/src/sec-filings.js';
 import { runPipeline } from '../packages/pipeline/src/orchestrate.js';
 import { getVideoCard, putVideoCard } from '../packages/pipeline/src/cache.js';
+import { newCostTracker, summarizeCost, type CostTracker } from '../packages/pipeline/src/llm.js';
 import { runPrimarySourceFull } from '../packages/pipeline/src/primary-source.js';
 import { renderPrimaryChecklistMarkdown } from '../packages/pipeline/src/primary-source-render.js';
 import { verifyChecklistCitations, verifySkepticCitations } from '../packages/pipeline/src/citation-verifier.js';
@@ -71,9 +72,19 @@ async function writeJson(path: string, data: unknown): Promise<void> {
   await writeText(path, JSON.stringify(data, null, 2) + '\n');
 }
 
-async function processVideos(ticker: string, urls: string[], debug: boolean): Promise<{ ran: number; cached: number }> {
+async function processVideos(
+  ticker: string,
+  urls: string[],
+  debug: boolean,
+): Promise<{ ran: number; cached: number; cost: number }> {
   let ran = 0;
   let cached = 0;
+  // Cost across all per-video pipeline runs in this invocation. Cached
+  // videos contribute zero (no LLM calls). The runPipeline call manages its
+  // own tracker internally; we observe its final cost via the last
+  // onProgress callback (it fires on every stage transition with the
+  // running total, so the last value seen is the total).
+  let totalVideoCost = 0;
   for (const url of urls) {
     const m = url.match(/[?&]v=([A-Za-z0-9_-]{11})|youtu\.be\/([A-Za-z0-9_-]{11})/);
     const videoId = m ? (m[1] ?? m[2])! : url;
@@ -86,20 +97,23 @@ async function processVideos(ticker: string, urls: string[], debug: boolean): Pr
       continue;
     }
     console.error(`[ticker] video ${videoId}: running pipeline (this is slow)`);
+    let lastCost = 0;
     const card = await runPipeline(url, {
       debug,
       onProgress: (stage, costSoFar) => {
+        lastCost = costSoFar;
         process.stderr.write(`[pipeline:${videoId}] ${stage} ($${costSoFar.toFixed(3)})\n`);
       },
       onCostWarning: (cost) => process.stderr.write(`[pipeline:${videoId}] WARN cost ${cost.toFixed(3)}\n`),
       onCostAbort: (cost) => process.stderr.write(`[pipeline:${videoId}] ABORT cost ${cost.toFixed(3)}\n`),
     });
+    totalVideoCost += lastCost;
     await putVideoCard(videoId, card);
     const target = join(FIXTURES_ROOT, ticker.toUpperCase(), 'videos', `${videoId}.json`);
     await writeJson(target, card);
     ran++;
   }
-  return { ran, cached };
+  return { ran, cached, cost: totalVideoCost };
 }
 
 async function processSec(ticker: string, form: '10-K' | '10-Q'): Promise<FilingMeta | null> {
@@ -210,6 +224,8 @@ async function processMetaCard(
   pass3: PrimarySourceJudgment,
   snapshot: FinancialSnapshot | null,
   dcf: ReverseDcfReport | null,
+  tracker: CostTracker,
+  totalLlmCost: number,
 ): Promise<MetaCard | null> {
   console.error('[ticker] synthesizing meta-card...');
   try {
@@ -221,7 +237,9 @@ async function processMetaCard(
       reverseDcf: dcf,
       snapshot,
       analystCards,
+      totalLlmCost,
       options: {
+        tracker,
         onProgress: (stage, cost) =>
           process.stderr.write(`[meta-card:${stage}] cost so far $${cost.toFixed(3)}\n`),
       },
@@ -242,20 +260,24 @@ async function processPrimaryChecklist(
   ticker: string,
   snapshot: FinancialSnapshot | null,
   reverseDcf: ReverseDcfReport | null,
+  tracker: CostTracker,
+  forceTriple: boolean,
 ): Promise<{
   pass1: PrimarySourceChecklist;
   pass2: PrimarySourceSkeptic;
   pass3: PrimarySourceJudgment;
 } | null> {
-  console.error('[ticker] running primary-source value checklist (3 passes)...');
+  console.error(`[ticker] running primary-source value checklist (3 passes${forceTriple ? ', --always-triple' : ', adaptive sampling'})...`);
   try {
     const { pass1, pass2, pass3 } = await runPrimarySourceFull(ticker, {
+      tracker,
       onProgress: (stage, cost) =>
         process.stderr.write(`[primary-source:${stage}] cost so far $${cost.toFixed(3)}\n`),
       // Reuse the snapshot + DCF we already built so the LLM Pass 1/2/3
       // calls don't re-fetch from Yahoo three times.
       snapshot,
       dcf: reverseDcf,
+      forceTriple,
     });
     // Verify citations from both Pass 1 and Pass 2 against source files.
     const pass1Verification = await verifyChecklistCitations(pass1);
@@ -293,8 +315,9 @@ async function main() {
   const ticker = args.find((a) => !a.startsWith('--'));
   const debug = args.includes('--debug');
   const skipLlm = args.includes('--no-llm');
+  const forceTriple = args.includes('--always-triple');
   if (!ticker) {
-    console.error('Usage: pnpm tsx scripts/analyze-ticker.ts <TICKER> [--debug] [--no-llm]');
+    console.error('Usage: pnpm tsx scripts/analyze-ticker.ts <TICKER> [--debug] [--no-llm] [--always-triple]');
     process.exit(1);
   }
   const upper = ticker.toUpperCase();
@@ -304,10 +327,16 @@ async function main() {
   const videoUrls = cfg.videos ?? [];
   console.error(`[ticker] config: ${videoUrls.length} analyst videos configured`);
 
+  // Single shared tracker across primary-source 3 passes and meta-card
+  // synthesis — captures the post-video LLM spend in one place. Per-video
+  // pipelines manage their own internal trackers (cost ceilings); their
+  // final cost is summed separately in processVideos.
+  const sharedTracker = newCostTracker();
+
   // Run all stages. Each one independently logs progress and tolerates
   // failure of the others — partial output is more useful than no output.
   const results = {
-    videos: { ran: 0, cached: 0 },
+    videos: { ran: 0, cached: 0, cost: 0 },
     tenK: null as FilingMeta | null,
     tenQ: null as FilingMeta | null,
     primaryChecklist: null as Awaited<ReturnType<typeof processPrimaryChecklist>>,
@@ -326,28 +355,55 @@ async function main() {
   results.snapshot = fc.snapshot;
   results.reverseDcf = fc.dcf;
   if (!skipLlm && results.tenK) {
-    results.primaryChecklist = await processPrimaryChecklist(upper, results.snapshot, results.reverseDcf);
+    results.primaryChecklist = await processPrimaryChecklist(
+      upper,
+      results.snapshot,
+      results.reverseDcf,
+      sharedTracker,
+      forceTriple,
+    );
   }
   // Meta-card synthesizes everything into one verdict. Requires the
   // primary-source checklist (which requires a 10-K). Reverse DCF and
   // analyst cards are optional inputs.
   if (!skipLlm && results.primaryChecklist) {
+    // Total LLM cost: per-video pipelines + shared tracker (primary-source
+    // + meta-card synthesis itself). Capture the sharedTracker total
+    // *before* meta-card synthesis so we can pass it in as the value to
+    // record on the card; the meta-card call then adds its own cost on top
+    // and the renderer shows the sum it received plus the synthesis call.
+    const preMetaCardCost = results.videos.cost + sharedTracker.total;
     results.metaCard = await processMetaCard(
       upper,
       results.primaryChecklist.pass1,
       results.primaryChecklist.pass3,
       results.snapshot,
       results.reverseDcf,
+      sharedTracker,
+      preMetaCardCost,
     );
   }
 
+  const totalCost = results.videos.cost + sharedTracker.total;
   console.error('');
   console.error(`[ticker] ${upper}: done`);
-  console.error(`  videos: ${results.videos.ran} fresh, ${results.videos.cached} cached`);
+  console.error(`  videos: ${results.videos.ran} fresh, ${results.videos.cached} cached  (cost $${results.videos.cost.toFixed(3)})`);
   console.error(`  10-K: ${results.tenK ? `${results.tenK.sections.length}/${results.tenK.sections.length + results.tenK.missing.length} sections (${results.tenK.missing.length} missing)` : 'failed'}`);
   console.error(`  10-Q: ${results.tenQ ? `${results.tenQ.sections.length} sections` : 'failed'}`);
   if (results.metaCard) {
     console.error(`  decision: ${results.metaCard.verdict} (${results.metaCard.weightedScore.toFixed(1)} / 10)`);
+  }
+  console.error(`  total LLM cost this run: $${totalCost.toFixed(3)}`);
+  // Per-stage breakdown — helpful when comparing optimization passes.
+  const summary = summarizeCost(sharedTracker);
+  if (Object.keys(summary.byStage).length > 0) {
+    console.error('  cost breakdown (post-video, by stage):');
+    for (const [stage, s] of Object.entries(summary.byStage)) {
+      const cacheNote = s.cacheReadTokens > 0 || s.cacheWriteTokens > 0
+        ? `  cache: write=${s.cacheWriteTokens}t read=${s.cacheReadTokens}t`
+        : '';
+      console.error(`    ${stage.padEnd(25)} ${s.calls} calls  in=${s.inputTokens}t out=${s.outputTokens}t  $${s.cost.toFixed(3)}${cacheNote}`);
+    }
   }
   console.error(`  artifacts: fixtures/${upper}/decision-card.md`);
 }

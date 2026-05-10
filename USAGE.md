@@ -2,6 +2,28 @@
 
 Ticker-first value-investing research tool. Type a ticker, get a decision card synthesized from primary sources (10-K + DEF 14A) and optional analyst-video analyses.
 
+## What "primary sources" means here
+
+Be specific about what the tool reads, because the verdict is anchored to exactly these inputs and nothing else.
+
+**The tool reads:**
+
+- **Latest 10-K** (annual report) — full text, sectioned by Item (Business, Risk Factors, Properties, Legal Proceedings, MD&A, Quant Risk, Financial Statements). This is the substrate for the value-investing checklist's qualitative reasoning.
+- **Latest DEF 14A** (proxy statement) — used for insider alignment scoring (executive compensation, beneficial ownership, related-party transactions, dual-class voting structure).
+- **SEC EDGAR companyfacts** — 10 years of structured financial data (revenue, EBIT, net income, FCF components, shares outstanding, long-term debt). Drives historical valuation medians and the reverse DCF's actual-FCF-CAGR comparison.
+- **Current price** (Yahoo Finance) — feeds market cap, current multiples, and the reverse DCF.
+
+**The tool does *not* read:**
+
+- **10-Qs** (quarterly reports) — fetched and parsed for the financial-snapshot's most-recent-period data, but *not* used as input to the primary-source value-investing checklist. The qualitative analysis ignores them.
+- **8-Ks** (material-event filings) — not fetched at all.
+- **Earnings call transcripts** — not fetched.
+- **News articles, press releases, sell-side reports** — not fetched.
+
+**What this means in practice:** the qualitative analysis is anchored to the latest annual 10-K. For companies in rapid transition since their last 10-K — recent M&A, strategy pivots, leadership changes, accounting restatements, regulatory developments — the analysis can miss material context captured only in interim filings or earnings commentary. The tool is best suited for value-investing analysis on **established large-caps with stable annual narratives**. For high-velocity situations (post-M&A integration, activist campaigns, recent guide-downs), treat the verdict as a stale-snapshot baseline and supplement with your own reading of the most recent 10-Q + 8-K filings.
+
+The primary-source checklist explicitly cites which 10-K section a finding comes from. If a citation references stale information that's been superseded by an interim filing, that's a signal to re-read the relevant 8-K or 10-Q before acting.
+
 ## The one command you'll use
 
 ```
@@ -76,6 +98,17 @@ Each dimension is scored three independent times by the LLM. The card shows:
 
 When you see a high-uncertainty dimension, that's where to focus your own judgment — the system is telling you it can't decide.
 
+### Adaptive sampling on re-runs
+
+The first time a ticker is analyzed, every dimension triple-samples. After that, the variance from each dimension is persisted to `.cache/variance-history/<TICKER>.json`. On subsequent runs:
+
+- Dimensions where the prior range was **tight (≤ 0.5)** drop to **single-sample** — the rubric was unambiguous, no need to pay 3× to confirm.
+- Dimensions with **moderate or high prior range** still triple-sample — the system isn't confident, so it samples again.
+
+This cuts re-run cost without sacrificing the variance signal where it matters. Override with `--always-triple` if you want the full triple-sampling for a particular run (e.g., after editing a prompt).
+
+The persisted history is invalidated automatically when a Pass 1 prompt is edited (the prompt-text hash is part of the history payload).
+
 ## Reading the decision-card sections
 
 Reading top-to-bottom:
@@ -117,10 +150,34 @@ Citations in `decision-card.md` and `primary-source-checklist.md` reference thes
 
 ## Cost
 
-- **Fresh ticker, no analyst videos**: ~$2 in LLM calls. Breakdown: 18 Pass 1 calls (3 samples × 6 dimensions) ≈ $1.20, 6 Pass 2 calls ≈ $0.40, 6 Pass 3 calls ≈ $0.35, 1 meta-card synthesis ≈ $0.04.
-- **Fresh ticker with 1 analyst video**: ~$2 + ~$0.60 for the video pipeline ≈ $2.60.
-- **Re-run on same ticker**: $0. Cache hits across the board.
+Numbers below are post-optimization (Anthropic prompt caching + adaptive sampling, both deployed). Measured on META as the benchmark; KO and CHD are similar. Sonnet 4.6 throughout — Haiku 4.5 was tested and rejected for Pass 1 (30%+ citation fabrication and a systematic 2-point cyclicality miscalibration).
+
+- **Fresh ticker, no analyst videos**: ~**$1.45** in LLM calls.
+- **Fresh ticker with 1 analyst video**: ~$1.45 + ~$0.60 for the video pipeline ≈ $2.05.
+- **Adaptive re-run** (5+ minutes after the prior run, prompts unchanged): ~**$1.30**. Pass 1 saves cost when prior dimensions had tight variance and drop to single-sample.
+- **Cached re-run** (within session, source filings unchanged): **$0**. Filesystem LLM cache hits everything.
 - **Re-run after editing a prompt**: only the affected pass re-runs. Cache keys include a hash of the prompt text, so editing `prompts/primary-source-skeptic.md` invalidates only Pass 2 (and Pass 3, which depends on Pass 2's output).
+- **20–30 ticker exploration budget**: ~$30–45.
+
+### Where the money goes
+
+Per-stage breakdown for a fresh-ticker run (~$1.45):
+
+- **Pass 1 with triple-sampling: ~$0.67** (largest line item; 18 LLM calls = 3 samples × 6 dimensions).
+- Pass 2 (skeptic): ~$0.38 (6 calls).
+- Pass 3 (judge): ~$0.36 (6 calls).
+- Meta-card synthesis: ~$0.04 (1 call).
+
+### Why Pass 1 is the largest line item
+
+Triple-sampling exists because individual LLM dimension scores have inherent variance (0.5–2.0 points run-to-run on the same primary sources). Surfacing that variance is what makes the meta-card honest about uncertainty — when 3 samples return 7, 7, 7, the rubric is unambiguous; when they return 4, 5.5, 7, the score is genuinely uncertain and should be weighted less in the composite. Single-sampling would hide the uncertainty and produce false-precision scores.
+
+Two optimizations bring Pass 1 down from a notional $1.27 (no caching, parallel triple) to ~$0.67 (caching + serialized first-sample):
+
+- **Anthropic prompt caching** (`cache_control` markers on the system prompt and the shared user-message prefix containing the source sections). The 80K-char source context is sent once per dimension and read from cache by samples 2 and 3.
+- **Sample-1 serialization** to populate the cache before samples 2 and 3 fire in parallel. Without this, all three samples race to write the cache and miss on the first read, defeating the purpose.
+
+On re-runs, **adaptive sampling** drops tight-variance dimensions to single-sample. After the first run on a ticker, ~4 of 6 dimensions typically drop, cutting Pass 1 calls from 18 to ~10 — about 23% Pass 1 savings on top of the caching wins.
 
 ## Known limitations
 

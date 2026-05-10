@@ -39,6 +39,12 @@ export function renderMetaCardMarkdown(c: MetaCard): string {
   lines.push('');
   lines.push(c.summary);
   lines.push('');
+  // Total cost footer in the summary section so the user always sees what
+  // the analysis cost. Renders "n/a" for cards generated before this field
+  // existed (backward compatibility).
+  const costStr = c.totalLlmCost != null ? `$${c.totalLlmCost.toFixed(2)}` : 'n/a';
+  lines.push(`*Total LLM cost for this analysis:* ${costStr} *(re-runs hit cache and cost $0).*`);
+  lines.push('');
   // Dimension table.
   lines.push('## Dimension scores');
   lines.push('');

@@ -242,13 +242,23 @@ export async function buildMetaCard(args: {
   snapshot: FinancialSnapshot | null;
   proxyAccession?: string | null;
   analystCards?: DecisionCard[];
+  // Total LLM cost incurred *before* this meta-card synthesis call. The
+  // synthesis call's own cost is added by buildMetaCard via the shared
+  // tracker; the value persisted on the card is the sum (pre-cost +
+  // synthesis cost) so the user sees the total spend for the entire run.
+  totalLlmCost?: number;
   options?: MetaCardOptions;
 }): Promise<MetaCard> {
   const { ticker, pass1, pass3, reverseDcf, snapshot, proxyAccession, analystCards = [] } = args;
+  const preMetaCardCost = args.totalLlmCost ?? 0;
   const options = args.options ?? {};
   const tracker = options.tracker ?? newCostTracker(options.onProgress
     ? (t) => options.onProgress!('meta-card', t)
     : undefined);
+  // Snapshot the tracker's total before our synthesis call so we can
+  // measure exactly how much this stage cost (sharedTracker carries the
+  // primary-source 3-pass total at this point).
+  const trackerBeforeSynthesis = tracker.total;
   options.onProgress?.('meta-card:compose', tracker.total);
 
   const { dimensions, weightedScore, insufficient } = composeDimensions(pass3, pass1);
@@ -314,6 +324,14 @@ export async function buildMetaCard(args: {
     (c) => Math.abs(c.discountRate - 0.10) < 1e-6 && c.terminalMultiple === 20,
   );
 
+  // Synthesis call's own cost = post-call tracker.total - pre-call snapshot.
+  // Total cost on the card = caller-supplied pre-cost + this synthesis call.
+  // When the caller didn't pass totalLlmCost, fall back to the tracker's
+  // total alone (which still captures everything for that tracker, just
+  // not any per-video pipeline cost from earlier stages).
+  const synthesisCost = tracker.total - trackerBeforeSynthesis;
+  const totalCost = preMetaCardCost > 0 ? preMetaCardCost + synthesisCost : tracker.total;
+
   const card: MetaCard = {
     ticker: ticker.toUpperCase(),
     generatedAt: new Date().toISOString(),
@@ -328,6 +346,7 @@ export async function buildMetaCard(args: {
       reverseDcfCentralImpliedCagr: central?.impliedFcfCagr ?? null,
       actualFcf5yCagr: reverseDcf?.actualFcfCagr5y ?? null,
     },
+    totalLlmCost: totalCost,
     crossSourceFindings: synthesis.crossSourceFindings as CrossSourceFinding[],
     thingsToVerify: synthesis.thingsToVerify,
     divergenceCommentary: synthesis.divergenceCommentary,

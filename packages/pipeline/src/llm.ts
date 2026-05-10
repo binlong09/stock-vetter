@@ -3,9 +3,22 @@ import type { Message, MessageCreateParamsNonStreaming } from '@anthropic-ai/sdk
 import { z } from 'zod';
 import { LLMValidationError } from './errors.js';
 
-const MODEL = 'claude-sonnet-4-6';
-const PRICE_INPUT_PER_MTOK = 3.0;
-const PRICE_OUTPUT_PER_MTOK = 15.0;
+const DEFAULT_MODEL = 'claude-sonnet-4-6';
+
+// Per-model pricing (USD per million tokens). Cache-write is 1.25× input;
+// cache-read is 0.10× input. Both assume the 5-minute TTL cache.
+type Pricing = { input: number; output: number; cacheWrite: number; cacheRead: number };
+const PRICING: Record<string, Pricing> = {
+  'claude-sonnet-4-6': { input: 3.0, output: 15.0, cacheWrite: 3.75, cacheRead: 0.30 },
+  'claude-haiku-4-5-20251001': { input: 1.0, output: 5.0, cacheWrite: 1.25, cacheRead: 0.10 },
+};
+
+function pricingFor(model: string): Pricing {
+  // Fall back to Sonnet pricing for unknown models (defensive — prevents
+  // throwing on a model we haven't priced yet, at the cost of a possibly
+  // wrong cost number on screen).
+  return PRICING[model] ?? PRICING[DEFAULT_MODEL]!;
+}
 
 let _client: Anthropic | null = null;
 
@@ -21,8 +34,10 @@ function client(): Anthropic {
 
 export type CostEntry = {
   stage: string;
-  inputTokens: number;
+  inputTokens: number;        // uncached input
   outputTokens: number;
+  cacheWriteTokens: number;   // tokens billed at 1.25× input (writing into the cache)
+  cacheReadTokens: number;    // tokens billed at 0.10× input (cache hit)
   cost: number;
 };
 
@@ -36,11 +51,57 @@ export function newCostTracker(onAfterCall?: (total: number) => void): CostTrack
   return { total: 0, byCall: [], onAfterCall };
 }
 
-function priceCall(inputTokens: number, outputTokens: number): number {
+function priceCall(
+  model: string,
+  inputTokens: number,
+  outputTokens: number,
+  cacheWriteTokens = 0,
+  cacheReadTokens = 0,
+): number {
+  const p = pricingFor(model);
   return (
-    (inputTokens / 1_000_000) * PRICE_INPUT_PER_MTOK +
-    (outputTokens / 1_000_000) * PRICE_OUTPUT_PER_MTOK
+    (inputTokens / 1_000_000) * p.input +
+    (outputTokens / 1_000_000) * p.output +
+    (cacheWriteTokens / 1_000_000) * p.cacheWrite +
+    (cacheReadTokens / 1_000_000) * p.cacheRead
   );
+}
+
+// Aggregate per-stage cost breakdown for end-of-run reporting. Groups byCall
+// entries by stage prefix (e.g., "primary-source-moatDurability-s0" →
+// "primary-source").
+export function summarizeCost(tracker: CostTracker): {
+  byStage: Record<string, { calls: number; inputTokens: number; outputTokens: number; cacheWriteTokens: number; cacheReadTokens: number; cost: number }>;
+  total: number;
+  totalCacheReadTokens: number;
+  totalCacheWriteTokens: number;
+} {
+  const byStage: Record<string, { calls: number; inputTokens: number; outputTokens: number; cacheWriteTokens: number; cacheReadTokens: number; cost: number }> = {};
+  let totalCacheReadTokens = 0;
+  let totalCacheWriteTokens = 0;
+  for (const c of tracker.byCall) {
+    // Bucket by the high-level prefix so we get clean stage groupings.
+    const prefix = c.stage.startsWith('primary-source-skeptic')
+      ? 'primary-source-skeptic'
+      : c.stage.startsWith('primary-source-judge')
+        ? 'primary-source-judge'
+        : c.stage.startsWith('primary-source-')
+          ? 'primary-source-pass1'
+          : c.stage.startsWith('meta-card')
+            ? 'meta-card'
+            : c.stage;
+    const cur = byStage[prefix] ?? { calls: 0, inputTokens: 0, outputTokens: 0, cacheWriteTokens: 0, cacheReadTokens: 0, cost: 0 };
+    cur.calls += 1;
+    cur.inputTokens += c.inputTokens;
+    cur.outputTokens += c.outputTokens;
+    cur.cacheWriteTokens += c.cacheWriteTokens;
+    cur.cacheReadTokens += c.cacheReadTokens;
+    cur.cost += c.cost;
+    byStage[prefix] = cur;
+    totalCacheReadTokens += c.cacheReadTokens;
+    totalCacheWriteTokens += c.cacheWriteTokens;
+  }
+  return { byStage, total: tracker.total, totalCacheReadTokens, totalCacheWriteTokens };
 }
 
 export type LLMCallResult = {
@@ -79,27 +140,56 @@ async function callWithRetry(
   throw lastErr;
 }
 
+// A text segment optionally marked for prompt caching. When `cache` is true,
+// a `cache_control: { type: "ephemeral" }` breakpoint is added on that block.
+// Anthropic supports up to 4 cache breakpoints per request; the prefix up to
+// each breakpoint is cached separately. Order matters — caches build
+// incrementally from the start.
+export type CacheableSegment = { text: string; cache?: boolean };
+
+// Build a Sonnet-friendly content array for the system prompt or a user
+// message from a string OR an array of segments with optional cache markers.
+function buildContentBlocks(
+  input: string | CacheableSegment[],
+): Array<{ type: 'text'; text: string; cache_control?: { type: 'ephemeral' } }> {
+  if (typeof input === 'string') return [{ type: 'text', text: input }];
+  return input.map((s) => ({
+    type: 'text' as const,
+    text: s.text,
+    ...(s.cache ? { cache_control: { type: 'ephemeral' as const } } : {}),
+  }));
+}
+
 export async function llmCall(opts: {
   stage: string;
-  systemPrompt: string;
-  userMessage: string;
+  systemPrompt: string | CacheableSegment[];
+  userMessage: string | CacheableSegment[];
   maxTokens?: number;
   tracker: CostTracker;
+  // Per-call model override. Defaults to Sonnet 4.6.
+  model?: string;
 }): Promise<LLMCallResult> {
+  const model = opts.model ?? DEFAULT_MODEL;
+  const systemBlocks = buildContentBlocks(opts.systemPrompt);
+  const userBlocks = buildContentBlocks(opts.userMessage);
   const resp = await callWithRetry(
     {
-      model: MODEL,
+      model,
       max_tokens: opts.maxTokens ?? 4096,
-      system: opts.systemPrompt,
-      messages: [{ role: 'user', content: opts.userMessage }],
+      system: systemBlocks,
+      messages: [{ role: 'user', content: userBlocks }],
     },
     opts.stage,
   );
   const inputTokens = resp.usage.input_tokens;
   const outputTokens = resp.usage.output_tokens;
-  const cost = priceCall(inputTokens, outputTokens);
+  // The Anthropic SDK exposes cache fields when prompt caching is in use.
+  // They're absent on calls without cache_control blocks, so default to 0.
+  const cacheWriteTokens = (resp.usage as { cache_creation_input_tokens?: number }).cache_creation_input_tokens ?? 0;
+  const cacheReadTokens = (resp.usage as { cache_read_input_tokens?: number }).cache_read_input_tokens ?? 0;
+  const cost = priceCall(model, inputTokens, outputTokens, cacheWriteTokens, cacheReadTokens);
   opts.tracker.total += cost;
-  opts.tracker.byCall.push({ stage: opts.stage, inputTokens, outputTokens, cost });
+  opts.tracker.byCall.push({ stage: opts.stage, inputTokens, outputTokens, cacheWriteTokens, cacheReadTokens, cost });
   opts.tracker.onAfterCall?.(opts.tracker.total);
 
   let text = '';
@@ -124,25 +214,37 @@ export function stripJsonFence(s: string): string {
 
 export async function llmCallJson<T>(opts: {
   stage: string;
-  systemPrompt: string;
-  userMessage: string;
+  systemPrompt: string | CacheableSegment[];
+  userMessage: string | CacheableSegment[];
   schema: z.ZodType<T>;
   maxTokens?: number;
   tracker: CostTracker;
+  model?: string;
 }): Promise<T> {
   let lastError: string | null = null;
   let lastRaw: string | undefined;
   for (let attempt = 0; attempt < 2; attempt++) {
-    const userMessage =
-      lastError === null
-        ? opts.userMessage
-        : `${opts.userMessage}\n\n---\nYour previous response failed validation:\n${lastError}\n\nReturn corrected JSON only. No markdown fences, no commentary.`;
+    let userMessage: string | CacheableSegment[];
+    if (lastError === null) {
+      userMessage = opts.userMessage;
+    } else {
+      // On retry, append a correction directive. Preserve cache markers from
+      // the original by appending a new uncached segment, so the cached
+      // prefix still hits.
+      const retrySuffix = `\n\n---\nYour previous response failed validation:\n${lastError}\n\nReturn corrected JSON only. No markdown fences, no commentary.`;
+      if (typeof opts.userMessage === 'string') {
+        userMessage = opts.userMessage + retrySuffix;
+      } else {
+        userMessage = [...opts.userMessage, { text: retrySuffix }];
+      }
+    }
     const result = await llmCall({
       stage: attempt === 0 ? opts.stage : `${opts.stage}-retry`,
       systemPrompt: opts.systemPrompt,
       userMessage,
       maxTokens: opts.maxTokens,
       tracker: opts.tracker,
+      model: opts.model,
     });
     const cleaned = stripJsonFence(result.text);
     lastRaw = cleaned;
