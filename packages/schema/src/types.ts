@@ -251,6 +251,13 @@ export const DecisionCard = z.object({
   videoId: z.string(),
   ticker: z.string(),
   channelId: z.string(),
+  // Captured from VideoBundle at orchestration time. Free to capture now,
+  // expensive to backfill later (the meta-card feature weights analyst rigor
+  // by channel, and the web viewer shows the video title/date). Optional so
+  // pre-existing cards parse; populated for all new runs.
+  channelName: z.string().optional(),
+  videoTitle: z.string().optional(),
+  publishedAt: z.string().optional(),
   generatedAt: z.string(),
   extraction: ExtractedAnalysis,
   critiques: Critiques,
