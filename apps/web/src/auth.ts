@@ -20,6 +20,10 @@ const ALLOWED_EMAILS = (process.env.ALLOWED_EMAILS ?? '')
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: LibsqlAdapter(db()),
+  // Honor the Host header / AUTH_URL when building callback URLs. On Vercel,
+  // set AUTH_URL to the stable production origin so magic-link emails point
+  // there rather than at a per-deployment preview URL.
+  trustHost: true,
   session: { strategy: 'jwt' },
   pages: {
     signIn: '/signin',
