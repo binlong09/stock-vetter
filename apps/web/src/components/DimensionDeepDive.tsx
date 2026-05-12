@@ -233,11 +233,10 @@ export function DimensionDeepDive({
           </div>
         </section>
 
-        {metaDim.effectiveWeight < 0.999 && (
+        {metaDim.uncertainty === 'high' && (
           <p className="text-[11px] text-rose-600">
-            This dimension was down-weighted to {metaDim.effectiveWeight.toFixed(2)} in the overall
-            score because the triple-sampling spread was wide
-            {metaDim.range != null ? ` (range ${metaDim.range.toFixed(1)})` : ''}.
+            This dimension was down-weighted in the overall score because the triple-sampling spread
+            was wide{metaDim.range != null ? ` (range ${metaDim.range.toFixed(1)})` : ''}.
           </p>
         )}
       </div>
