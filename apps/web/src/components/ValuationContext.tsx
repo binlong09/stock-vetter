@@ -39,6 +39,8 @@ export function ValuationContext({
           : 'in-line'
       : null;
 
+  const hasReverseDcf = implied != null;
+
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-3.5 text-sm">
       <dl className="space-y-2.5">
@@ -46,36 +48,43 @@ export function ValuationContext({
           <dt className="text-[11px] uppercase tracking-wide text-slate-400">
             Reverse DCF — growth the price implies
           </dt>
-          <dd className="mt-0.5 text-slate-800">
-            <span className="block text-[12px] leading-snug text-slate-500">
-              A reverse DCF works backward from today&apos;s stock price to figure out what future
-              cash-flow growth the market is implicitly assuming. If that implied growth looks
-              unrealistic, the price might be wrong.
-            </span>
-            <span className="mt-1.5 block">
-              At a 10% discount rate and a 20× terminal multiple, today&apos;s price requires{' '}
-            <strong className="tabular-nums">{pct(implied)}</strong> annual free-cash-flow growth
-            for 10 years.{' '}
-            {actual != null && (
-              <>
-                The company actually grew FCF{' '}
-                <strong className="tabular-nums">{signedPct(actual)}</strong>/yr over the last 5
-                years
-                {growthGap === 'demanding' && (
-                  <span className="text-rose-700"> — the price is demanding more than that.</span>
+          {hasReverseDcf ? (
+            <dd className="mt-0.5 text-slate-800">
+              <span className="block text-[12px] leading-snug text-slate-500">
+                A reverse DCF works backward from today&apos;s stock price to figure out what future
+                cash-flow growth the market is implicitly assuming. If that implied growth looks
+                unrealistic, the price might be wrong.
+              </span>
+              <span className="mt-1.5 block">
+                At a 10% discount rate and a 20× terminal multiple, today&apos;s price requires{' '}
+                <strong className="tabular-nums">{pct(implied)}</strong> annual free-cash-flow growth
+                for 10 years.{' '}
+                {actual != null && (
+                  <>
+                    The company actually grew FCF{' '}
+                    <strong className="tabular-nums">{signedPct(actual)}</strong>/yr over the last 5
+                    years
+                    {growthGap === 'demanding' && (
+                      <span className="text-rose-700"> — the price is demanding more than that.</span>
+                    )}
+                    {growthGap === 'forgiving' && (
+                      <span className="text-emerald-700">
+                        {' '}
+                        — less than that, so the price isn&apos;t betting on acceleration.
+                      </span>
+                    )}
+                    {growthGap === 'in-line' && <span> — roughly in line.</span>}
+                  </>
                 )}
-                {growthGap === 'forgiving' && (
-                  <span className="text-emerald-700">
-                    {' '}
-                    — less than that, so the price isn&apos;t betting on acceleration.
-                  </span>
-                )}
-                {growthGap === 'in-line' && <span> — roughly in line.</span>}
-              </>
-            )}
-            {actual == null && '.'}
-            </span>
-          </dd>
+                {actual == null && '.'}
+              </span>
+            </dd>
+          ) : (
+            <dd className="mt-0.5 text-[12px] leading-snug text-slate-500">
+              Reverse DCF couldn&apos;t be computed — usable free-cash-flow data wasn&apos;t
+              available from SEC EDGAR for this ticker.
+            </dd>
+          )}
         </div>
 
         <div className="flex flex-wrap gap-x-6 gap-y-2.5">
@@ -98,12 +107,6 @@ export function ValuationContext({
           </div>
         </div>
       </dl>
-      {implied == null && actual == null && pe == null && (
-        <p className="mt-1 text-[11px] text-slate-400">
-          No valuation data available for this ticker (the reverse DCF needs positive FCF and a
-          share count).
-        </p>
-      )}
     </div>
   );
 }
