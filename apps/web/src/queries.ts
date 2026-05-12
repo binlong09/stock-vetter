@@ -27,23 +27,41 @@ export interface TickerListRow {
   summary: string;
   analystVideoCount: number;
   generatedAt: string;
+  /** From the meta-card inputs — used to flag a reverse-DCF vs actual gap. */
+  reverseDcfCentralImpliedCagr: number | null;
+  actualFcf5yCagr: number | null;
 }
 
 /** All analyzed tickers, highest score first. */
 export async function listTickers(): Promise<TickerListRow[]> {
   const res = await db().execute(
-    `SELECT ticker, verdict, weighted_score, summary, analyst_video_count, generated_at
+    `SELECT ticker, verdict, weighted_score, summary, analyst_video_count, generated_at, meta_card_json
        FROM tickers
       ORDER BY weighted_score DESC, ticker ASC`,
   );
-  return res.rows.map((r) => ({
-    ticker: String(r.ticker),
-    verdict: String(r.verdict),
-    weightedScore: Number(r.weighted_score),
-    summary: String(r.summary),
-    analystVideoCount: Number(r.analyst_video_count),
-    generatedAt: String(r.generated_at),
-  }));
+  return res.rows.map((r) => {
+    let implied: number | null = null;
+    let actual: number | null = null;
+    try {
+      const mc = JSON.parse(String(r.meta_card_json)) as {
+        inputs?: { reverseDcfCentralImpliedCagr?: number | null; actualFcf5yCagr?: number | null };
+      };
+      implied = mc.inputs?.reverseDcfCentralImpliedCagr ?? null;
+      actual = mc.inputs?.actualFcf5yCagr ?? null;
+    } catch {
+      // leave nulls — the badge just won't render for this row
+    }
+    return {
+      ticker: String(r.ticker),
+      verdict: String(r.verdict),
+      weightedScore: Number(r.weighted_score),
+      summary: String(r.summary),
+      analystVideoCount: Number(r.analyst_video_count),
+      generatedAt: String(r.generated_at),
+      reverseDcfCentralImpliedCagr: implied,
+      actualFcf5yCagr: actual,
+    };
+  });
 }
 
 // ---- per-ticker ---------------------------------------------------------

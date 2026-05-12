@@ -4,6 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import type { TickerListRow } from '@/queries';
 import { verdictMeta, VERDICT_ORDER } from '@/lib/verdict';
+import { valuationGap } from '@/lib/anomaly';
+import { ValuationGapBadge } from './ValuationGapBadge';
 
 function scoreColor(s: number): string {
   if (s >= 7.5) return 'text-emerald-700';
@@ -59,6 +61,7 @@ export function DashboardList({ rows }: { rows: TickerListRow[] }) {
       <ul className="mt-3 divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 bg-white">
         {visible.map((r) => {
           const m = verdictMeta(r.verdict);
+          const gap = valuationGap(r.reverseDcfCentralImpliedCagr, r.actualFcf5yCagr);
           return (
             <li key={r.ticker}>
               <Link
@@ -77,6 +80,11 @@ export function DashboardList({ rows }: { rows: TickerListRow[] }) {
                     {m.label}
                   </span>
                 </div>
+                {gap && (
+                  <div className="mt-1.5">
+                    <ValuationGapBadge gap={gap} size="chip" />
+                  </div>
+                )}
                 <p className="mt-1 line-clamp-2 text-[12px] leading-snug text-slate-500">
                   {r.summary}
                 </p>

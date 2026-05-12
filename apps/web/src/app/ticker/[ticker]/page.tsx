@@ -8,6 +8,8 @@ import { ValuationContext } from '@/components/ValuationContext';
 import { CrossSourceFindings } from '@/components/CrossSourceFindings';
 import { Section } from '@/components/Section';
 import { DeepView } from '@/components/DeepView';
+import { ValuationGapBadge } from '@/components/ValuationGapBadge';
+import { valuationGap } from '@/lib/anomaly';
 import { usd, isoDate } from '@/lib/format';
 
 export const revalidate = 300;
@@ -23,6 +25,7 @@ export default async function TickerPage({ params }: { params: Promise<{ ticker:
   ]);
 
   const { metaCard: m, financialSnapshot } = detail;
+  const gap = valuationGap(m.inputs.reverseDcfCentralImpliedCagr, m.inputs.actualFcf5yCagr);
 
   return (
     <div>
@@ -41,6 +44,14 @@ export default async function TickerPage({ params }: { params: Promise<{ ticker:
           <span className="ml-2 text-[12px] text-slate-400">weighted across 6 dimensions</span>
         </div>
       </div>
+
+      {/* Valuation-anomaly flag — shown when reverse-DCF-implied vs actual FCF
+          growth diverge by more than 10pp. Doesn't affect the score. */}
+      {gap && (
+        <div className="mt-3">
+          <ValuationGapBadge gap={gap} size="full" />
+        </div>
+      )}
 
       {/* Summary */}
       <p className="mt-3 text-[14px] leading-relaxed text-slate-700">{m.summary}</p>
