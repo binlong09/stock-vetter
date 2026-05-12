@@ -1,6 +1,21 @@
 # Stock Vetter
 
-Tool for vetting stock analyses from YouTube. Input: a YouTube URL of a fundamental analysis video. Output: a quantified decision card with weighted pros/cons, scored 1–10 on five value-investing dimensions.
+Ticker-first value-investing research tool. Type a ticker; the tool fetches the latest 10-K + DEF 14A proxy + SEC companyfacts + current price, runs a three-pass primary-source value-investing checklist, computes historical valuation medians and a reverse DCF, optionally synthesizes against analyst-video analyses, and produces one decision card with a verdict + 1–10 weighted score.
+
+---
+
+## Current state
+
+This is built and in use. See **[USAGE.md](USAGE.md)** for how to operate it. In short:
+
+- **CLI on your laptop does the analysis.** `pnpm tsx scripts/analyze-ticker.ts <TICKER>` — fetches everything, runs the LLM passes, writes `fixtures/<TICKER>/decision-card.md`, and (if Turso is configured) pushes the card to a hosted database.
+- **A read-only web app reads the results on your phone.** `apps/web/` — a small Next.js app on Vercel's free tier, magic-link login with an email allowlist. Dashboard of all tickers + a default per-ticker view + a deep view with the full 3-pass reasoning, citations, reverse-DCF grid, and analyst-card detail pages. **The pipeline is not deployed** — only the viewer.
+  - Deployed at: _<set after first deploy — see "Deploying the web viewer" in USAGE.md>_
+- **Adding a ticker**: edit `data/tickers.json`, run `analyze-ticker`, done — the push to the web app is automatic.
+- **Adding a reader**: add their email to `ALLOWED_EMAILS` in the Vercel env vars and redeploy.
+- **Costs**: ~$1.45 in LLM calls per fresh ticker (or ~$2 with an analyst video); $0 on cached re-runs; ~$30–45 for a 20–30 ticker exploration. Vercel / Turso / Resend are all free-tier. Full breakdown in USAGE.md.
+
+For a packaging / handoff overview see **[HANDOFF.md](HANDOFF.md)**. The rest of this file is the original build spec, kept for history.
 
 ---
 

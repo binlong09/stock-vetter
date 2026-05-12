@@ -62,6 +62,76 @@ Each video runs through the existing per-video pipeline (~$0.60, ~5 min) and pro
 
 If you want to use the tool without curating videos, leave `videos: []`. Most tickers should start this way.
 
+## The web viewer (read cards on your phone)
+
+The CLI runs on your laptop. A small read-only Next.js app — `apps/web/`, deployed on Vercel's free tier — lets you read the decision cards on your phone. **The pipeline is not deployed**; nothing about the analysis runs in the cloud. The web app only reads.
+
+How it works:
+
+- After a successful `analyze-ticker` run, the CLI **pushes the full decision card into Turso** (a hosted libSQL database, free tier) — but only if `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` are set in `.env`. If they're not set, the CLI works exactly as before (fixtures only). If the push fails, the run still succeeds locally — it just logs a warning.
+- The web app reads from Turso and renders: a dashboard (all tickers, sorted by score, filterable by verdict bucket), a per-ticker **default view** (verdict + score + the six-dimension table + valuation context + analyst-vs-primary findings), and a **deep view** below it (per-dimension 3-pass reasoning + citations, the reverse-DCF grid, historical financials, the analyst-video detail pages).
+- Login is magic-link email (Auth.js + Resend) with an allowlist — only addresses in `ALLOWED_EMAILS` can sign in.
+
+**Deployed at: _<set after first deploy — see "Deploying the web viewer" below>_**
+
+### One-time setup (already done if `.env` has `TURSO_*`)
+
+1. Create a Turso database:
+   ```
+   brew install tursodatabase/tap/turso
+   turso auth login
+   turso db create stock-vetter
+   turso db show stock-vetter --url        # → TURSO_DATABASE_URL
+   turso db tokens create stock-vetter     # → TURSO_AUTH_TOKEN
+   ```
+   Put both in the repo-root `.env`.
+2. Backfill existing analyses (also creates the schema on first run):
+   ```
+   pnpm push-fixtures
+   ```
+   Re-run anytime; it's idempotent. From then on, every `analyze-ticker` run pushes automatically.
+
+### Adding a new ticker (end to end)
+
+1. Add it to `data/tickers.json` (see "Adding a ticker" above).
+2. `pnpm tsx scripts/analyze-ticker.ts <TICKER>` — analyzes it, writes `fixtures/<TICKER>/`, and pushes to Turso automatically (if configured). It appears in the web app within ~5 minutes (the pages use a 5-minute cache).
+
+### Adding a new allowed email
+
+The allowlist is the `ALLOWED_EMAILS` env var — comma-separated, e.g. `me@example.com,family@example.com`. To add someone:
+
+- **Production**: edit `ALLOWED_EMAILS` in the Vercel project's environment variables, then redeploy (Vercel → Deployments → Redeploy, or just push any commit). New value takes effect on the next deploy.
+- **Local dev**: edit `ALLOWED_EMAILS` in `apps/web/.env` and restart `pnpm dev`.
+
+Fails closed: if `ALLOWED_EMAILS` is unset or empty, nobody can sign in.
+
+### Running the web app locally
+
+```
+cd apps/web
+cp .env.example .env     # fill in TURSO_*, AUTH_SECRET (openssl rand -base64 32),
+                          #   AUTH_RESEND_KEY, EMAIL_FROM, ALLOWED_EMAILS
+pnpm dev                  # http://localhost:3000
+```
+
+### Deploying the web viewer
+
+The pipeline stays on your laptop; only `apps/web/` deploys. On Vercel:
+
+1. **Import the GitHub repo** into a new Vercel project.
+2. **Set the project's Root Directory to `apps/web`.** Vercel walks up to the repo's `pnpm-workspace.yaml`, so the workspace dependency (`@stock-vetter/schema`) installs and the Next build transpiles it from source (`next.config.ts` handles this). Framework auto-detects as Next.js.
+3. **Add environment variables** (Production + Preview):
+   - `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN` — the same database the CLI pushes to.
+   - `AUTH_SECRET` — generate with `openssl rand -base64 32`. **Must be set explicitly** — a default-derived secret breaks sessions on every redeploy.
+   - `AUTH_URL` — the deployed origin, e.g. `https://stock-vetter-<you>.vercel.app`. This makes magic-link callback URLs in emails point at production, not a per-deployment preview URL.
+   - `AUTH_RESEND_KEY` — from https://resend.com/api-keys.
+   - `EMAIL_FROM` — e.g. `Stock Vetter <onboarding@resend.dev>` (Resend's sandbox sender works without a verified domain).
+   - `ALLOWED_EMAILS` — comma-separated allowlist.
+4. Deploy. The default `*.vercel.app` subdomain is fine.
+5. **Smoke-test on your phone**: visit the URL → bounced to `/signin` → enter an allowlisted email → magic link arrives → click → dashboard loads → close the browser, reopen, still signed in. Then try a non-allowlisted email → "not allowed" error, no email sent.
+
+**Redeploys on code changes are automatic** — Vercel rebuilds on every push to `main`. The CLI on your laptop is unaffected by deploys.
+
 ## Reading the verdict
 
 The headline of `decision-card.md`:
@@ -158,6 +228,15 @@ Numbers below are post-optimization (Anthropic prompt caching + adaptive samplin
 - **Cached re-run** (within session, source filings unchanged): **$0**. Filesystem LLM cache hits everything.
 - **Re-run after editing a prompt**: only the affected pass re-runs. Cache keys include a hash of the prompt text, so editing `prompts/primary-source-skeptic.md` invalidates only Pass 2 (and Pass 3, which depends on Pass 2's output).
 - **20–30 ticker exploration budget**: ~$30–45.
+
+### Web-viewer infrastructure cost
+
+All free-tier; effectively $0 at this scale:
+
+- **Vercel** (hosting the read-only app): Hobby tier — fine for one user and a handful of readers.
+- **Turso** (libSQL database): free tier is 500 DBs / 9 GB / 1B row-reads per month. This app stores ~30 tickers at a few KB–55 KB each — well under 5 MB. Reads are tiny (a few rows per page view).
+- **Resend** (magic-link email): free tier is 3,000 emails/month, 100/day. Sign-ins are infrequent.
+- No new API costs — the deep view shows data already in the JSON; there are no incremental LLM calls per page view.
 
 ### Where the money goes
 
