@@ -122,13 +122,17 @@ export const ExtractedAnalysis = z.object({
         citation: Citation,
       }),
     ),
-    impliedReturn: z.object({ low: z.number(), high: z.number() }).optional(),
-    impliedPriceTarget: z.number().optional(),
+    // LLMs vary in whether they omit or null absent fields; accept both.
+    // Many value investors (Drew Cohen, Buffett-style) work in implied-
+    // return terms without an explicit price target, or vice versa.
+    impliedReturn: z.object({ low: z.number(), high: z.number() }).nullable().optional(),
+    impliedPriceTarget: z.number().nullable().optional(),
   }),
   qualitativeFactors: z.object({
     managementQuality: z.string(),
     moat: z.string(),
-    insiderOwnership: z.string().nullable(),
+    // LLMs vary in whether they omit or null absent fields; accept both.
+    insiderOwnership: z.string().nullable().optional(),
     capitalAllocation: z.string(),
   }),
 });
