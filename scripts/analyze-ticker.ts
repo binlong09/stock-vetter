@@ -40,6 +40,7 @@ import { buildReverseDcf, renderReverseDcfMarkdown } from '../packages/pipeline/
 import { buildMetaCard } from '../packages/pipeline/src/meta-card.js';
 import { renderMetaCardMarkdown } from '../packages/pipeline/src/meta-card-render.js';
 import { DecisionCard, type FinancialSnapshot, type MetaCard, type PrimarySourceChecklist, type PrimarySourceJudgment, type PrimarySourceSkeptic, type ReverseDcfReport } from '@stock-vetter/schema';
+import { isTursoConfigured, pushTickerFromFixtures } from '@stock-vetter/pipeline';
 
 const FIXTURES_ROOT = 'fixtures';
 
@@ -382,6 +383,18 @@ async function main() {
       sharedTracker,
       preMetaCardCost,
     );
+  }
+
+  // Best-effort push to Turso for the web viewer. Only after the meta-card
+  // succeeded (which guarantees the fixture files are on disk). A failure here
+  // never fails the run — "still works locally" is the degraded mode.
+  if (results.metaCard && isTursoConfigured()) {
+    try {
+      await pushTickerFromFixtures(FIXTURES_ROOT, upper);
+      console.error('[ticker] pushed to Turso');
+    } catch (e) {
+      console.warn(`[ticker] Turso push failed (run still succeeded locally): ${(e as Error).message}`);
+    }
   }
 
   const totalCost = results.videos.cost + sharedTracker.total;
