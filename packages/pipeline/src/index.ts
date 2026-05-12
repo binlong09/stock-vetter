@@ -10,3 +10,10 @@ export {
   PipelineError,
 } from './errors.js';
 export { TICKER_PEERS, getPeers } from './comps.js';
+export {
+  isTursoConfigured,
+  getTursoClient,
+  migrate,
+  pushTicker,
+  type PushTickerInput,
+} from './turso.js';
