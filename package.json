@@ -11,6 +11,7 @@
     "typecheck": "tsc -b",
     "run-pipeline": "tsx scripts/run-pipeline.ts",
     "analyze-ticker": "tsx scripts/analyze-ticker.ts",
+    "push-fixtures": "tsx scripts/push-fixtures.ts",
     "eval": "tsx scripts/eval.ts"
   },
   "devDependencies": {
