@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import {
   PRIMARY_DIMENSION_KEYS,
   type MetaCard,
@@ -96,11 +97,12 @@ export function DeepView({
             <ul className="divide-y divide-slate-100">
               {analystCards.map((c) => (
                 <li key={c.videoId} className="py-2 text-[12px] first:pt-0 last:pb-0">
-                  {/* Detail page (/ticker/<t>/video/<id>) lands in Day 6; for now
-                      the title is plain text and we link out to YouTube. */}
-                  <span className="font-medium text-slate-800">
+                  <Link
+                    href={`/ticker/${ticker}/video/${c.videoId}`}
+                    className="font-medium text-slate-800 hover:underline"
+                  >
                     {c.title ?? c.channel ?? c.videoId}
-                  </span>
+                  </Link>
                   <span className="text-slate-400">
                     {c.channel && c.title ? ` · ${c.channel}` : ''}
                     {c.publishedAt ? ` · ${isoDate(c.publishedAt)}` : ''}
