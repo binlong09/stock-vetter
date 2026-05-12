@@ -47,7 +47,13 @@ export function ValuationContext({
             Reverse DCF — growth the price implies
           </dt>
           <dd className="mt-0.5 text-slate-800">
-            At a 10% discount rate and a 20× terminal multiple, today&apos;s price requires{' '}
+            <span className="block text-[12px] leading-snug text-slate-500">
+              A reverse DCF works backward from today&apos;s stock price to figure out what future
+              cash-flow growth the market is implicitly assuming. If that implied growth looks
+              unrealistic, the price might be wrong.
+            </span>
+            <span className="mt-1.5 block">
+              At a 10% discount rate and a 20× terminal multiple, today&apos;s price requires{' '}
             <strong className="tabular-nums">{pct(implied)}</strong> annual free-cash-flow growth
             for 10 years.{' '}
             {actual != null && (
@@ -68,6 +74,7 @@ export function ValuationContext({
               </>
             )}
             {actual == null && '.'}
+            </span>
           </dd>
         </div>
 
