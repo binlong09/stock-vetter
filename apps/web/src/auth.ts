@@ -1,18 +1,22 @@
 /**
  * Auth.js (NextAuth v5) configuration.
  *
- * Single-user app: magic-link email login via Resend, with a hard allowlist of
- * one address (`ALLOWED_EMAIL`). Sessions are JWT (no session table needed); the
- * libSQL adapter exists only so the magic-link verification token can be stored
- * and consumed. The allowlist is enforced in the `signIn` callback — both the
- * deny path (any other email) and the allow path go through here.
+ * Read-only viewer shared with a handful of people: magic-link email login via
+ * Resend, with a hard allowlist (`ALLOWED_EMAILS`, comma-separated). Sessions
+ * are JWT (no session table needed); the libSQL adapter exists only so the
+ * magic-link verification token can be stored and consumed. The allowlist is
+ * enforced in the `signIn` callback — both the deny path (any other email) and
+ * the allow path go through here. Fails closed if `ALLOWED_EMAILS` is empty.
  */
 import NextAuth from 'next-auth';
 import Resend from 'next-auth/providers/resend';
 import { db } from './db';
 import { LibsqlAdapter } from './auth-libsql-adapter';
 
-const ALLOWED_EMAIL = (process.env.ALLOWED_EMAIL ?? '').trim().toLowerCase();
+const ALLOWED_EMAILS = (process.env.ALLOWED_EMAILS ?? '')
+  .split(',')
+  .map((e) => e.trim().toLowerCase())
+  .filter((e) => e.length > 0);
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: LibsqlAdapter(db()),
@@ -33,12 +37,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async signIn({ user }) {
-      const email = (user?.email ?? '').trim().toLowerCase();
-      if (!ALLOWED_EMAIL) {
+      if (ALLOWED_EMAILS.length === 0) {
         // Misconfiguration: fail closed.
         return false;
       }
-      return email === ALLOWED_EMAIL;
+      return ALLOWED_EMAILS.includes((user?.email ?? '').trim().toLowerCase());
     },
   },
 });
