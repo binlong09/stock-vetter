@@ -15,6 +15,7 @@ import {
   type ReverseDcfReport as ReverseDcfReportT,
   type DecisionCard as DecisionCardT,
 } from '@stock-vetter/schema';
+import { ChecklistBundle, type ChecklistBundle as ChecklistBundleT } from './lib/checklist';
 import { db } from './db';
 
 // ---- dashboard ----------------------------------------------------------
@@ -86,6 +87,20 @@ export async function getTickerDetail(ticker: string): Promise<TickerDetail | nu
     generatedAt: String(row.generated_at),
     pushedAt: String(row.pushed_at),
   };
+}
+
+/**
+ * The full 3-pass primary-source checklist for a ticker (pass1 + pass2 + pass3
+ * + citation-verification reports), parsed. Null if the ticker has no run.
+ */
+export async function getChecklistBundle(ticker: string): Promise<ChecklistBundleT | null> {
+  const res = await db().execute({
+    sql: `SELECT checklist_json FROM primary_source_runs WHERE ticker = ?`,
+    args: [ticker.toUpperCase()],
+  });
+  const row = res.rows[0];
+  if (!row || row.checklist_json == null) return null;
+  return ChecklistBundle.parse(JSON.parse(String(row.checklist_json)));
 }
 
 export interface AnalystCardSummaryRow {
