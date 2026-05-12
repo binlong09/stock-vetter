@@ -4,10 +4,10 @@
  *
  * A ticker counts as "analyzed" iff `fixtures/<TICKER>/decision-card.json`
  * exists — same gating artifact the `analyze-ticker` CLI uses. For each, this
- * reads decision-card.json, primary-source-checklist.json, financial-snapshot.json,
- * reverse-dcf.json (optional), and every videos/*.json, validates each through the
- * shared Zod schemas, then calls the same `pushTicker(...)` the CLI uses (single
- * code path — no drift). Idempotent: re-running overwrites.
+ * loads decision-card.json, primary-source-checklist.json, financial-snapshot.json,
+ * reverse-dcf.json (optional), and every videos/*.json via the shared fixture
+ * loader (validates against the Zod schemas), then calls the same `pushTicker(...)`
+ * the CLI uses — single code path, no drift. Idempotent: re-running overwrites.
  *
  * Runs migrations first, so on a fresh Turso DB this is the one-shot bootstrap.
  *
@@ -19,63 +19,16 @@
  */
 
 import 'dotenv/config';
-import { readdir, readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { readdir } from 'node:fs/promises';
 import {
-  DecisionCard,
-  FinancialSnapshot,
-  MetaCard,
-  ReverseDcfReport,
-} from '@stock-vetter/schema';
-import { isTursoConfigured, migrate, pushTicker } from '@stock-vetter/pipeline';
+  hasDecisionCard,
+  isTursoConfigured,
+  migrate,
+  pushTickerFromFixtures,
+  loadTickerFixtures,
+} from '@stock-vetter/pipeline';
 
 const FIXTURES_DIR = 'fixtures';
-
-async function fileExists(path: string): Promise<boolean> {
-  try {
-    await readFile(path);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-async function readJson<T>(path: string): Promise<T> {
-  return JSON.parse(await readFile(path, 'utf-8')) as T;
-}
-
-interface LoadedTicker {
-  ticker: string;
-  metaCard: ReturnType<typeof MetaCard.parse>;
-  primaryChecklist: unknown;
-  financialSnapshot: ReturnType<typeof FinancialSnapshot.parse>;
-  reverseDcf: ReturnType<typeof ReverseDcfReport.parse> | null;
-  analystCards: ReturnType<typeof DecisionCard.parse>[];
-}
-
-async function loadTicker(ticker: string): Promise<LoadedTicker> {
-  const base = join(FIXTURES_DIR, ticker);
-  const metaCard = MetaCard.parse(await readJson(join(base, 'decision-card.json')));
-  const primaryChecklist = await readJson(join(base, 'primary-source-checklist.json'));
-  const financialSnapshot = FinancialSnapshot.parse(
-    await readJson(join(base, 'financial-snapshot.json')),
-  );
-  let reverseDcf: LoadedTicker['reverseDcf'] = null;
-  const rdcfPath = join(base, 'reverse-dcf.json');
-  if (await fileExists(rdcfPath)) {
-    reverseDcf = ReverseDcfReport.parse(await readJson(rdcfPath));
-  }
-  const analystCards: LoadedTicker['analystCards'] = [];
-  try {
-    const videoFiles = (await readdir(join(base, 'videos'))).filter((f) => f.endsWith('.json'));
-    for (const f of videoFiles.sort()) {
-      analystCards.push(DecisionCard.parse(await readJson(join(base, 'videos', f))));
-    }
-  } catch {
-    // no videos/ dir — fine
-  }
-  return { ticker, metaCard, primaryChecklist, financialSnapshot, reverseDcf, analystCards };
-}
 
 async function main(): Promise<void> {
   if (!isTursoConfigured()) {
@@ -88,13 +41,14 @@ async function main(): Promise<void> {
   const requested = process.argv.slice(2).map((t) => t.toUpperCase());
   const allDirs = (await readdir(FIXTURES_DIR, { withFileTypes: true }))
     .filter((d) => d.isDirectory())
-    .map((d) => d.name);
+    .map((d) => d.name)
+    .sort();
 
   const analyzed: string[] = [];
   const skipped: string[] = [];
-  for (const t of allDirs.sort()) {
+  for (const t of allDirs) {
     if (requested.length > 0 && !requested.includes(t)) continue;
-    if (await fileExists(join(FIXTURES_DIR, t, 'decision-card.json'))) analyzed.push(t);
+    if (await hasDecisionCard(FIXTURES_DIR, t)) analyzed.push(t);
     else skipped.push(t);
   }
 
@@ -103,27 +57,26 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  console.error(`[push-fixtures] running migrations...`);
+  console.error('[push-fixtures] running migrations...');
   const applied = await migrate();
   console.error(
-    applied.length > 0 ? `[push-fixtures] applied migrations: ${applied.join(', ')}` : `[push-fixtures] schema up to date`,
+    applied.length > 0
+      ? `[push-fixtures] applied migrations: ${applied.join(', ')}`
+      : '[push-fixtures] schema up to date',
   );
 
   let ok = 0;
   let failed = 0;
   for (const t of analyzed) {
     try {
-      const loaded = await loadTicker(t);
-      await pushTicker({
-        metaCard: loaded.metaCard,
-        primaryChecklist: loaded.primaryChecklist,
-        financialSnapshot: loaded.financialSnapshot,
-        reverseDcf: loaded.reverseDcf,
-        analystCards: loaded.analystCards,
-      });
+      // Load once for the summary line, then push (push re-loads — cheap, and
+      // keeps push-fixtures and analyze-ticker on the identical push path).
+      const f = await loadTickerFixtures(FIXTURES_DIR, t);
+      await pushTickerFromFixtures(FIXTURES_DIR, t);
       ok += 1;
+      const n = f.analystCards.length;
       console.log(
-        `${t} ✓ (${loaded.metaCard.verdict} ${loaded.metaCard.weightedScore.toFixed(1)}, ${loaded.analystCards.length} video${loaded.analystCards.length === 1 ? '' : 's'})`,
+        `${t} ✓ (${f.metaCard.verdict} ${f.metaCard.weightedScore.toFixed(1)}, ${n} video${n === 1 ? '' : 's'})`,
       );
     } catch (e) {
       failed += 1;
@@ -132,9 +85,7 @@ async function main(): Promise<void> {
   }
 
   if (skipped.length > 0) {
-    console.log(
-      `\nskipped (no decision-card.json yet): ${skipped.join(', ')}`,
-    );
+    console.log(`\nskipped (no decision-card.json yet): ${skipped.join(', ')}`);
   }
   console.log(`\n${ok} pushed, ${failed} failed.`);
   if (failed > 0) process.exit(1);

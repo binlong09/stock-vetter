@@ -21,9 +21,9 @@ import type {
   DecisionCard,
   FinancialSnapshot,
   MetaCard,
-  PrimarySourceChecklist,
   ReverseDcfReport,
 } from '@stock-vetter/schema';
+import { loadTickerFixtures } from './fixture-loader.js';
 
 const MIGRATIONS_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'migrations');
 
@@ -245,4 +245,27 @@ export async function pushTicker(input: PushTickerInput): Promise<boolean> {
 
   await client.batch(stmts, 'write');
   return true;
+}
+
+/**
+ * Load a ticker's fixtures from disk and push them to Turso. Returns true on
+ * success, false if Turso isn't configured (silent no-op). Throws on a real
+ * failure — the CLI catches and warns rather than failing the run.
+ *
+ * `analyze-ticker` calls this *after* writing the fixture files, so the push
+ * mirrors exactly what's on disk; `push-fixtures` uses the same path for backfill.
+ */
+export async function pushTickerFromFixtures(
+  fixturesRoot: string,
+  ticker: string,
+): Promise<boolean> {
+  if (!isTursoConfigured()) return false;
+  const f = await loadTickerFixtures(fixturesRoot, ticker);
+  return pushTicker({
+    metaCard: f.metaCard,
+    primaryChecklist: f.primaryChecklist,
+    financialSnapshot: f.financialSnapshot,
+    reverseDcf: f.reverseDcf,
+    analystCards: f.analystCards,
+  });
 }

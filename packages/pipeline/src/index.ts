@@ -15,5 +15,11 @@ export {
   getTursoClient,
   migrate,
   pushTicker,
+  pushTickerFromFixtures,
   type PushTickerInput,
 } from './turso.js';
+export {
+  loadTickerFixtures,
+  hasDecisionCard,
+  type LoadedTickerFixtures,
+} from './fixture-loader.js';
