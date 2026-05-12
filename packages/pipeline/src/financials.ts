@@ -81,29 +81,46 @@ function pickConcept(
   return Array.from(byYearAndPeriod.values());
 }
 
+// Days between two YYYY-MM-DD strings (inclusive-ish; good enough for the
+// ~365 vs ~90 distinction we care about).
+function dayspan(start: string, end: string): number {
+  const a = Date.parse(start);
+  const b = Date.parse(end);
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return NaN;
+  return Math.round((b - a) / 86_400_000);
+}
+
 function annualValues(values: SecFactValue[]): SecFactValue[] {
-  // SEC company-facts has two kinds of FY entries:
+  // SEC company-facts has two kinds of FY-tagged entries:
   //   - period values (income statement, cash flow): have both `start` and
-  //     `end`; the reporting period must span fiscal year `fy`.
+  //     `end`. We want the row that *covers fiscal year `fy`* — and only that
+  //     row. SEC names a fiscal year for its END date, not its start: ADBE's
+  //     FY2025 runs 2024-11-30 → 2025-11-28, MSFT's runs 2023-07-01 →
+  //     2024-06-30 for FY2024, etc. So the guard is `end year === fy`. But
+  //     `fp: "FY"` is *also* attached to comparative QUARTERLY data in many
+  //     older 10-Ks (a quarter ending in fy's calendar year passes an
+  //     end-year check), so we additionally require the period span to be
+  //     roughly one year (~350–380 days). A 90-day quarter is rejected.
   //   - instant values (balance sheet): have only `end` (no `start`); the
   //     end-of-period balance must fall in fiscal year `fy`.
   //
-  // For both kinds, each year typically has multiple entries (one per 10-K
-  // that re-reported that year as comparative data) — we keep the most
-  // authoritative one. Without the year-must-match guard, comparative
-  // entries from later filings get assigned to the wrong fy.
+  // Each year typically has multiple surviving entries (one per 10-K that
+  // re-reported that year as comparative data) — we dedupe to the most
+  // authoritative / most-recent below.
   const byKey = new Map<string, SecFactValue>();
   for (const v of values) {
     if (v.fp !== 'FY') continue;
     if (!v.fy) continue;
     if (!v.end) continue;
+    const endYear = parseInt(v.end.slice(0, 4), 10);
     if (v.start) {
-      // Period value — start year must equal fy.
-      const startYear = parseInt(v.start.slice(0, 4), 10);
-      if (startYear !== v.fy) continue;
+      // Period value — must end in `fy` and span ≈ one year (rejects quarters
+      // that are mistagged FY in comparative tables).
+      if (endYear !== v.fy) continue;
+      const span = dayspan(v.start, v.end);
+      if (!Number.isFinite(span) || span < 350 || span > 380) continue;
     } else {
       // Instant value (balance sheet) — end year must equal fy.
-      const endYear = parseInt(v.end.slice(0, 4), 10);
       if (endYear !== v.fy) continue;
     }
     const key = `${v.fy}_${v.start ?? 'instant'}_${v.end}`;
@@ -253,7 +270,30 @@ function buildAnnualRows(facts: SecCompanyFacts): AnnualRow[] {
     });
   }
   rows.sort((a, b) => a.year - b.year);
-  return rows.slice(-10);
+  const out = rows.slice(-10);
+  warnOnRevenueDiscontinuity(out, facts.entityName);
+  return out;
+}
+
+// Cheap regression guard for the "quarter-sized annual figures" failure class
+// (the off-calendar-fiscal-year bug). A real revenue series doesn't jump 3×+
+// between consecutive years; if it does, something in the period-bucketing is
+// almost certainly picking the wrong-granularity entry. Logs a warning; does
+// not throw — we'd rather surface a partial snapshot than fail the run.
+function warnOnRevenueDiscontinuity(rows: AnnualRow[], entityName?: string): void {
+  for (let i = 1; i < rows.length; i++) {
+    const prev = rows[i - 1]!.revenue;
+    const cur = rows[i]!.revenue;
+    if (prev <= 0 || cur <= 0) continue;
+    const ratio = cur > prev ? cur / prev : prev / cur;
+    if (ratio > 3) {
+      console.warn(
+        `[financials] suspicious revenue discontinuity for ${entityName ?? 'ticker'}: ` +
+          `FY${rows[i - 1]!.year}=${prev} → FY${rows[i]!.year}=${cur} (${ratio.toFixed(1)}× jump). ` +
+          `Likely a fiscal-year/period-bucketing issue — verify the annual snapshot.`,
+      );
+    }
+  }
 }
 
 type YahooQuote = {
