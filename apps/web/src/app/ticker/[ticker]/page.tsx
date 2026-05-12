@@ -6,7 +6,6 @@ import { ScoreBadge } from '@/components/ScoreBadge';
 import { DimensionTable } from '@/components/DimensionTable';
 import { ValuationContext } from '@/components/ValuationContext';
 import { CrossSourceFindings } from '@/components/CrossSourceFindings';
-import { ThingsToVerify } from '@/components/ThingsToVerify';
 import { Section } from '@/components/Section';
 import { usd, isoDate } from '@/lib/format';
 
@@ -71,11 +70,6 @@ export default async function TickerPage({ params }: { params: Promise<{ ticker:
           </p>
         </Section>
       )}
-
-      {/* Things to verify */}
-      <Section title="Verify these yourself" hint="The card is a starting point, not a recommendation.">
-        <ThingsToVerify items={m.thingsToVerify} />
-      </Section>
 
       {/* Footer */}
       <div className="mt-6 border-t border-slate-200 pt-3 text-[11px] leading-relaxed text-slate-400">
