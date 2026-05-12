@@ -71,7 +71,7 @@ export function ValuationContext({
           </dd>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="flex flex-wrap gap-x-6 gap-y-2.5">
           <div>
             <dt className="text-[11px] uppercase tracking-wide text-slate-400">P/E vs 10-yr median</dt>
             <dd className="mt-0.5 text-slate-800">
