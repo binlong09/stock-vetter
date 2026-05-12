@@ -1,12 +1,13 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getTickerDetail } from '@/queries';
+import { getTickerDetail, getChecklistBundle, listAnalystCards } from '@/queries';
 import { VerdictBadge } from '@/components/VerdictBadge';
 import { ScoreBadge } from '@/components/ScoreBadge';
 import { DimensionTable } from '@/components/DimensionTable';
 import { ValuationContext } from '@/components/ValuationContext';
 import { CrossSourceFindings } from '@/components/CrossSourceFindings';
 import { Section } from '@/components/Section';
+import { DeepView } from '@/components/DeepView';
 import { usd, isoDate } from '@/lib/format';
 
 export const revalidate = 300;
@@ -15,6 +16,11 @@ export default async function TickerPage({ params }: { params: Promise<{ ticker:
   const { ticker } = await params;
   const detail = await getTickerDetail(ticker);
   if (!detail) notFound();
+
+  const [checklist, analystCards] = await Promise.all([
+    getChecklistBundle(detail.ticker),
+    listAnalystCards(detail.ticker),
+  ]);
 
   const { metaCard: m, financialSnapshot } = detail;
 
@@ -70,6 +76,16 @@ export default async function TickerPage({ params }: { params: Promise<{ ticker:
           </p>
         </Section>
       )}
+
+      {/* Deep view — everything behind the verdict, as collapsible sections */}
+      <DeepView
+        ticker={detail.ticker}
+        metaCard={m}
+        checklist={checklist}
+        snapshot={financialSnapshot}
+        reverseDcf={detail.reverseDcf}
+        analystCards={analystCards}
+      />
 
       {/* Footer */}
       <div className="mt-6 border-t border-slate-200 pt-3 text-[11px] leading-relaxed text-slate-400">
