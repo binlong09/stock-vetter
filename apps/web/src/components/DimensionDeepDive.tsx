@@ -153,6 +153,7 @@ export function DimensionDeepDive({
   pass1Tiers: Map<string, MatchTier>;
   pass2Tiers: Map<string, MatchTier>;
 }) {
+  const insufficient = pass1 != null && isInsufficientPrimary(pass1);
   const initial = pass1 && !isInsufficientPrimary(pass1) ? pass1.score : null;
   const adj = pass2?.recommendedAdjustment;
   const final = pass3?.finalScore ?? metaDim.finalScore;
@@ -233,12 +234,17 @@ export function DimensionDeepDive({
           </div>
         </section>
 
-        {metaDim.uncertainty === 'high' && (
+        {insufficient ? (
+          <p className="text-[11px] text-rose-600">
+            The filings didn&apos;t support a confident score here, so this dimension was excluded
+            from the overall weighted score.
+          </p>
+        ) : metaDim.uncertainty === 'high' ? (
           <p className="text-[11px] text-rose-600">
             This dimension was down-weighted in the overall score because the triple-sampling spread
             was wide{metaDim.range != null ? ` (range ${metaDim.range.toFixed(1)})` : ''}.
           </p>
-        )}
+        ) : null}
       </div>
     </details>
   );
