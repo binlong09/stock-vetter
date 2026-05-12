@@ -1,0 +1,92 @@
+{
+  "ticker": "PYPL",
+  "cik": "0001633917",
+  "accession": "0001633917-26-000067",
+  "form": "10-Q",
+  "filingDate": "2026-05-05",
+  "primaryDocument": "pypl-20260331.htm",
+  "parsedAt": "2026-05-10T07:33:20.227Z",
+  "cleanedTextLength": 236663,
+  "sections": [
+    {
+      "id": "financial-statements",
+      "label": "Financial Statements",
+      "itemNumber": "1",
+      "charLength": 267,
+      "confidence": "failed",
+      "warnings": [
+        "incorporation-by-reference: real content lives elsewhere in the filing"
+      ],
+      "chosenAnchor": {
+        "text": "ITEM 1:  LEGAL PROCEEDINGS",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "risk-factors",
+      "label": "Risk Factors (updates)",
+      "itemNumber": "1A",
+      "charLength": 20844,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "ITEM 1A:  RISK FACTORS",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "mda",
+      "label": "Management's Discussion and Analysis",
+      "itemNumber": "2",
+      "charLength": 2065,
+      "confidence": "failed",
+      "warnings": [
+        "Section length 2065 far below floor — likely TOC entry or missing content"
+      ],
+      "chosenAnchor": {
+        "text": "ITEM 2:  UNREGISTERED SALES OF EQUITY SECURITIES AND USE OF PROCEEDS",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "quant-risk",
+      "label": "Quantitative and Qualitative Disclosures About Market Risk",
+      "itemNumber": "3",
+      "charLength": 2895,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "ITEM 3:  DEFAULTS UPON SENIOR SECURITIES",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    }
+  ],
+  "parserWarnings": [
+    "Item not extracted cleanly: financial-statements",
+    "Item not extracted cleanly: mda"
+  ],
+  "missing": [
+    "financial-statements",
+    "mda"
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "ticker": "INTU",
+  "cik": "0000896878",
+  "accession": "0000896878-26-000014",
+  "form": "10-Q",
+  "filingDate": "2026-02-26",
+  "primaryDocument": "intu-20260131.htm",
+  "parsedAt": "2026-05-10T05:17:19.742Z",
+  "cleanedTextLength": 290765,
+  "sections": [
+    {
+      "id": "quant-risk",
+      "label": "Quantitative and Qualitative Disclosures About Market Risk",
+      "itemNumber": "3",
+      "charLength": 4877,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "ITEM 3 - QUANTITATIVE AND QUALITATIVE DISCLOSURES ABOUT MARKET RISK",
+        "score": 9,
+        "signals": [
+          "descendant-bold",
+          "larger-font",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "financial-statements",
+      "label": "Financial Statements",
+      "itemNumber": "1",
+      "charLength": 184,
+      "confidence": "failed",
+      "warnings": [
+        "incorporation-by-reference: real content lives elsewhere in the filing"
+      ],
+      "chosenAnchor": {
+        "text": "ITEM 1 - LEGAL PROCEEDINGS",
+        "score": 9,
+        "signals": [
+          "descendant-bold",
+          "larger-font",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "risk-factors",
+      "label": "Risk Factors (updates)",
+      "itemNumber": "1A",
+      "charLength": 85985,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "ITEM 1A - RISK FACTORS",
+        "score": 9,
+        "signals": [
+          "descendant-bold",
+          "larger-font",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "mda",
+      "label": "Management's Discussion and Analysis",
+      "itemNumber": "2",
+      "charLength": 4661,
+      "confidence": "failed",
+      "warnings": [
+        "Section length 4661 far below floor — likely TOC entry or missing content"
+      ],
+      "chosenAnchor": {
+        "text": "ITEM 2 - UNREGISTERED SALES OF EQUITY SECURITIES AND USE OF PROCEEDS",
+        "score": 9,
+        "signals": [
+          "descendant-bold",
+          "larger-font",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    }
+  ],
+  "parserWarnings": [
+    "Item not extracted cleanly: financial-statements",
+    "Item not extracted cleanly: mda"
+  ],
+  "missing": [
+    "financial-statements",
+    "mda"
+  ]
+}

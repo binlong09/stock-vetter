@@ -1,0 +1,126 @@
+{
+  "ticker": "NFLX",
+  "cik": "0001065280",
+  "accession": "0001065280-26-000034",
+  "form": "10-K",
+  "filingDate": "2026-01-23",
+  "primaryDocument": "nflx-20251231.htm",
+  "parsedAt": "2026-05-10T07:45:17.785Z",
+  "cleanedTextLength": 303996,
+  "sections": [
+    {
+      "id": "business",
+      "label": "Business",
+      "itemNumber": "1",
+      "charLength": 9146,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "Item 1.Business",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "risk-factors",
+      "label": "Risk Factors",
+      "itemNumber": "1A",
+      "charLength": 79792,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "Item 1A.Risk Factors",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "properties",
+      "label": "Properties",
+      "itemNumber": "2",
+      "charLength": 507,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "Item 2.Properties",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "legal-proceedings",
+      "label": "Legal Proceedings",
+      "itemNumber": "3",
+      "charLength": 4145,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "Item 3.Legal Proceedings",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "mda",
+      "label": "Management's Discussion and Analysis",
+      "itemNumber": "7",
+      "charLength": 37116,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "Item 7.Management’s Discussion and Analysis of Financial Condition and Results of Operations",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "quant-risk",
+      "label": "Quantitative and Qualitative Disclosures About Market Risk",
+      "itemNumber": "7A",
+      "charLength": 6707,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "Item 7A.Quantitative and Qualitative Disclosures About Market Risk",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "financial-statements",
+      "label": "Financial Statements",
+      "itemNumber": "8",
+      "charLength": 123554,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "Item 8.Financial Statements and Supplementary Data",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    }
+  ],
+  "parserWarnings": [],
+  "missing": []
+}

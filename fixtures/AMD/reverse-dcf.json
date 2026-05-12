@@ -1,0 +1,57 @@
+{
+  "ticker": "AMD",
+  "asOf": "2026-05-10",
+  "currentPrice": 455.19,
+  "sharesOutstanding": 1625,
+  "startingFcfMillions": 1121,
+  "actualFcfCagr3y": null,
+  "actualFcfCagr5y": null,
+  "grid": [
+    {
+      "discountRate": 0.08,
+      "terminalMultiple": 15,
+      "impliedFcfCagr": null
+    },
+    {
+      "discountRate": 0.08,
+      "terminalMultiple": 20,
+      "impliedFcfCagr": null
+    },
+    {
+      "discountRate": 0.08,
+      "terminalMultiple": 25,
+      "impliedFcfCagr": 0.47832031249999996
+    },
+    {
+      "discountRate": 0.1,
+      "terminalMultiple": 15,
+      "impliedFcfCagr": null
+    },
+    {
+      "discountRate": 0.1,
+      "terminalMultiple": 20,
+      "impliedFcfCagr": null
+    },
+    {
+      "discountRate": 0.1,
+      "terminalMultiple": 25,
+      "impliedFcfCagr": null
+    },
+    {
+      "discountRate": 0.12,
+      "terminalMultiple": 15,
+      "impliedFcfCagr": null
+    },
+    {
+      "discountRate": 0.12,
+      "terminalMultiple": 20,
+      "impliedFcfCagr": null
+    },
+    {
+      "discountRate": 0.12,
+      "terminalMultiple": 25,
+      "impliedFcfCagr": null
+    }
+  ],
+  "narrative": "At a current price of $455.19 per share and trailing FCF of $1.1B, the reverse DCF asks: what 10-year FCF growth rate would justify this price under various assumptions?\n\n\nRead the sensitivity grid below to see how this implied growth shifts under different discount rates and terminal multiples. A value-investing skeptic would ask whether the highest-implied-growth cells in the grid are achievable, and whether the assumptions that produce a more attractive picture are themselves reasonable."
+}

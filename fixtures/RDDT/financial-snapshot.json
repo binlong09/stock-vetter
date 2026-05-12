@@ -1,0 +1,41 @@
+{
+  "ticker": "RDDT",
+  "asOf": "2026-05-10",
+  "price": 155.8,
+  "marketCap": 29992908800,
+  "enterpriseValue": 27243565056,
+  "netCash": 2749343936,
+  "peRatio": 44.387466,
+  "evEbit": 61.63925629887055,
+  "evSales": 12.369348848992919,
+  "fcfYield": 0.018807600815296713,
+  "peRatio10yMedian": null,
+  "evEbit10yMedian": null,
+  "annual": [
+    {
+      "year": 2024,
+      "revenue": 1300205000,
+      "ebit": -560568000,
+      "netIncome": -484276000,
+      "fcf": 215820000,
+      "sharesOutstanding": 145472389,
+      "longTermDebt": null,
+      "roic": null,
+      "debtToEquity": null
+    },
+    {
+      "year": 2025,
+      "revenue": 2202506000,
+      "ebit": 441984000,
+      "netIncome": 529721000,
+      "fcf": 684169000,
+      "sharesOutstanding": 202107978,
+      "longTermDebt": null,
+      "roic": null,
+      "debtToEquity": null
+    }
+  ],
+  "isProfitable": true,
+  "hasPositiveFcf": true,
+  "shareCountTrend": "growing"
+}

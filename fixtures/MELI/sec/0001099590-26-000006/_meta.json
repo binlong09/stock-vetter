@@ -1,0 +1,157 @@
+{
+  "ticker": "MELI",
+  "cik": "0001099590",
+  "accession": "0001099590-26-000006",
+  "form": "10-K",
+  "filingDate": "2026-02-25",
+  "primaryDocument": "meli-20251231.htm",
+  "parsedAt": "2026-05-10T07:50:09.417Z",
+  "cleanedTextLength": 647941,
+  "sections": [
+    {
+      "id": "business",
+      "label": "Business",
+      "itemNumber": "1",
+      "charLength": 17,
+      "confidence": "failed",
+      "warnings": [
+        "Section length 17 far below floor — likely TOC entry or missing content"
+      ],
+      "chosenAnchor": {
+        "text": "ITEM 1. BUSINESS",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "risk-factors",
+      "label": "Risk Factors",
+      "itemNumber": "1A",
+      "charLength": 83,
+      "confidence": "failed",
+      "warnings": [
+        "Section length 83 far below floor — likely TOC entry or missing content"
+      ],
+      "chosenAnchor": {
+        "text": "ITEM 1A. RISK FACTORS",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "properties",
+      "label": "Properties",
+      "itemNumber": "2",
+      "charLength": 20,
+      "confidence": "failed",
+      "warnings": [
+        "Section length 20 far below floor — likely TOC entry or missing content"
+      ],
+      "chosenAnchor": {
+        "text": "ITEM 2. PROPERTIES",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "legal-proceedings",
+      "label": "Legal Proceedings",
+      "itemNumber": "3",
+      "charLength": 203,
+      "confidence": "low",
+      "warnings": [
+        "Section length 203 below expected floor for legal-proceedings"
+      ],
+      "chosenAnchor": {
+        "text": "ITEM 3. LEGAL PROCEEDINGS",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "mda",
+      "label": "Management's Discussion and Analysis",
+      "itemNumber": "7",
+      "charLength": 95,
+      "confidence": "failed",
+      "warnings": [
+        "Section length 95 far below floor — likely TOC entry or missing content"
+      ],
+      "chosenAnchor": {
+        "text": "ITEM 7. MANAGEMENT’S DISCUSSION AND ANALYSIS OF FINANCIAL CONDITION AND RESULTS OF OPERATIONS",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "quant-risk",
+      "label": "Quantitative and Qualitative Disclosures About Market Risk",
+      "itemNumber": "7A",
+      "charLength": 69,
+      "confidence": "failed",
+      "warnings": [
+        "Section length 69 far below floor — likely TOC entry or missing content"
+      ],
+      "chosenAnchor": {
+        "text": "ITEM 7A. QUANTITATIVE AND QUALITATIVE DISCLOSURES ABOUT MARKET RISK",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "financial-statements",
+      "label": "Financial Statements",
+      "itemNumber": "8",
+      "charLength": 569021,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "ITEM 8. FINANCIAL STATEMENTS AND SUPPLEMENTARY DATA",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    }
+  ],
+  "parserWarnings": [
+    "Item not extracted cleanly: business",
+    "Item not extracted cleanly: risk-factors",
+    "Item not extracted cleanly: properties",
+    "Item not extracted cleanly: mda",
+    "Item not extracted cleanly: quant-risk"
+  ],
+  "missing": [
+    "business",
+    "risk-factors",
+    "properties",
+    "mda",
+    "quant-risk"
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "ticker": "RDDT",
+  "cik": "0001713445",
+  "accession": "0001713445-26-000069",
+  "form": "10-Q",
+  "filingDate": "2026-05-01",
+  "primaryDocument": "rddt-20260331.htm",
+  "parsedAt": "2026-05-10T06:57:04.166Z",
+  "cleanedTextLength": 320145,
+  "sections": [
+    {
+      "id": "financial-statements",
+      "label": "Financial Statements",
+      "itemNumber": "1",
+      "charLength": 27,
+      "confidence": "failed",
+      "warnings": [
+        "Section length 27 far below floor — likely TOC entry or missing content"
+      ],
+      "chosenAnchor": {
+        "text": "Item 1. Legal Proceedings",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "risk-factors",
+      "label": "Risk Factors (updates)",
+      "itemNumber": "1A",
+      "charLength": 23,
+      "confidence": "failed",
+      "warnings": [
+        "Section length 23 far below floor — likely TOC entry or missing content"
+      ],
+      "chosenAnchor": {
+        "text": "Item 1A. Risk Factors",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "mda",
+      "label": "Management's Discussion and Analysis",
+      "itemNumber": "2",
+      "charLength": 69,
+      "confidence": "failed",
+      "warnings": [
+        "Section length 69 far below floor — likely TOC entry or missing content"
+      ],
+      "chosenAnchor": {
+        "text": "Item 2. Unregistered Sales of Equity Securities and Use of Proceeds",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "quant-risk",
+      "label": "Quantitative and Qualitative Disclosures About Market Risk",
+      "itemNumber": "3",
+      "charLength": 306916,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "Item 3. Defaults Upon Senior Securities",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    }
+  ],
+  "parserWarnings": [
+    "Item not extracted cleanly: financial-statements",
+    "Item not extracted cleanly: risk-factors",
+    "Item not extracted cleanly: mda"
+  ],
+  "missing": [
+    "financial-statements",
+    "risk-factors",
+    "mda"
+  ]
+}

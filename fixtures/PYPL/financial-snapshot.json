@@ -1,0 +1,129 @@
+{
+  "ticker": "PYPL",
+  "asOf": "2026-05-10",
+  "price": 45.37,
+  "marketCap": 40021123072,
+  "enterpriseValue": 42349125632,
+  "netCash": -2327999488,
+  "peRatio": 8.512195,
+  "evEbit": 6.982543385325639,
+  "evSales": 1.2766527683588569,
+  "fcfYield": 0.10203361921287364,
+  "peRatio10yMedian": 41.746467533998256,
+  "evEbit10yMedian": 36.28658919951774,
+  "annual": [
+    {
+      "year": 2016,
+      "revenue": 10842000000,
+      "ebit": 1586000000,
+      "netIncome": 1401000000,
+      "fcf": 2489000000,
+      "sharesOutstanding": 1218000000,
+      "longTermDebt": null,
+      "roic": null,
+      "debtToEquity": null
+    },
+    {
+      "year": 2017,
+      "revenue": 13094000000,
+      "ebit": 2127000000,
+      "netIncome": 1795000000,
+      "fcf": 1864000000,
+      "sharesOutstanding": 1221000000,
+      "longTermDebt": null,
+      "roic": null,
+      "debtToEquity": null
+    },
+    {
+      "year": 2018,
+      "revenue": 15451000000,
+      "ebit": 2194000000,
+      "netIncome": 2057000000,
+      "fcf": 4660000000,
+      "sharesOutstanding": 1203000000,
+      "longTermDebt": null,
+      "roic": null,
+      "debtToEquity": null
+    },
+    {
+      "year": 2019,
+      "revenue": 17772000000,
+      "ebit": 2719000000,
+      "netIncome": 2459000000,
+      "fcf": 3857000000,
+      "sharesOutstanding": 1188000000,
+      "longTermDebt": 4965000000,
+      "roic": null,
+      "debtToEquity": 0.29404797157240153
+    },
+    {
+      "year": 2020,
+      "revenue": 21454000000,
+      "ebit": 3289000000,
+      "netIncome": 4202000000,
+      "fcf": 4988000000,
+      "sharesOutstanding": 1187000000,
+      "longTermDebt": 8939000000,
+      "roic": null,
+      "debtToEquity": 0.44652580048953494
+    },
+    {
+      "year": 2021,
+      "revenue": 25371000000,
+      "ebit": 4262000000,
+      "netIncome": 4169000000,
+      "fcf": 5432000000,
+      "sharesOutstanding": 1186000000,
+      "longTermDebt": 8049000000,
+      "roic": null,
+      "debtToEquity": 0.37046071708013073
+    },
+    {
+      "year": 2022,
+      "revenue": 27518000000,
+      "ebit": 3837000000,
+      "netIncome": 2419000000,
+      "fcf": 5107000000,
+      "sharesOutstanding": 1158000000,
+      "longTermDebt": 10417000000,
+      "roic": null,
+      "debtToEquity": 0.5138107921475782
+    },
+    {
+      "year": 2023,
+      "revenue": 29771000000,
+      "ebit": 5028000000,
+      "netIncome": 4246000000,
+      "fcf": 4220000000,
+      "sharesOutstanding": 1107000000,
+      "longTermDebt": 9676000000,
+      "roic": null,
+      "debtToEquity": 0.45964562253574653
+    },
+    {
+      "year": 2024,
+      "revenue": 31797000000,
+      "ebit": 5325000000,
+      "netIncome": 4147000000,
+      "fcf": 6767000000,
+      "sharesOutstanding": 1039000000,
+      "longTermDebt": 9879000000,
+      "roic": null,
+      "debtToEquity": 0.4838614879757065
+    },
+    {
+      "year": 2025,
+      "revenue": 33172000000,
+      "ebit": 6065000000,
+      "netIncome": 5233000000,
+      "fcf": 5564000000,
+      "sharesOutstanding": 968000000,
+      "longTermDebt": 9987000000,
+      "roic": null,
+      "debtToEquity": 0.49303909952606634
+    }
+  ],
+  "isProfitable": true,
+  "hasPositiveFcf": true,
+  "shareCountTrend": "shrinking"
+}

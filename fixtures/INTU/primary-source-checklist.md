@@ -1,0 +1,213 @@
+# INTU — Primary-Source Value Checklist
+
+*Source:* 10-K accession `0000896878-25-000035` + DEF 14A (where used)
+*Citation verification:* 15/22 exact, 0 whitespace-normalized, 1 case-only, 4 punctuation-normalized, 2 **no-match**
+
+> ⚠️ 2 citation(s) could not be located in the cited source. See annotations below.
+
+Each dimension is scored 1–10 from primary sources only (no analyst opinions). Citations point to specific 10-K or proxy passages so you can verify the reasoning yourself — and learn what to look for in primary documents.
+
+## Scores at a glance
+
+| Dimension | Pass 1 | Skeptic Δ | Final | Decision |
+|---|---|---|---|---|
+| Moat durability | 7.0 | 0 | 7.0 | no-change |
+| Owner earnings quality | 5.5 | 0 | 5.5 | no-change |
+| Capital allocation | 6.0 | 0 | 6.0 | no-change |
+| Debt sustainability | 6.5 | 0 | 6.5 | no-change |
+| Insider alignment | 6.5 | 0 | 6.5 | no-change |
+| Cyclicality awareness | 7.0 | 0 | 7.0 | no-change |
+
+## Moat durability
+
+**Score:** 7.0 / 10   _samples: [7.0, 7.0, 7.0], range 0.0_ *(tight: low uncertainty)*
+
+Intuit's moat rests on at least three structural pillars: (1) deep switching costs from an all-in-one platform where payroll, payments, bookkeeping, and tax are intertwined; (2) a self-reinforcing network of hundreds of thousands of ProAdvisor accountants who recommend QuickBooks to their clients; and (3) a proprietary AI operating system (GenOS) built on decades of unique financial data that competitors cannot easily replicate. Risk Factors, however, are unusually candid about competitive vulnerabilities, citing government-funded free tax filing, AI-enabled entrants, and large platform companies targeting the same customers — limiting the score to 7 rather than 8.
+
+### Citations
+
+- **`business`** — "We have a significant competitive advantage with our scale of data, data services, AI capabilities, ecosystem of applications, and our large network of AI-enabled human experts to become the all-in-one platform for consumers, businesses, and accountants."
+  *Why it matters:* Management explicitly articulates the multi-dimensional nature of the moat — data scale, AI, ecosystem breadth, and a human expert network — which collectively raise switching costs and reinforce network effects across all four segments.
+- **`business`** — "Our free Find a ProAdvisor service helps customers find a QuickBooks Certified accountant or bookkeeper who knows their niche, speaks their language, or is nearby."
+  *Why it matters:* The ProAdvisor network creates a demand-side flywheel: accountants certified in QuickBooks recommend it to clients, who then become sticky customers, reinforcing the network effect without additional marketing spend.
+- **`risk-factors`** — "federal and state governments are or could become publicly funded direct competitors of the U.S. tax services industry and of Intuit. Government funded services that curtail or eliminate the role of taxpayers in preparing their own taxes could potentially have material and adverse revenue implications on us."
+  *Why it matters:* This is the single most structurally threatening risk to the Consumer segment moat — government competition is non-commercial and price-immune, representing a ceiling on TurboTax pricing power that a normal competitive moat would not face.
+- **`risk-factors`** *(case-only match)* — "We face competition from existing companies with large established consumer user bases and broad-based platforms, who may change or expand the focus of their business strategies and marketing to target our customers, including small businesses, tax and personal financial management customers."
+  *Why it matters:* This acknowledges that large platform companies (e.g., Google, Amazon, Apple) could redirect existing customer relationships to displace Intuit, representing a structural threat to moat durability that cannot be dismissed.
+
+### Pass 1 counter-evidence considered
+
+Risk Factors are unusually explicit about competitive erosion vectors: (1) government-funded free tax filing (IRS Direct File) directly threatens the Consumer segment, which contributes ~26% of revenue; (2) AI could enable new entrants or incumbents to replicate Intuit's functionality without its legacy data advantage if model quality converges; (3) free and low-cost offerings in accounting and payments already pressure pricing in the Global Business Solutions segment. The Business section's competition disclosure also admits 'competitive pressures in many of the market segments we serve have grown markedly over the past few years,' which is an unusually self-critical admission that constrains the moat score.
+
+### Pass 2 — Skeptic
+
+*Adjustment: no change recommended*
+
+Pass 1's counter-evidence already addresses the three primary moat-erosion vectors visible in the primary sources: IRS Direct File threatening the Consumer segment, AI enabling new entrants, and free/low-cost competition in business software. Reading the same primary sources independently, I find no material evidence that Pass 1 missed. The Business section confirms deep ecosystem integration (payments, payroll, bookkeeping, capital, marketing all on one platform), a large proprietary data asset, GenOS as a proprietary AI infrastructure layer, and a network of hundreds of thousands of accountants who recommend and distribute QuickBooks — all structural moat reinforcers that the score of 7 appears to already reflect. The Risk Factors confirm the competitive threats Pass 1 cited. The competition disclosure's self-critical language ('competitive pressures in many of the market segments we serve have grown markedly over the past few years') was already quoted by Pass 1. No new evidence of either a stronger moat or a deeper erosion risk emerges from the primary sources that Pass 1 did not already weigh. The score of 7 is well-calibrated.
+
+### Pass 3 — Judge
+
+**Final score: 7.0 / 10** *(decision: no-change)*
+
+Pass 2 explicitly confirmed it found no material evidence that Pass 1 missed, recommended zero adjustment, and agreed the score of 7 is well-calibrated. The primary sources support Pass 1's characterization of both the multi-pillar moat (GenOS, ProAdvisor network, deep ecosystem switching costs) and the three erosion vectors (government free filing, AI-enabled entrants, large platform competitors), all of which were already weighed in Pass 1's reasoning. No new evidence from either side warrants a change.
+
+## Owner earnings quality
+
+**Score:** 5.5 / 10   _samples: [5.5, 5.5, 5.5], range 0.0_ *(tight: low uncertainty)*
+
+Intuit's operating cash flow ($6.2B in FY2025) substantially exceeds net income ($3.9B), a favorable signal, but this gap is largely explained by $1.97B of stock-based compensation — a real economic cost to owners that is non-cash. Stripping out SBC, owner FCF is closer to $4.2B before capex ($124M total capitalized), which aligns more closely with GAAP net income. The business is capital-light in terms of physical capex, but SBC running at ~32% of operating cash flow is a persistent and meaningful drag on true owner earnings. Revenue recognition involves genuine complexity (multiple performance obligations, desktop vs. online, Credit Karma cost-per-action), which introduces non-trivial estimation risk acknowledged by auditors as a critical audit matter.
+
+### Citations
+
+- **`financial-statements`** — "Share-based compensation expense— — 1,968 — — — 1,968"
+  *Why it matters:* SBC of $1.968B in FY2025 (vs. $1.940B in FY2024 and $1.712B in FY2023) is a large, growing, and recurring non-cash charge that inflates reported operating cash flow relative to true owner earnings; at ~51% of net income, it is the single largest reconciling item between net income and operating cash flow.
+- **`financial-statements`** — "Net cash provided by operating activities6,207 4,884 5,046"
+  *Why it matters:* Operating cash flow of $6.2B in FY2025 against net income of $3.9B produces a 1.6× ratio, which looks strong, but the entire gap is explained by SBC ($1.97B) and amortization of acquired intangibles ($637M) — the latter being a real cost of past acquisitions that will recur as long as Intuit continues acquiring, not a conservative accounting artifact.
+- **`financial-statements`** *(punctuation-normalized match)* — "Given the nature of the Company's product and service offerings, there is complexity in determining whether software licenses and services are considered performance obligations that should be accounted for separately or together."
+  *Why it matters:* The auditor flagged performance obligation determination as the sole critical audit matter, signaling that revenue recognition requires significant management judgment and introduces risk that reported revenues could be timed differently than cash receipts — a meaningful earnings quality caveat.
+- **`financial-statements`** — "Capitalization of internal use software(40)(59)(50)"
+  *Why it matters:* Capitalized internal-use software ($40M in FY2025) is modest relative to the $2.9B R&D expense run-rate, indicating Intuit is not aggressively capitalizing development costs to inflate operating income — a positive earnings quality signal.
+
+### Pass 1 counter-evidence considered
+
+The largest counter-evidence to a higher score is that SBC has grown from $1.71B (FY2023) to $1.97B (FY2025), now representing approximately 51% of net income and 32% of operating cash flow. If one treats SBC as a cash cost (as it economically is), true owner FCF is roughly $4.1–4.2B — only modestly above GAAP net income — narrowing the apparent cash conversion advantage. Additionally, $637M of annual amortization of acquired intangibles flows through both P&L and operating cash flow as an add-back, masking that Intuit must keep acquiring to sustain growth, making this 'non-cash' charge somewhat recurring in an economic sense.
+
+### Pass 2 — Skeptic
+
+*Adjustment: no change recommended*
+
+Pass 1's counter-evidence already addresses the two largest concerns: (1) SBC at ~51% of net income / 32% of operating cash flow reducing true owner FCF to ~$4.1–4.2B, and (2) the $637M amortization of acquired intangibles being semi-recurring given Intuit's acquisition cadence. I reviewed the primary sources for any additional evidence not addressed. Two items worth checking: (a) the RSU tax-withholding cash outflow of $982M in FY2025 (vs. $1,002M in FY2024), which is a real cash cost associated with SBC that reduces reported operating cash flow by being classified as financing — but Pass 1's analysis of SBC as an economic cost effectively captures this concept already. (b) The $435M deferred tax benefit added back in operating cash flow ($554M in FY2024, $628M in FY2023) is a persistent and growing non-cash add-back that inflates reported operating cash flow versus cash taxes actually paid ($1,408M paid vs. ~$965M provision), but this reverses sign and the tax paid figure actually implies higher cash taxes than the provision, not lower — meaning operating cash flow overstates cash earnings on the deferred tax line in aggregate. However, neither of these represents a dimension-changing concern beyond what Pass 1 already incorporated. The cash-flow statement confirms operating cash flow of $6,207M, but after adjusting for SBC ($1,968M) and noting that employee tax withholding on RSU vesting ($982M) is in financing, the normalized owner earnings figure Pass 1 cited (~$4.1–4.2B) is consistent with the primary sources. No new material evidence found that would warrant adjusting the 5.5 score.
+
+### Pass 3 — Judge
+
+**Final score: 5.5 / 10** *(decision: no-change)*
+
+Pass 2 explicitly found no new material evidence beyond what Pass 1 already incorporated, recommending a 0 adjustment. The two items Pass 2 surfaced — RSU tax-withholding outflows ($982M in financing) and deferred tax dynamics — were either already captured conceptually in Pass 1's SBC economic cost framework or do not represent dimension-changing concerns. Pass 1's analysis of SBC at ~51% of net income, the intangible amortization semi-recurring nature, and the revenue recognition complexity critical audit matter together support the 5.5 score without any revision warranted.
+
+## Capital allocation
+
+**Score:** 6.0 / 10   _samples: [6.0, 6.0, 6.0], range 0.0_ *(tight: low uncertainty)*
+
+Intuit returns meaningful cash to shareholders through dividends ($1.2B in fiscal 2025) and share repurchases ($2.8B in fiscal 2025), funded by strong operating cash flow ($6.2B). However, the repurchase cadence appears mechanical rather than opportunistic — buybacks occurred at elevated valuations (trailing P/E ~26×, stock near $400). The $184M acquisition in fiscal 2025 is small and targeted, and the 2021 Credit Karma acquisition created significant goodwill. Capex is modest at $124M vs. $6.2B operating cash flow, reflecting a capital-light model, but large SBC-related cash outflows ($982M in employee tax withholding on RSU vesting) and SBC itself dilute the shareholder return picture. Overall, capital allocation is adequate and shareholder-return-oriented, but lacks evidence of valuation-sensitive buyback discipline.
+
+### Citations
+
+- **`mda`** — "we used $2.8 billion for the repurchase of shares of our common stock under our stock repurchase programs, $1.2 billion for the payment of cash dividends"
+  *Why it matters:* In fiscal 2025, Intuit returned approximately $4.0B to shareholders via buybacks and dividends against $6.2B of operating cash flow — a high payout ratio, but the buybacks at elevated multiples raise questions about valuation discipline.
+- **`mda`** — "We expect to return excess cash generated by operations to our stockholders through repurchases of our common stock and payment of cash dividends, after taking into account our operating and strategic cash needs."
+  *Why it matters:* Management's stated capital allocation priority is shareholder return, framed as residual after operational and strategic needs — a reasonable framework but one that doesn't commit to valuation sensitivity in buyback timing.
+- **`mda`** — "During fiscal 2025, we generated $6.2 billion in cash from operations. We also received $3.1 billion from the net increase in funds receivable and funds payable and amounts due to customers"
+  *Why it matters:* The $6.2B operating cash flow provides a substantial base for capital allocation, but the $3.1B seasonal float from tax-season timing inflates the headline figure and must be distinguished from recurring free cash flow.
+- **`mda`** **⚠️ NO-MATCH** — "we used $184 million for a business acquisition, and $124 million for capital expenditures"
+  *Why it matters:* Acquisition spending in fiscal 2025 was minor and capex was minimal relative to revenues ($18.8B), suggesting disciplined organic reinvestment rather than empire-building M&A — a positive signal for owner returns.
+
+### Pass 1 counter-evidence considered
+
+In fiscal 2024, Intuit issued $4.0B in new senior unsecured notes and simultaneously repaid $4.2B in debt — partly to refinance at higher rates locked in at 5.125%–5.500% — while also repurchasing $2.0B in stock. This combination of new high-rate debt issuance alongside large buybacks at peak valuations is a suboptimal allocation pattern. Additionally, the $982M cash outflow for employee tax withholding on RSU vesting (fiscal 2025) signals that SBC is a significant and ongoing dilution vector that partially offsets the stated $2.8B buyback program.
+
+### Pass 2 — Skeptic
+
+*Adjustment: no change recommended*
+
+Pass 1's counter-evidence already addresses the two main concerns: (1) the fiscal 2024 $4.0B debt issuance at elevated rates paired with $2.0B buybacks, and (2) the $982M RSU tax withholding as a dilution offset to buybacks. Reviewing the primary sources independently, I find several positive capital allocation signals that Pass 1 may have underweighted: fiscal 2025 operating cash flow grew 27% to $6.2B, buybacks increased to $2.8B (from $2.0B in fiscal 2024), the Board added $3.2B to repurchase authorization in August 2025, dividends grew to $4.16/share (~$1.2B), capex remained minimal at $124M (vs. $250M in fiscal 2024), and the company executed a small bolt-on acquisition of only $184M rather than a dilutive mega-deal. The debt profile also improved in fiscal 2025: net repayment of $500M with no new issuance, and no commercial paper outstanding at year-end. The purchase obligation of $4.9B (primarily cloud services) is large but operationally necessary and not a capital allocation red flag. No new concerns beyond what Pass 1 already flagged are present in the primary sources. The score of 6 appears reasonably calibrated given the genuine tension between strong cash generation/shareholder returns and the prior-year debt/buyback timing issue already noted.
+
+### Pass 3 — Judge
+
+**Final score: 6.0 / 10** *(decision: no-change)*
+
+Pass 2 recommended zero adjustment and explicitly agreed that Pass 1's score of 6 is reasonably calibrated. Pass 2's rebuttal highlighted positive signals (27% OCF growth, increased buybacks, $3.2B new authorization, capex reduction, debt repayment) but acknowledged these were already visible in Pass 1's analysis. The core concern Pass 1 identified — mechanical buybacks at elevated valuations (~26x P/E) and the fiscal 2024 pattern of issuing $4.0B in high-rate debt while simultaneously repurchasing $2.0B in stock — remains valid and not rebutted by Pass 2. A score of 6 appropriately reflects strong cash generation and shareholder returns tempered by the lack of demonstrated valuation-sensitive buyback discipline.
+
+## Debt sustainability
+
+**Score:** 6.5 / 10   _samples: [6.5, 6.5, 8.0], range 1.5_ *(moderate variance)*
+
+Intuit carries approximately $6.0B in long-term senior unsecured notes against FY2025 operating income of $4.9B and operating cash flow of $6.2B, yielding comfortable interest coverage (interest expense of $247M implies ~20× coverage on operating cash flow). Net debt is modest relative to earnings power and maturities appear well-structured, but the company is not net-cash — the reported net cash figure of -$3.9B reflects gross debt of ~$6B offset by $2.9B cash plus $1.7B investments. There are no disclosed covenant violations or near-term maturity clusters flagged in the filing, and the company repaid $500M of short-term debt in FY2025, leaving zero short-term debt on the balance sheet. The leverage profile is manageable for a high-FCF software business but not conservative enough to score in the 7–8 range given absolute debt levels.
+
+### Citations
+
+- **`financial-statements`** *(punctuation-normalized match)* — "Financial liabilities whose fair values we measure using Level 2 inputs consist of senior unsecured notes. See Note 7, "Debt," for more information. We measure the fair value of our senior unsecured notes based on their trading prices and the interest rates we could obtain for other borrowings with similar terms. At July 31, 2025 and July 31, 2024, the total estimated fair value of the senior unsecured notes was $5.0 billion and $5.5 billion, respectively."
+  *Why it matters:* This confirms ~$5B in senior unsecured notes outstanding at fair value, the primary debt obligation, with carrying value matching fair value — no hidden distress discount.
+- **`financial-statements`** — "Interest expense(247)(242)(248)"
+  *Why it matters:* Three years of nearly flat interest expense (~$245M average) against FY2025 operating cash flow of $6.2B implies roughly 25× cash interest coverage, indicating highly comfortable debt service capacity.
+- **`financial-statements`** — "Short-term debt$— $499"
+  *Why it matters:* The $499M short-term debt visible at July 31, 2024 was fully repaid by July 31, 2025, eliminating near-term maturity pressure and leaving only long-term obligations of $5.97B.
+
+### Pass 1 counter-evidence considered
+
+The $5.97B long-term debt load is not trivial in absolute terms, and the filing does not provide a full maturity schedule in the excerpted sections — so it is possible there are near-term clusters in years 1–3 that cannot be confirmed or ruled out from the provided text. Additionally, the company is growing its notes-receivable-held-for-investment book (up to $1.4B from $779M), adding credit exposure that could stress liquidity if credit losses accelerate, though this is currently modest relative to FCF.
+
+### Pass 2 — Skeptic
+
+*Adjustment: no change recommended*
+
+Pass 1 already identified the two main concerns: (1) the absolute size of the $5.97B long-term debt load and uncertainty about the maturity schedule, and (2) the growing notes-receivable-held-for-investment book adding credit exposure. Looking at the primary sources for additional evidence not addressed by Pass 1: The balance sheet confirms long-term debt of $5,973M at July 31, 2025 (up from $5,539M at July 31, 2024), with zero short-term debt (the $499M short-term debt from FY2024 has been repaid). The cash flow statement shows $500M in debt repayments during FY2025 and zero new long-term debt issuance, confirming the balance increase reflects non-current reclassification rather than new borrowing. Operating cash flow of $6,207M is very strong. Interest expense of $247M is modest relative to operating income of $4,923M (coverage ~20x). The fair value note confirms senior unsecured notes had estimated fair value of $5.0B vs. carrying value of $5.0B — no material discount suggesting market stress. The financing activities also show $429M of proceeds from secured revolving credit facility borrowings with no corresponding repayment in FY2025, which Pass 1 did not specifically call out. However, this appears to relate to the QuickBooks Capital lending business (secured by the notes receivable portfolio) rather than corporate debt, and the balance is small relative to FCF. No maturity schedule detail is available in the excerpted sections to identify near-term clusters, which Pass 1 already flagged. No covenant disclosures, going-concern language, or material weakness appears. On balance, Pass 1's score of 6.5 is well-calibrated: strong coverage and FCF offset meaningful gross debt, with the maturity uncertainty already noted as a limitation. The $429M secured revolving credit facility draw is a minor additional observation but does not materially change the picture given the lending-business context.
+
+### Pass 3 — Judge
+
+**Final score: 6.5 / 10** *(decision: no-change)*
+
+Pass 2 recommended zero adjustment and explicitly agreed that Pass 1's score of 6.5 is well-calibrated. Pass 2's only marginal new observation — the $429M secured revolving credit facility draw — was correctly contextualized as related to the QuickBooks Capital lending business rather than corporate debt, and is immaterial relative to $6.2B operating cash flow. The primary sources confirm strong coverage (~20x), flat interest expense, zero short-term debt, and fair value of senior notes equal to carrying value with no market stress signals, all of which Pass 1 already incorporated.
+
+## Insider alignment
+
+**Score:** 6.5 / 10   _samples: [6.5, 6.5, 6.5], range 0.0_ *(tight: low uncertainty)*
+
+Intuit has strong structural pay-for-performance features — approximately 96% of CEO total direct compensation is performance-linked, with multi-year PSU vesting, a mandatory one-year post-vesting holding period, and robust stock ownership requirements (10x salary for CEO, 10x cash retainer for directors). However, the CEO is a professional manager rather than a founder, and the proxy does not disclose his specific share ownership percentage, limiting the ability to confirm truly meaningful skin-in-the-game ownership. Founder Scott Cook remains on the board and receives a $1.3M cash package but no equity grants, suggesting his alignment comes from his historical ownership stake rather than ongoing incentive structure.
+
+### Citations
+
+- **`proxy`** *(punctuation-normalized match)* — "We delivered approximately 96% of total direct compensation for our CEO, and approximately 95% of total direct compensation for our other NEOs, through awards linked to Intuit's performance. The only fixed component of pay was base salary."
+  *Why it matters:* This quantifies the degree to which CEO pay is variable and performance-contingent, a strong structural alignment feature.
+- **`proxy`** — "We have robust stock ownership requirements for senior executive officers and non-employee directors, including 10x salary for the CEO and 10x annual cash retainer for non-employee directors."
+  *Why it matters:* A 10x salary ownership requirement for the CEO is above typical market practice and creates meaningful long-term alignment with shareholders.
+- **`proxy`** **⚠️ NO-MATCH** — "RSUs and PSUs granted to the CEO include an additional mandatory one-year holding period after vesting to increase his long-term alignment with stockholders."
+  *Why it matters:* The mandatory post-vesting holding period lengthens the effective time horizon of CEO equity compensation, reducing incentives for short-term stock price manipulation.
+- **`proxy`** — "Half the value of equity grants to executive officers is in the form of PSUs that require above-median TSR (60th percentile) to earn a target award."
+  *Why it matters:* Requiring above-median relative TSR for target PSU payout sets a meaningful performance bar rather than awarding equity for mere continued employment.
+
+### Pass 1 counter-evidence considered
+
+The proxy does not include a Beneficial Ownership table in the provided excerpt, so specific share counts and percentage ownership for CEO Goodarzi and other insiders cannot be verified from the given sections. Additionally, Scott Cook, the founder who presumably holds the largest insider stake, received no equity grants in fiscal 2025 and his ongoing ownership level is not quantified in the provided text. The 2025 say-on-pay vote passed at 91.7%, solid but not overwhelmingly high, suggesting some stockholder skepticism about the pay program. The bonus for NEOs was paid at 100% of target despite the formula generating 117.8%, which is positive (downward discretion applied), but also indicates the compensation committee exercises significant subjectivity.
+
+### Pass 2 — Skeptic
+
+*Adjustment: no change recommended*
+
+Pass 1 already flagged the absence of a beneficial ownership table, Scott Cook's unquantified ownership, the 91.7% say-on-pay result, and the committee's downward discretion on bonuses. Reviewing the same primary sources, I find two items worth noting but neither rises above what Pass 1 already weighted. First, the Director Summary Compensation Table confirms Cook received zero equity grants in fiscal 2025 (footnote d explicitly states 'Mr. Cook was not granted any equity awards from Intuit during fiscal 2025') and his Outstanding Equity Awards table shows zero shares subject to outstanding stock awards — meaning his entire alignment is through legacy ownership that is unquantified in these excerpts. Pass 1 already named this concern. Second, the 'What We Do / What We Don't Do' table documents a 10x salary CEO stock ownership requirement, a mandatory one-year post-vesting holding period on CEO RSUs/PSUs, clawback provisions, and an explicit no-pledging/no-hedging policy — these are structural alignment features that are genuinely positive and Pass 1's score of 6.5 appears to have incorporated them (96% performance-based pay, PSU structure, holding period). No new material evidence emerges from these sections that Pass 1 did not already address. The score of 6.5 is reasonable given the strong compensation structure but incomplete ownership quantification.
+
+### Pass 3 — Judge
+
+**Final score: 6.5 / 10** *(decision: no-change)*
+
+Pass 2 recommended zero adjustment and explicitly agreed that Pass 1's score of 6.5 is reasonable, citing the same structural alignment features (96% performance-based pay, 10x ownership requirement, mandatory post-vesting holding period, no-pledging/no-hedging policy) and the same limitations (Scott Cook's zero equity grants and unquantified legacy ownership, absence of a beneficial ownership table). Pass 2 surfaced no new material evidence beyond what Pass 1 already identified and weighed. The primary sources confirm all of Pass 1's citations accurately, and no additional concerns emerge from the director compensation tables that would shift the score.
+
+## Cyclicality awareness
+
+**Score:** 7.0 / 10   _samples: [7.0, 7.0, 7.0], range 0.0_ *(tight: low uncertainty)*
+
+Intuit's core businesses—tax preparation and small-business software—are structurally non-cyclical in the sense that tax filing is a legal mandate regardless of economic conditions, and SMB accounting software is a recurring, largely subscription-based necessity. The risk factors do acknowledge meaningful cyclical sensitivity in specific segments (Credit Karma, payments, SMB lending) tied to interest rates, consumer confidence, and credit availability, but the flagship tax and QuickBooks franchises are driven more by regulatory calendars than economic cycles. The seasonal intra-year concentration is a noted risk, but that is a quarterly timing issue rather than a true multi-year economic cycle exposure.
+
+### Citations
+
+- **`risk-factors`** — "Revenue from income tax preparation products and services has historically been heavily concentrated from November through April, as the tax filing deadline for the IRS and many states is traditionally in April."
+  *Why it matters:* This confirms that the tax business is governed by a regulatory calendar rather than the economic cycle, making annual revenue relatively predictable regardless of macroeconomic conditions.
+- **`risk-factors`** — "High unemployment and changes in the tax code and the government programs that are administered by tax authorities have caused, and could in the future cause, a significant decrease in the number of tax returns filed, which may have a significant effect on the number of tax returns we prepare and file."
+  *Why it matters:* While primarily a regulatory/calendar-driven business, Intuit does acknowledge that extreme macro conditions (high unemployment reducing filers) can mildly affect tax volume, tempering the non-cyclical narrative slightly.
+- **`risk-factors`** *(punctuation-normalized match)* — "Some financial institutions and other partners have in the past decreased or suspended their activity on Credit Karma's platform and could do so in the future. In addition, increased interest rates may make offers from Credit Karma's partners less attractive to Credit Karma's members."
+  *Why it matters:* This explicitly identifies Credit Karma as cyclically sensitive—partner activity and consumer credit demand both fluctuate with interest rate cycles—representing a meaningful portion of Intuit's revenue that is economically exposed.
+
+### Pass 1 counter-evidence considered
+
+The Credit Karma and SMB lending segments introduce meaningful cyclical exposure: interest rate sensitivity dampens Credit Karma partner activity and member qualification rates, and adverse macro conditions disproportionately harm small businesses (Intuit's core QuickBooks customer base), potentially increasing churn. Additionally, payments processing revenue falls with reduced consumer spending. These segments prevent a higher score despite the core tax business's regulatory-calendar resilience.
+
+### Pass 2 — Skeptic
+
+*Adjustment: no change recommended*
+
+Pass 1's counter-evidence already addresses the core cyclical exposures: Credit Karma's interest-rate sensitivity dampening partner activity and member qualification rates, SMB churn risk in adverse macro conditions, and payments processing revenue sensitivity to consumer spending. The primary sources confirm these same points verbatim ('increased interest rates may make offers from Credit Karma's partners less attractive to Credit Karma's members,' 'Decreased consumer spending levels could also reduce payment processing volumes,' 'small and mid-market businesses...are disproportionately adversely affected by economic downturns'). The tax business's regulatory-calendar resilience is also well-documented. No material cyclical dimension was missed by Pass 1. The score of 7 appropriately reflects a predominantly subscription/recurring-revenue model with a regulatory-anchored tax cycle, offset by meaningful but disclosed cyclical pockets in Credit Karma and SMB lending. No adjustment is warranted.
+
+### Pass 3 — Judge
+
+**Final score: 7.0 / 10** *(decision: no-change)*
+
+Pass 2 recommended no adjustment and agreed with Pass 1's assessment. The primary sources confirm all cited evidence: Credit Karma's interest-rate sensitivity, SMB lending cyclical exposure, payment processing volume sensitivity to consumer spending, and the tax business's regulatory-calendar resilience. Pass 1 already incorporated the counter-evidence about cyclical pockets, and Pass 2 found no additional material concerns. A score of 7 appropriately reflects a predominantly recurring-revenue model anchored by regulatory tax deadlines, offset by meaningful but disclosed cyclical exposures in Credit Karma and SMB lending.

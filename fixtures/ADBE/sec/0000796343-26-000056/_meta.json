@@ -1,0 +1,92 @@
+{
+  "ticker": "ADBE",
+  "cik": "0000796343",
+  "accession": "0000796343-26-000056",
+  "form": "10-Q",
+  "filingDate": "2026-03-25",
+  "primaryDocument": "adbe-20260227.htm",
+  "parsedAt": "2026-05-10T07:31:57.944Z",
+  "cleanedTextLength": 193315,
+  "sections": [
+    {
+      "id": "quant-risk",
+      "label": "Quantitative and Qualitative Disclosures About Market Risk",
+      "itemNumber": "3",
+      "charLength": 2090,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "ITEM 3.  QUANTITATIVE AND QUALITATIVE DISCLOSURES ABOUT MARKET RISK",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "financial-statements",
+      "label": "Financial Statements",
+      "itemNumber": "1",
+      "charLength": 145,
+      "confidence": "failed",
+      "warnings": [
+        "incorporation-by-reference: real content lives elsewhere in the filing"
+      ],
+      "chosenAnchor": {
+        "text": "ITEM 1.  LEGAL PROCEEDINGS",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "risk-factors",
+      "label": "Risk Factors (updates)",
+      "itemNumber": "1A",
+      "charLength": 69947,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "ITEM 1A.  RISK FACTORS",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "mda",
+      "label": "Management's Discussion and Analysis",
+      "itemNumber": "2",
+      "charLength": 4482,
+      "confidence": "failed",
+      "warnings": [
+        "Section length 4482 far below floor — likely TOC entry or missing content"
+      ],
+      "chosenAnchor": {
+        "text": "ITEM 2.  UNREGISTERED SALES OF EQUITY SECURITIES AND USE OF PROCEEDS",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    }
+  ],
+  "parserWarnings": [
+    "Item not extracted cleanly: financial-statements",
+    "Item not extracted cleanly: mda"
+  ],
+  "missing": [
+    "financial-statements",
+    "mda"
+  ]
+}

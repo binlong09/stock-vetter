@@ -1,0 +1,94 @@
+{
+  "ticker": "MSFT",
+  "cik": "0000789019",
+  "accession": "0001193125-26-191507",
+  "form": "10-Q",
+  "filingDate": "2026-04-29",
+  "primaryDocument": "msft-20260331.htm",
+  "parsedAt": "2026-05-10T07:16:45.630Z",
+  "cleanedTextLength": 235101,
+  "sections": [
+    {
+      "id": "quant-risk",
+      "label": "Quantitative and Qualitative Disclosures About Market Risk",
+      "itemNumber": "3",
+      "charLength": 2687,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "ITEM 3. QUANTITATIVE AND QUALITATIVE DISCLOSURES ABOUT MARKET RISK",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "larger-font",
+          "all-caps",
+          "-trailing-page-number"
+        ]
+      }
+    },
+    {
+      "id": "financial-statements",
+      "label": "Financial Statements",
+      "itemNumber": "1",
+      "charLength": 199,
+      "confidence": "failed",
+      "warnings": [
+        "incorporation-by-reference: real content lives elsewhere in the filing"
+      ],
+      "chosenAnchor": {
+        "text": "ITEM 1. LEGAL PROCEEDINGS",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "larger-font",
+          "all-caps"
+        ]
+      }
+    },
+    {
+      "id": "risk-factors",
+      "label": "Risk Factors (updates)",
+      "itemNumber": "1A",
+      "charLength": 70799,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "ITEM 1A. RISK FACTORS",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "larger-font",
+          "all-caps"
+        ]
+      }
+    },
+    {
+      "id": "mda",
+      "label": "Management's Discussion and Analysis",
+      "itemNumber": "2",
+      "charLength": 4751,
+      "confidence": "failed",
+      "warnings": [
+        "Section length 4751 far below floor — likely TOC entry or missing content"
+      ],
+      "chosenAnchor": {
+        "text": "ITEM 2. UNREGISTERED SALES OF EQUITY SECURITIES AND USE OF PROCEEDS",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "larger-font",
+          "all-caps",
+          "-trailing-page-number"
+        ]
+      }
+    }
+  ],
+  "parserWarnings": [
+    "Item not extracted cleanly: financial-statements",
+    "Item not extracted cleanly: mda"
+  ],
+  "missing": [
+    "financial-statements",
+    "mda"
+  ]
+}

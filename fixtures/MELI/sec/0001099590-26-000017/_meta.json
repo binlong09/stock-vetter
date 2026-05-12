@@ -1,0 +1,96 @@
+{
+  "ticker": "MELI",
+  "cik": "0001099590",
+  "accession": "0001099590-26-000017",
+  "form": "10-Q",
+  "filingDate": "2026-05-08",
+  "primaryDocument": "meli-20260331.htm",
+  "parsedAt": "2026-05-10T07:50:10.037Z",
+  "cleanedTextLength": 255743,
+  "sections": [
+    {
+      "id": "quant-risk",
+      "label": "Quantitative and Qualitative Disclosures About Market Risk",
+      "itemNumber": "3",
+      "charLength": 16645,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "ITEM 3. QUANTITATIVE AND QUALITATIVE DISCLOSURES ABOUT MARKET RISK",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "financial-statements",
+      "label": "Financial Statements",
+      "itemNumber": "1",
+      "charLength": 148,
+      "confidence": "failed",
+      "warnings": [
+        "incorporation-by-reference: real content lives elsewhere in the filing"
+      ],
+      "chosenAnchor": {
+        "text": "ITEM 1. LEGAL PROCEEDINGS",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "risk-factors",
+      "label": "Risk Factors (updates)",
+      "itemNumber": "1A",
+      "charLength": 187,
+      "confidence": "failed",
+      "warnings": [
+        "Section length 187 far below floor — likely TOC entry or missing content"
+      ],
+      "chosenAnchor": {
+        "text": "ITEM 1A. RISK FACTORS",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "mda",
+      "label": "Management's Discussion and Analysis",
+      "itemNumber": "2",
+      "charLength": 3663,
+      "confidence": "failed",
+      "warnings": [
+        "Section length 3663 far below floor — likely TOC entry or missing content"
+      ],
+      "chosenAnchor": {
+        "text": "ITEM 2. UNREGISTERED SALES OF EQUITY SECURITIES AND USE OF PROCEEDS",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    }
+  ],
+  "parserWarnings": [
+    "Item not extracted cleanly: financial-statements",
+    "Item not extracted cleanly: risk-factors",
+    "Item not extracted cleanly: mda"
+  ],
+  "missing": [
+    "financial-statements",
+    "risk-factors",
+    "mda"
+  ]
+}

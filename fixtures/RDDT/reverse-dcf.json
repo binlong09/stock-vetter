@@ -1,0 +1,57 @@
+{
+  "ticker": "RDDT",
+  "asOf": "2026-05-10",
+  "currentPrice": 155.8,
+  "sharesOutstanding": 202.107978,
+  "startingFcfMillions": 684.169,
+  "actualFcfCagr3y": null,
+  "actualFcfCagr5y": null,
+  "grid": [
+    {
+      "discountRate": 0.08,
+      "terminalMultiple": 15,
+      "impliedFcfCagr": 0.1607421875
+    },
+    {
+      "discountRate": 0.08,
+      "terminalMultiple": 20,
+      "impliedFcfCagr": 0.13466796874999998
+    },
+    {
+      "discountRate": 0.08,
+      "terminalMultiple": 25,
+      "impliedFcfCagr": 0.11416015625
+    },
+    {
+      "discountRate": 0.1,
+      "terminalMultiple": 15,
+      "impliedFcfCagr": 0.18212890625
+    },
+    {
+      "discountRate": 0.1,
+      "terminalMultiple": 20,
+      "impliedFcfCagr": 0.15576171875
+    },
+    {
+      "discountRate": 0.1,
+      "terminalMultiple": 25,
+      "impliedFcfCagr": 0.13466796874999998
+    },
+    {
+      "discountRate": 0.12,
+      "terminalMultiple": 15,
+      "impliedFcfCagr": 0.20380859375000004
+    },
+    {
+      "discountRate": 0.12,
+      "terminalMultiple": 20,
+      "impliedFcfCagr": 0.17670898437500002
+    },
+    {
+      "discountRate": 0.12,
+      "terminalMultiple": 25,
+      "impliedFcfCagr": 0.15546875000000002
+    }
+  ],
+  "narrative": "At a current price of $155.80 per share and trailing FCF of $0.7B, the reverse DCF asks: what 10-year FCF growth rate would justify this price under various assumptions?\n\nUnder the central assumptions (10% discount rate, 20× terminal P/FCF), the market is pricing in approximately 15.6% annual FCF growth for 10 years.\n\nRead the sensitivity grid below to see how this implied growth shifts under different discount rates and terminal multiples. A value-investing skeptic would ask whether the highest-implied-growth cells in the grid are achievable, and whether the assumptions that produce a more attractive picture are themselves reasonable."
+}

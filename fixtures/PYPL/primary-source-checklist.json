@@ -1,0 +1,536 @@
+{
+  "pass1": {
+    "ticker": "PYPL",
+    "filingAccession": "0001633917-26-000024",
+    "scores": {
+      "moatDurability": {
+        "score": 5.5,
+        "rationale": "PayPal operates a genuine two-sided network at scale with 439 million active accounts and $1.79 trillion TPV, creating real switching costs and data advantages that differentiate it from pure payment processors. However, the moat is contested on multiple fronts: the Business section's claims of brand trust and platform agnosticism are directly undermined by Risk Factors disclosing intense competition from banks, card networks, Big Tech digital wallets, and real-time payment systems. The regulatory license portfolio provides a meaningful structural barrier to entry in many markets, but that same regulatory complexity is a recurring cost and compliance burden. The two-sided network effect is real but not self-reinforcing at the same magnitude as a pure marketplace, because consumers and merchants can and do use multiple payment methods simultaneously.",
+        "citations": [
+          {
+            "section": "business",
+            "quote": "We operate a global, two-sided network at scale that connects consumers and merchants with 439 million active accounts across approximately 200 markets as of December 31, 2025.",
+            "whyItMatters": "Scale and two-sidedness are the core moat claim — a network connecting 439M accounts across 200 markets creates data advantages and acceptance density that new entrants cannot easily replicate."
+          },
+          {
+            "section": "business",
+            "quote": "We believe that our regulatory licenses, which enable us to operate in markets around the world, are a distinct advantage and help support business growth.",
+            "whyItMatters": "Regulatory licenses represent a structural barrier to entry; obtaining money-transmitter, credit-institution, and electronic-money-institution licenses across ~200 markets takes years and capital, limiting competitive replication."
+          },
+          {
+            "section": "risk-factors",
+            "quote": "Competition also may intensify as new competitors emerge, businesses combine or enter into new partnerships, and established companies in other segments expand to become competitive with various aspects of our business.",
+            "whyItMatters": "Management is legally required to flag this, and the language acknowledges that the moat is not static — established companies expanding into payments (e.g., Apple, Google, banks) represent credible erosion vectors."
+          },
+          {
+            "section": "risk-factors",
+            "quote": "Rapid, significant, and disruptive technological changes impact the industries in which we operate, including payment technologies (including real-time payments, payment card tokenization, virtual currencies, distributed ledger and blockchain technologies, and proximity payment technology such as Near Field Communication and other contactless payments)",
+            "whyItMatters": "This passage enumerates specific technologies that could commoditize PayPal's checkout advantage, indicating that the switching-cost moat is vulnerable to infrastructure-level disruption rather than just incremental competition."
+          }
+        ],
+        "counterEvidence": "The Business section's Competition discussion is unusually candid for a 10-K, noting rivalry from banks, card networks, real-time payment systems, P2P apps, and 'card on file' services — effectively every major payment modality. The Risk Factors reinforce that PayPal's branded checkout faces structural pressure from browser-stored card credentials and Apple/Google Pay, which bypass the PayPal login entirely. Transaction count actually declined 4% in 2025 even as TPV grew 7%, suggesting per-transaction values are rising but engagement frequency is under pressure — a sign that consumers may be concentrating PayPal use on higher-value transactions while routing everyday payments elsewhere.",
+        "samples": [
+          5.5,
+          5.5,
+          5.5
+        ],
+        "range": 0,
+        "representativeSampleIndex": 0
+      },
+      "ownerEarningsQuality": {
+        "score": 6.5,
+        "rationale": "PayPal's reported earnings are reasonably representative of owner earnings, but with notable caveats. FCF from operations was $6.4B in 2025 vs. net income of $5.2B — a healthy ratio — but SBC of $1.0B (down from $1.5B in 2023) still represents ~16% of operating cash flow, a meaningful dilution drag. The business is increasingly capital-intensive as internally developed software capitalization rose to $642M in 2025 from $509M in 2024, and capex was $852M vs. D&A of $963M, roughly matched. The 5-year FCF CAGR of only 2.2% despite strong net income growth reflects the complexity of the financial structure (large loan book flows through operating cash flow, creating noise). Revenue recognition is straightforward for transaction revenues, but the expanding consumer lending portfolio introduces credit loss estimation subjectivity flagged as a critical audit matter.",
+        "citations": [
+          {
+            "section": "financial-statements",
+            "quote": "Stock-based compensation1,002 1,230 1,475",
+            "whyItMatters": "SBC has declined from $1.475B in 2023 to $1.002B in 2025, but still represents ~16% of operating cash flow, meaningfully reducing the cash available to equity owners beyond what net income suggests."
+          },
+          {
+            "section": "financial-statements",
+            "quote": "We capitalized $642 million and $509 million of internally developed software and website development costs for the years ended December 31, 2025 and 2024, respectively.",
+            "whyItMatters": "Rising capitalization of internal software costs ($642M vs. $509M) defers expenses and flatters current earnings; the 26% year-over-year increase warrants scrutiny as a potential earnings quality drag."
+          },
+          {
+            "section": "financial-statements",
+            "quote": "The allowance for consumer loans receivable is primarily based on expectations of credit losses using historical lifetime loss data and incorporates macroeconomic forecasts applied to the portfolio.",
+            "whyItMatters": "The consumer loan allowance methodology involves significant estimation — flagged as the sole critical audit matter by PwC — meaning reported earnings are sensitive to management's macroeconomic assumptions."
+          },
+          {
+            "section": "financial-statements",
+            "quote": "Net cash provided by operating activities6,416 7,450 4,843",
+            "whyItMatters": "Operating cash flow of $6.4B in 2025 vs. net income of $5.2B shows FCF exceeds reported earnings, a positive sign, but the 2024 figure of $7.45B was higher, indicating cash generation is not uniformly growing despite earnings growth."
+          }
+        ],
+        "counterEvidence": "The most significant counter-evidence to a higher score is the large and growing held-for-sale loan portfolio: originations of $36.7B flow through operating cash flow in 2025 (vs. $24.5B in 2024), creating substantial gross cash flow volatility that obscures the underlying payments business's true cash generation. The net operating cash flow figure is a residual of very large gross flows, making year-over-year comparisons less meaningful and owner earnings harder to pin down with confidence.",
+        "samples": [
+          6.5,
+          6.5,
+          6.5
+        ],
+        "range": 0,
+        "representativeSampleIndex": 0
+      },
+      "capitalAllocation": {
+        "score": 6,
+        "rationale": "PayPal's capital allocation in 2025 shows a mixed but improving picture. The company deployed ~$6.0B in buybacks — aggressive and meaningful at ~15% of market cap — while also initiating a dividend for the first time, signaling confidence in cash generation. However, buybacks were executed at prices well above the current ~$45 share price (the stock has been declining), raising questions about timing discipline. The absence of major M&A in the period and active debt issuance to fund buybacks adds a layer of financial engineering concern. The restructuring initiative (2Q 2025 Plan) suggests capital was previously misallocated in legacy infrastructure, now requiring costly correction.",
+        "citations": [
+          {
+            "section": "mda",
+            "quote": "During the year ended December 31, 2025, we repurchased approximately $6.0 billion of our common stock in the open market under our stock repurchase programs authorized in June 2022 and February 2025.",
+            "whyItMatters": "A $6B buyback in a single year represents massive capital return relative to the ~$40B market cap, but the timing is ambiguous — the stock has been in a multi-year decline, meaning prior buybacks at higher prices destroyed value, and it is unclear whether 2025 buybacks were well-timed."
+          },
+          {
+            "section": "mda",
+            "quote": "In October 2025, we announced that our Board of Directors approved the initiation of a quarterly cash dividend program and declared a cash dividend of $0.14 per share on our common stock, totaling approximately $130 million.",
+            "whyItMatters": "The dividend initiation at $0.14/quarter ($0.56 annualized) signals management's confidence in sustainable cash generation, but the modest size relative to buybacks suggests capital return priorities are heavily skewed toward repurchases over a more balanced program."
+          },
+          {
+            "section": "mda",
+            "quote": "an increase of approximately $600 million in borrowings under financing arrangements, net of repayments, partially offset by a decline of approximately $320 million in collateral received related to derivative instruments.",
+            "whyItMatters": "Net new borrowing in the same year as $6B in buybacks indicates PayPal is partly debt-financing its share repurchase program, a leveraged recapitalization approach that amplifies risk and is a yellow flag for capital allocation discipline."
+          },
+          {
+            "section": "mda",
+            "quote": "The 2Q 2025 Plan is a transformative unified program designed to streamline operations and includes exiting certain data centers to migrate to more efficient cloud-based solutions.",
+            "whyItMatters": "A large-scale technology infrastructure overhaul with $240-300M in expected restructuring charges suggests prior capital spending on data centers was not optimally allocated, and shareholders are now paying the remediation cost."
+          }
+        ],
+        "counterEvidence": "The $13.9B remaining buyback authorization as of year-end 2025 and the fact that buybacks in 2025 were executed at relatively low valuations (trailing P/E ~8.5x, EV/EBIT ~7x) compared to the company's 10-year median multiples (P/E ~41.7x, EV/EBIT ~36.3x) could actually represent excellent timing for the 2025 cohort specifically, even if earlier buybacks under the June 2022 program were made at much higher prices.",
+        "samples": [
+          6,
+          6.5,
+          6
+        ],
+        "range": 0.5,
+        "representativeSampleIndex": 0
+      },
+      "debtSustainability": {
+        "score": 7.5,
+        "rationale": "PayPal carries ~$10B of long-term debt against operating income of ~$6.1B, implying leverage under 2× EBIT, and generated $6.4B of operating cash flow in 2025 against ~$406M of cash interest paid — an interest coverage ratio exceeding 15×. The debt is explicitly long-term in character (classified on the balance sheet as 'Long-term debt') with no near-term maturity wall disclosed in the provided sections. The company also holds $8B of unrestricted cash and cash equivalents plus $6.7B of short-term and long-term investments, providing a substantial liquidity buffer against the ~$10B debt stack. The key complication is that PayPal's balance sheet is structurally complex: $38–40B of customer funds sit alongside corresponding liabilities, which are ringfenced and not available to service corporate debt, so investors must read through those to isolate the corporate capital structure.",
+        "citations": [
+          {
+            "section": "financial-statements",
+            "quote": "Long-term debt9,987 9,879",
+            "whyItMatters": "The balance sheet shows ~$10B of long-term debt in both 2025 and 2024, a stable and manageable figure relative to operating income of $6.1B (implying roughly 1.6× debt/EBIT leverage)."
+          },
+          {
+            "section": "financial-statements",
+            "quote": "Cash paid for interest$406 $366 $331",
+            "whyItMatters": "Cash interest paid of $406M in 2025 against $6.4B of operating cash flow implies interest coverage well above 15×, signaling very comfortable debt service capacity."
+          },
+          {
+            "section": "financial-statements",
+            "quote": "Cash and cash equivalents$8,049 $6,662",
+            "whyItMatters": "Unrestricted corporate cash of $8B plus short- and long-term investment portfolios provide a liquidity cushion that substantially offsets the $10B gross debt position."
+          }
+        ],
+        "counterEvidence": "The provided sections do not include the detailed debt maturity schedule or covenant disclosures from the Notes on Debt, so it is not possible to confirm whether there is a near-term maturity cluster or restrictive covenants. Additionally, the balance sheet's size ($80B total assets) is heavily influenced by $38B of customer funds and corresponding liabilities that are regulatory ringfenced and unavailable for corporate debt service — investors cannot simply read the aggregate leverage ratios without stripping these out. The net cash figure from the financial context shows net debt of -$2.3B (i.e., net indebted), which is modest but not net-cash positive.",
+        "samples": [
+          7.5,
+          7.5,
+          7.5
+        ],
+        "range": 0,
+        "representativeSampleIndex": 0
+      },
+      "insiderAlignment": {
+        "score": 4.5,
+        "rationale": "PayPal is a professionally managed company with no founder-level ownership; the proxy reveals standard institutional-grade compensation with multi-year performance vesting and robust governance policies, but no evidence of meaningful personal stock ownership by any NEO at levels that would create true wealth-at-risk alignment. The new CEO Lores was an external hire with a heavily equity-weighted package, including a $25M stock-price PBRSU with stretch hurdles, which is a positive signal, but this is an inducement award rather than organically accumulated ownership. The recent CEO departure (Chriss) and the resulting transition compensation — including a $3M cash retention award for the interim CEO — highlights instability in alignment rather than long-term owner mentality.",
+        "citations": [
+          {
+            "section": "proxy",
+            "quote": "The design of Mr. Lores' new hire awards is highly performance-oriented, with no sign-on cash component, and with a special performance-based equity award tied to rigorous stock price hurdles over a period up to five years.",
+            "whyItMatters": "The incoming CEO's compensation is structured to align with long-term stock price appreciation rather than guaranteed cash, which is a positive alignment signal, though it reflects an inducement package rather than accumulated ownership."
+          },
+          {
+            "section": "proxy",
+            "quote": "Robust stock ownership guidelines Our stock ownership guidelines require significant sustained ownership of our common stock to align the long-term interests of our NEOs and non-employee directors with those of our stockholders and reflect our commitment to sound corporate governance.",
+            "whyItMatters": "Ownership guidelines exist but the proxy window provided does not disclose the actual ownership levels or dollar thresholds required, making it impossible to verify whether meaningful personal wealth is at stake."
+          },
+          {
+            "section": "proxy",
+            "quote": "In recognition of Ms. Miller's service as Interim President and CEO, and to secure her continued service as our Chief Financial and Operating Officer during this critical time for the Company, Ms. Miller received a cash retention award of $3 million",
+            "whyItMatters": "A large cash retention award to secure the CFO/COO during a CEO transition is a retention tool, not an ownership-alignment mechanism, suggesting the executive team does not have sufficient equity skin-in-the-game to remain committed without additional cash incentives."
+          },
+          {
+            "section": "proxy",
+            "quote": "More than 50% of our NEOs' target total direct compensation (composed of each NEO's base salary, AIP target and LTI target) is performance-based and tied to pre-established performance goals aligned with our short-term and long-term objectives.",
+            "whyItMatters": "While majority performance-based pay is a positive governance signal, the actual beneficial ownership percentages of the company held by insiders are not disclosed in the provided sections, leaving the true alignment case incomplete."
+          }
+        ],
+        "counterEvidence": "The proxy describes a well-structured pay-for-performance framework including multi-year PBRSUs with rTSR hurdles, clawback policies, no excise tax gross-ups, and prohibition on hedging/pledging — governance practices that reduce misalignment risk. The new CEO's $25M inducement PBRSU requires 60-150% stock price appreciation to earn target-to-max payout, which is a genuine long-term alignment mechanism. The 2025 say-on-pay vote received 90% support, suggesting broad stockholder comfort with the compensation structure. However, no specific beneficial ownership table or dollar ownership figures for any NEO were included in the provided proxy window, preventing verification of whether insiders hold meaningful personal wealth in company stock.",
+        "samples": [
+          4.5,
+          5,
+          4.5
+        ],
+        "range": 0.5,
+        "representativeSampleIndex": 0
+      },
+      "cyclicalityAwareness": {
+        "score": 6,
+        "rationale": "PayPal operates a digital payments network whose transaction volumes are meaningfully tied to consumer spending and e-commerce activity, creating moderate cyclicality. The Risk Factors explicitly acknowledge that recessions, unemployment, and reduced consumer confidence can reduce transaction volumes and harm results. However, PayPal is not a manufacturer or commodity producer — its revenues are fee-based on transaction volume, which tends to compress but not collapse in downturns, and the secular shift to digital payments provides a structural tailwind that partially offsets cyclical headwinds. The company does not provide explicit through-cycle margin data in the sections provided, preventing a higher score.",
+        "citations": [
+          {
+            "section": "risk-factors",
+            "quote": "Adverse global and regional economic conditions such as political unrest and turmoil affecting the banking system or financial markets, including, but not limited to, tightening in the credit markets, extreme volatility or distress in the financial markets",
+            "whyItMatters": "Management explicitly lists a broad range of macroeconomic deterioration scenarios — recessions, unemployment, reduced consumer confidence — that could reduce transaction volumes, confirming meaningful cyclical exposure."
+          },
+          {
+            "section": "risk-factors",
+            "quote": "The non-payment rate among account holders may increase due to, among other factors, changes to underwriting standards, risk models not accurately predicting the creditworthiness of a user, worsening economic conditions, such as recessions, economic downturns or government austerity programs, increases in prevailing interest rates, and high unemployment rates.",
+            "whyItMatters": "The credit products business introduces an additional cyclical risk layer — default rates rise in downturns — meaning PayPal's earnings can be hit from both reduced transaction fee revenue and increased credit losses simultaneously."
+          },
+          {
+            "section": "risk-factors",
+            "quote": "Cross-border trade has been and may be negatively impacted by various factors including foreign exchange rate fluctuations; changes in or new tariffs, trade disputes, barriers or restrictions threats of such actions, and the related uncertainty thereof",
+            "whyItMatters": "Cross-border transactions are described as a higher-margin revenue source, and their specific sensitivity to trade policy cycles and geopolitical events adds a cyclical dimension beyond simple consumer spending."
+          }
+        ],
+        "counterEvidence": "The risk factors do not quantify the magnitude of revenue decline in prior downturns (e.g., 2020 or 2008–2009), and PayPal actually benefited from accelerated e-commerce adoption during COVID-19, suggesting at least partial counter-cyclical behavior in certain downturn scenarios. The digital payments secular growth trend means even in recessions, PayPal may gain share from offline channels, which would moderate cyclical impact. Additionally, the fee-based, asset-light model means fixed cost leverage is less of a concern than in capital-intensive cyclical industries.",
+        "samples": [
+          6.5,
+          6,
+          6
+        ],
+        "range": 0.5,
+        "representativeSampleIndex": 1
+      }
+    }
+  },
+  "pass2": {
+    "ticker": "PYPL",
+    "filingAccession": "0001633917-26-000024",
+    "rebuttals": {
+      "moatDurability": {
+        "rebuttal": "Pass 1's counter-evidence already addresses the core moat concerns: intense multi-modal competition, structural pressure from browser-stored credentials and Apple/Google Pay bypassing PayPal login, and the transaction count decline of 4% in 2025 even as TPV grew 7%. I reviewed the primary sources for any additional evidence not captured by Pass 1. The Business section confirms the two-sided network at scale (439 million active accounts, $1.79T TPV), regulatory licenses across ~200 markets, and trusted brand differentiation — all positive moat factors that Pass 1's score of 5.5 appears to reflect. The Risk Factors section discusses technological disruption risks (browser-stored card credentials, real-time payments, AI agents, contactless payments) in detail, but these are the same structural pressures Pass 1 already cited. One item worth noting: the Risk Factors explicitly call out 'web browser technologies that enable users to easily store their payment card information for use on any retail or e-commerce website' and 'third parties may deploy AI technologies in a manner that reduces customer demand for our products and services' and 'development, adoption, and use of generative AI technologies and autonomous AI agents' as moat erosion vectors — but Pass 1's counter-evidence already encompasses these structural threats under the Apple/Google Pay bypass framing. The agentic commerce risk (AI agents routing payments without PayPal involvement) is a genuinely emerging concern, but it is referenced in the Business section's Strategy as an opportunity PayPal is pursuing, and the Risk Factors note it as a threat — this is a balanced picture that does not clearly tilt the score in either direction beyond what Pass 1 already calibrated. No new material evidence found that Pass 1 did not address. Score of 5.5 appears well-calibrated.",
+        "citations": [],
+        "recommendedAdjustment": 0
+      },
+      "ownerEarningsQuality": {
+        "rebuttal": "Pass 1's counter-evidence already addresses the primary concern about the held-for-sale loan portfolio creating gross cash flow volatility (originations of $36.7B vs. proceeds of $35.4B flowing through operating cash flow). Reviewing the primary sources independently, I looked for additional issues not raised by Pass 1: (1) stock-based compensation declining from $1,475M (2023) to $1,230M (2024) to $1,002M (2025) — a positive trend in earnings quality not penalized by Pass 1; (2) capitalized software rising from $509M (2024) to $642M (2025), a 26% increase worth noting as it reduces reported opex; (3) the allowance methodology changes mid-year (shift to probability-weighted multiple macroeconomic scenarios in Q2 2025) represent a model change that could affect comparability of credit loss provisions — but the filing states this 'did not have a material impact on the provision'; (4) PwC's critical audit matter focuses solely on the consumer loan allowance, which is consistent with Pass 1's characterization of the lending portfolio as the key complexity. The capitalized software increase is a minor quality concern — it shifts $133M more expense off the income statement versus prior year — but at $642M against $33B in revenues and $6.4B operating cash flow, it is not material enough to warrant a score change on its own. No single primary-source finding rises to the level of an unaddressed concern that would shift the score from 6.5.",
+        "citations": [
+          {
+            "section": "financial-statements",
+            "quote": "We capitalized $642 million and $509 million of internally developed software and website development costs for the years ended December 31, 2025 and 2024, respectively.",
+            "whyItMatters": "Capitalized software increased 26% YoY ($133M more), shifting costs from the income statement to the balance sheet and modestly boosting reported operating cash flow quality — a minor earnings quality concern Pass 1 did not specifically call out, but not material enough at this scale to warrant a score adjustment."
+          }
+        ],
+        "recommendedAdjustment": 0
+      },
+      "capitalAllocation": {
+        "rebuttal": "Pass 1 scored capital allocation at 6/10 and its counter-evidence focused on the timing quality of the 2025 buyback cohort versus earlier buybacks under the June 2022 program. I reviewed the primary sources looking for additional evidence not addressed by Pass 1.\n\nThe filing confirms $6.0B in buybacks during 2025 at approximately 8.5x trailing P/E and 7x EV/EBIT — valuations far below the 10-year medians — which Pass 1 already noted. The filing also discloses a new quarterly dividend initiated in October 2025 at $0.14/share (~$130M total), which represents a modest but new capital return commitment. The $13.9B remaining authorization is documented. The 2Q 2025 restructuring plan (expected $280M annualized savings) and the forward-flow loan sale arrangements (up to €65B and $7B committed) reflect disciplined operational capital management. Sales and marketing jumped 14% ($282M) with heavy brand spend on 'PayPal Everywhere' and 'Venmo Everything' campaigns — this is a meaningful discretionary investment whose ROI is uncertain but not unreasonable given the strategic pivot to profitable growth. The filing also notes operating cash flow declined $1.0B YoY (to $6.4B from $7.5B), partly due to ~$1.2B increase in loan originations held for sale — a structural use of capital whose forward economics depend on the forward-flow arrangements continuing. None of these items represent material concerns that Pass 1 did not implicitly or explicitly address (buyback timing quality, disciplined cost management, restructuring). The dividend initiation is a small positive not specifically called out by Pass 1, but at ~$130M annually against $6B in buybacks and $6.4B operating cash flow, it is immaterial to the capital allocation score. No adjustment is warranted.",
+        "citations": [],
+        "recommendedAdjustment": 0
+      },
+      "debtSustainability": {
+        "rebuttal": "Pass 1 already identified the key concerns: the ringfencing of $38B+ in customer funds/liabilities, the net debt position of ~$2.3B, and the absence of detailed covenant/maturity schedule disclosures in the provided sections. Reading the primary sources independently confirms these findings. The balance sheet shows Long-term debt of $9,987M against Cash and cash equivalents of $8,049M plus Short-term investments of $2,373M, yielding roughly net cash positive at the corporate level when excluding customer account assets/liabilities. Operating income of $6,065M in 2025 provides strong interest coverage (cash paid for interest was $406M, implying ~15x coverage). FCF from operations was $6,416M. The repurchase/reverse repurchase agreement activity ($2,949M borrowed and fully repaid in 2025) reflects short-term liquidity management rather than structural leverage. No going-concern language, no covenant breach disclosures, and internal controls were assessed as effective by PwC. Pass 1's counter-evidence section already captures the two main risks: the customer funds ringfencing distortion and the modest net debt position. No new material evidence found in the primary sources that Pass 1 did not address.",
+        "citations": [],
+        "recommendedAdjustment": 0
+      },
+      "insiderAlignment": {
+        "rebuttal": "Pass 1's primary concern was the absence of a beneficial ownership table or dollar ownership figures for any NEO, preventing verification of meaningful personal wealth in company stock. The proxy window provided does not contain the beneficial ownership table (which typically appears earlier in the proxy). However, the proxy does explicitly state 'Robust stock ownership guidelines: Our stock ownership guidelines require significant sustained ownership of our common stock to align the long-term interests of our NEOs and non-employee directors with those of our stockholders.' This is mentioned in the 'What We Do' section but no specific ownership thresholds or multiples of salary are disclosed in this window. Separately, the proxy reveals one new piece of structural information not addressed by Pass 1: the new CEO (Enrique Lores) received $20M in Make-Whole RSUs that fully accelerate upon termination without cause or for good reason — creating a potential misalignment where an executive can capture a large unvested equity stake without needing to deliver long-term performance. Additionally, the interim CEO received a $3M cash retention award with no equity component, meaning the person running the company for approximately one month had no equity-based alignment during that period. Neither of these structural nuances was addressed in Pass 1's counter-evidence. However, both are relatively minor in the context of the overall compensation structure: the Make-Whole RSUs are explicitly framed as compensation for forfeited prior-employer awards (a common and generally acceptable practice), and the interim CEO period was brief. These concerns are marginal and do not materially change the character of the dimension. Pass 1's score of 4.5 appears well-calibrated given the overall governance framework described, offset by the absence of verified ownership data.",
+        "citations": [
+          {
+            "section": "proxy (DEF 14A) — Compensation Discussion and Analysis, Executive Summary, Transition-Related Compensation",
+            "quote": "Upon a termination of employment by PayPal without cause, by Mr. Lores for good reason, or due to Mr. Lores' death or disability (in each case as defined in the Company's Executive Change in Control and Severance Plan (the \"Executive Severance Plan\")), any then-unvested Make-Whole RSUs will vest, subject to satisfaction of release of claims and other requirements under the Executive Severance Plan",
+            "whyItMatters": "The $20M Make-Whole RSUs fully accelerate on termination without cause, which could allow the incoming CEO to capture a large equity stake without delivering sustained performance — a potential misalignment not addressed by Pass 1. However, this is a standard make-whole structure and the concern is marginal relative to the broader pay-for-performance framework."
+          },
+          {
+            "section": "proxy (DEF 14A) — Compensation Discussion and Analysis, Executive Summary, Interim President and CEO Compensation",
+            "quote": "In recognition of Ms. Miller's service as Interim President and CEO, and to secure her continued service as our Chief Financial and Operating Officer during this critical time for the Company, Ms. Miller received a cash retention award of $3 million, which will vest and become payable as to 67% on February 2, 2027 and 33% on February 2, 2028",
+            "whyItMatters": "The interim CEO's transition compensation was entirely cash-based with no equity component, meaning the person leading the company during a critical CEO transition period had no incremental equity alignment. This nuance was not addressed by Pass 1, though the period was brief (approximately one month) and Ms. Miller already held existing equity grants."
+          }
+        ],
+        "recommendedAdjustment": 0
+      },
+      "cyclicalityAwareness": {
+        "rebuttal": "Pass 1 scored cyclicalityAwareness at 6, acknowledging that PayPal's fee-based, asset-light model moderates cyclical risk and that COVID-19 actually provided a tailwind via e-commerce acceleration. The counter-evidence already addressed the absence of quantified prior-downturn revenue data and the secular digital-payments tailwind that can offset cyclical headwinds. Reading the primary sources independently, the risk factors do contain an explicit macro/cyclicality risk disclosure ('Global and regional economic conditions could harm our business') that names recession, unemployment, reduced consumer confidence, tariffs, and trade tensions as material threats to transaction volume. However, Pass 1's counter-evidence already captures this dynamic when noting the digital payments secular growth trend and the asset-light model. The tariff/trade tension language is notable but is framed as a volume risk to cross-border transactions — a concern Pass 1 implicitly addressed by acknowledging cyclical impact moderation. The credit-product risk factor ('The non-payment rate among account holders may increase due to...worsening economic conditions, such as recessions') adds a modest cyclical dimension through credit losses that Pass 1 did not explicitly call out, but this is a relatively small part of PayPal's overall revenue mix and is partially mitigated by the company's reliance on third-party bank originators for U.S. consumer credit. On balance, no material new evidence emerges beyond what Pass 1 already weighed. The score of 6 appears well-calibrated.",
+        "citations": [],
+        "recommendedAdjustment": 0
+      }
+    }
+  },
+  "pass3": {
+    "ticker": "PYPL",
+    "filingAccession": "0001633917-26-000024",
+    "finalScores": {
+      "moatDurability": {
+        "finalScore": 5.5,
+        "decision": "no-change",
+        "justification": "Pass 2 explicitly found no new material evidence beyond what Pass 1 already incorporated, recommending zero adjustment. The agentic commerce risk and browser-stored credential threats cited by Pass 2 were already captured in Pass 1's counter-evidence. Pass 1's score of 5.5 accurately reflects the genuine but contested two-sided network moat (439M accounts, $1.79T TPV, regulatory license barriers) weighed against multi-modal competitive pressure and the transaction count decline, and no additional primary-source evidence emerged to move the needle in either direction."
+      },
+      "ownerEarningsQuality": {
+        "finalScore": 6.5,
+        "decision": "no-change",
+        "justification": "Pass 2 explicitly recommended 0 adjustment and agreed that no single primary-source finding rises to the level of an unaddressed concern. Pass 2's sole citation on capitalized software was already identified and weighted by Pass 1, and Pass 2 correctly notes the $133M incremental shift is immaterial against $33B revenues and $6.4B operating cash flow. The model change to probability-weighted macroeconomic scenarios is documented in the filing as having 'no material impact,' further supporting Pass 1's score. Pass 1's 6.5 appropriately reflects the SBC drag, rising software capitalization, and the loan portfolio cash flow noise without over- or under-weighting any single factor."
+      },
+      "capitalAllocation": {
+        "finalScore": 6,
+        "decision": "agreed-with-pass1",
+        "justification": "Pass 2's rebuttal explicitly recommends zero adjustment and largely confirms Pass 1's analysis, noting no material concerns were missed. Pass 2 identified the dividend initiation as a small positive and the forward-flow arrangements as disciplined operational capital management, but correctly characterized these as immaterial to the overall score. Pass 1's score of 6 appropriately reflects the mixed picture: aggressive buybacks at attractive 2025 valuations offset by prior value-destructive repurchases at higher prices, debt-funded buybacks, and restructuring costs signaling prior capital misallocation."
+      },
+      "debtSustainability": {
+        "finalScore": 7.5,
+        "decision": "no-change",
+        "justification": "Pass 2 independently verified Pass 1's core findings — ~$10B long-term debt, $8B+ unrestricted cash, ~15× interest coverage from $406M cash interest against $6.4B operating cash flow — and explicitly concluded that no new material evidence was found beyond what Pass 1 already addressed. Pass 2 recommended zero adjustment. The key risks (customer funds ringfencing, modest net debt of $2.3B, absence of detailed maturity/covenant schedule in provided sections) were already acknowledged in Pass 1's counter-evidence section, making Pass 2's rebuttal confirmatory rather than additive. The 7.5 score accurately reflects strong coverage metrics offset by the structural complexity of the balance sheet and the small net debt position."
+      },
+      "insiderAlignment": {
+        "finalScore": 4.5,
+        "decision": "agreed-with-pass1",
+        "justification": "Pass 2 raised two concerns — the Make-Whole RSU full acceleration on termination without cause and the cash-only nature of the interim CEO compensation — but concluded both were marginal and recommended zero adjustment. Pass 2's own analysis acknowledges the Make-Whole RSUs are standard make-whole practice compensating for forfeited prior-employer awards, and the interim period lasted approximately one month with Ms. Miller already holding existing equity. These points do not materially change the alignment picture beyond what Pass 1 already recognized. Pass 1's score of 4.5 appropriately reflects a professionally managed company with solid governance mechanics but no verified beneficial ownership data and instability signals from the CEO transition, and Pass 2 added no evidence that would move that assessment in either direction."
+      },
+      "cyclicalityAwareness": {
+        "finalScore": 6,
+        "decision": "no-change",
+        "justification": "Pass 2 recommended zero adjustment and explicitly confirmed that Pass 1's score of 6 is well-calibrated. Pass 2's rebuttal added no material new evidence beyond what Pass 1 already weighed — the macro/cyclicality risk disclosures, credit product default risk, and cross-border trade sensitivity were all addressed in Pass 1's original reasoning and counter-evidence. The primary sources confirm the same cyclical risks Pass 1 cited without surfacing any additional quantified downturn data or structural concerns that would warrant a score change."
+      }
+    }
+  },
+  "pass1Verification": {
+    "total": 22,
+    "exact": 18,
+    "whitespaceNormalized": 0,
+    "caseInsensitive": 1,
+    "punctuationNormalized": 3,
+    "noMatch": 0,
+    "details": [
+      {
+        "dimension": "moatDurability",
+        "citationIndex": 0,
+        "section": "business",
+        "quote": "We operate a global, two-sided network at scale that connects consumers and merchants with 439 million active accounts across approximately 200 markets as of December 31, 2025.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "We operate a global, two-sided network at scale that connects consumers and merc"
+      },
+      {
+        "dimension": "moatDurability",
+        "citationIndex": 1,
+        "section": "business",
+        "quote": "We believe that our regulatory licenses, which enable us to operate in markets around the world, are a distinct advantage and help support business growth.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "case-insensitive",
+        "quotePreview": "We believe that our regulatory licenses, which enable us to operate in markets a"
+      },
+      {
+        "dimension": "moatDurability",
+        "citationIndex": 2,
+        "section": "risk-factors",
+        "quote": "Competition also may intensify as new competitors emerge, businesses combine or enter into new partnerships, and established companies in other segments expand to become competitive with various aspects of our business.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "Competition also may intensify as new competitors emerge, businesses combine or "
+      },
+      {
+        "dimension": "moatDurability",
+        "citationIndex": 3,
+        "section": "risk-factors",
+        "quote": "Rapid, significant, and disruptive technological changes impact the industries in which we operate, including payment technologies (including real-time payments, payment card tokenization, virtual currencies, distributed ledger and blockchain technologies, and proximity payment technology such as Near Field Communication and other contactless payments)",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "Rapid, significant, and disruptive technological changes impact the industries i"
+      },
+      {
+        "dimension": "ownerEarningsQuality",
+        "citationIndex": 0,
+        "section": "financial-statements",
+        "quote": "Stock-based compensation1,002 1,230 1,475",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "Stock-based compensation1,002 1,230 1,475"
+      },
+      {
+        "dimension": "ownerEarningsQuality",
+        "citationIndex": 1,
+        "section": "financial-statements",
+        "quote": "We capitalized $642 million and $509 million of internally developed software and website development costs for the years ended December 31, 2025 and 2024, respectively.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "We capitalized $642 million and $509 million of internally developed software an"
+      },
+      {
+        "dimension": "ownerEarningsQuality",
+        "citationIndex": 2,
+        "section": "financial-statements",
+        "quote": "The allowance for consumer loans receivable is primarily based on expectations of credit losses using historical lifetime loss data and incorporates macroeconomic forecasts applied to the portfolio.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "The allowance for consumer loans receivable is primarily based on expectations o"
+      },
+      {
+        "dimension": "ownerEarningsQuality",
+        "citationIndex": 3,
+        "section": "financial-statements",
+        "quote": "Net cash provided by operating activities6,416 7,450 4,843",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "Net cash provided by operating activities6,416 7,450 4,843"
+      },
+      {
+        "dimension": "capitalAllocation",
+        "citationIndex": 0,
+        "section": "mda",
+        "quote": "During the year ended December 31, 2025, we repurchased approximately $6.0 billion of our common stock in the open market under our stock repurchase programs authorized in June 2022 and February 2025.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "During the year ended December 31, 2025, we repurchased approximately $6.0 billi"
+      },
+      {
+        "dimension": "capitalAllocation",
+        "citationIndex": 1,
+        "section": "mda",
+        "quote": "In October 2025, we announced that our Board of Directors approved the initiation of a quarterly cash dividend program and declared a cash dividend of $0.14 per share on our common stock, totaling approximately $130 million.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "In October 2025, we announced that our Board of Directors approved the initiatio"
+      },
+      {
+        "dimension": "capitalAllocation",
+        "citationIndex": 2,
+        "section": "mda",
+        "quote": "an increase of approximately $600 million in borrowings under financing arrangements, net of repayments, partially offset by a decline of approximately $320 million in collateral received related to derivative instruments.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "an increase of approximately $600 million in borrowings under financing arrangem"
+      },
+      {
+        "dimension": "capitalAllocation",
+        "citationIndex": 3,
+        "section": "mda",
+        "quote": "The 2Q 2025 Plan is a transformative unified program designed to streamline operations and includes exiting certain data centers to migrate to more efficient cloud-based solutions.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "The 2Q 2025 Plan is a transformative unified program designed to streamline oper"
+      },
+      {
+        "dimension": "debtSustainability",
+        "citationIndex": 0,
+        "section": "financial-statements",
+        "quote": "Long-term debt9,987 9,879",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "Long-term debt9,987 9,879"
+      },
+      {
+        "dimension": "debtSustainability",
+        "citationIndex": 1,
+        "section": "financial-statements",
+        "quote": "Cash paid for interest$406 $366 $331",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "Cash paid for interest$406 $366 $331"
+      },
+      {
+        "dimension": "debtSustainability",
+        "citationIndex": 2,
+        "section": "financial-statements",
+        "quote": "Cash and cash equivalents$8,049 $6,662",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "Cash and cash equivalents$8,049 $6,662"
+      },
+      {
+        "dimension": "insiderAlignment",
+        "citationIndex": 0,
+        "section": "proxy",
+        "quote": "The design of Mr. Lores' new hire awards is highly performance-oriented, with no sign-on cash component, and with a special performance-based equity award tied to rigorous stock price hurdles over a period up to five years.",
+        "lookedIn": "fixtures-fallback",
+        "matchTier": "punctuation-normalized",
+        "quotePreview": "The design of Mr. Lores' new hire awards is highly performance-oriented, with no"
+      },
+      {
+        "dimension": "insiderAlignment",
+        "citationIndex": 1,
+        "section": "proxy",
+        "quote": "Robust stock ownership guidelines Our stock ownership guidelines require significant sustained ownership of our common stock to align the long-term interests of our NEOs and non-employee directors with those of our stockholders and reflect our commitment to sound corporate governance.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "Robust stock ownership guidelines Our stock ownership guidelines require signifi"
+      },
+      {
+        "dimension": "insiderAlignment",
+        "citationIndex": 2,
+        "section": "proxy",
+        "quote": "In recognition of Ms. Miller's service as Interim President and CEO, and to secure her continued service as our Chief Financial and Operating Officer during this critical time for the Company, Ms. Miller received a cash retention award of $3 million",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "punctuation-normalized",
+        "quotePreview": "In recognition of Ms. Miller's service as Interim President and CEO, and to secu"
+      },
+      {
+        "dimension": "insiderAlignment",
+        "citationIndex": 3,
+        "section": "proxy",
+        "quote": "More than 50% of our NEOs' target total direct compensation (composed of each NEO's base salary, AIP target and LTI target) is performance-based and tied to pre-established performance goals aligned with our short-term and long-term objectives.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "punctuation-normalized",
+        "quotePreview": "More than 50% of our NEOs' target total direct compensation (composed of each NE"
+      },
+      {
+        "dimension": "cyclicalityAwareness",
+        "citationIndex": 0,
+        "section": "risk-factors",
+        "quote": "Adverse global and regional economic conditions such as political unrest and turmoil affecting the banking system or financial markets, including, but not limited to, tightening in the credit markets, extreme volatility or distress in the financial markets",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "Adverse global and regional economic conditions such as political unrest and tur"
+      },
+      {
+        "dimension": "cyclicalityAwareness",
+        "citationIndex": 1,
+        "section": "risk-factors",
+        "quote": "The non-payment rate among account holders may increase due to, among other factors, changes to underwriting standards, risk models not accurately predicting the creditworthiness of a user, worsening economic conditions, such as recessions, economic downturns or government austerity programs, increases in prevailing interest rates, and high unemployment rates.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "The non-payment rate among account holders may increase due to, among other fact"
+      },
+      {
+        "dimension": "cyclicalityAwareness",
+        "citationIndex": 2,
+        "section": "risk-factors",
+        "quote": "Cross-border trade has been and may be negatively impacted by various factors including foreign exchange rate fluctuations; changes in or new tariffs, trade disputes, barriers or restrictions threats of such actions, and the related uncertainty thereof",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "Cross-border trade has been and may be negatively impacted by various factors in"
+      }
+    ]
+  },
+  "pass2Verification": {
+    "total": 3,
+    "exact": 1,
+    "whitespaceNormalized": 0,
+    "caseInsensitive": 0,
+    "punctuationNormalized": 2,
+    "noMatch": 0,
+    "details": [
+      {
+        "dimension": "ownerEarningsQuality",
+        "citationIndex": 0,
+        "section": "financial-statements",
+        "quote": "We capitalized $642 million and $509 million of internally developed software and website development costs for the years ended December 31, 2025 and 2024, respectively.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "We capitalized $642 million and $509 million of internally developed software an"
+      },
+      {
+        "dimension": "insiderAlignment",
+        "citationIndex": 0,
+        "section": "proxy (DEF 14A) — Compensation Discussion and Analysis, Executive Summary, Transition-Related Compensation",
+        "quote": "Upon a termination of employment by PayPal without cause, by Mr. Lores for good reason, or due to Mr. Lores' death or disability (in each case as defined in the Company's Executive Change in Control and Severance Plan (the \"Executive Severance Plan\")), any then-unvested Make-Whole RSUs will vest, subject to satisfaction of release of claims and other requirements under the Executive Severance Plan",
+        "lookedIn": "fixtures-fallback",
+        "matchTier": "punctuation-normalized",
+        "quotePreview": "Upon a termination of employment by PayPal without cause, by Mr. Lores for good "
+      },
+      {
+        "dimension": "insiderAlignment",
+        "citationIndex": 1,
+        "section": "proxy (DEF 14A) — Compensation Discussion and Analysis, Executive Summary, Interim President and CEO Compensation",
+        "quote": "In recognition of Ms. Miller's service as Interim President and CEO, and to secure her continued service as our Chief Financial and Operating Officer during this critical time for the Company, Ms. Miller received a cash retention award of $3 million, which will vest and become payable as to 67% on February 2, 2027 and 33% on February 2, 2028",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "punctuation-normalized",
+        "quotePreview": "In recognition of Ms. Miller's service as Interim President and CEO, and to secu"
+      }
+    ]
+  }
+}

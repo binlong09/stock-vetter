@@ -1,0 +1,151 @@
+{
+  "ticker": "INTU",
+  "cik": "0000896878",
+  "accession": "0000896878-25-000035",
+  "form": "10-K",
+  "filingDate": "2025-09-03",
+  "primaryDocument": "intu-20250731.htm",
+  "parsedAt": "2026-05-10T05:17:19.059Z",
+  "cleanedTextLength": 442318,
+  "sections": [
+    {
+      "id": "business",
+      "label": "Business",
+      "itemNumber": "1",
+      "charLength": 54286,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "ITEM 1 - BUSINESS",
+        "score": 9,
+        "signals": [
+          "descendant-bold",
+          "larger-font",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "risk-factors",
+      "label": "Risk Factors",
+      "itemNumber": "1A",
+      "charLength": 93394,
+      "confidence": "high",
+      "warnings": [
+        "absorbed bundled content from \"properties\""
+      ],
+      "bundled": [
+        "properties"
+      ],
+      "chosenAnchor": {
+        "text": "ITEM 1A - RISK FACTORS",
+        "score": 9,
+        "signals": [
+          "descendant-bold",
+          "larger-font",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "properties",
+      "label": "Properties",
+      "itemNumber": "2",
+      "charLength": 1273,
+      "confidence": "high",
+      "warnings": [
+        "incorporation-by-reference: real content lives elsewhere in the filing",
+        "bundled into \"risk-factors\" (93,394 chars vs threshold 82,500)"
+      ],
+      "bundled": [
+        "risk-factors"
+      ],
+      "chosenAnchor": {
+        "text": "ITEM 2 - PROPERTIES",
+        "score": 9,
+        "signals": [
+          "descendant-bold",
+          "larger-font",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "legal-proceedings",
+      "label": "Legal Proceedings",
+      "itemNumber": "3",
+      "charLength": 3891,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "ITEM 3 - LEGAL PROCEEDINGS",
+        "score": 9,
+        "signals": [
+          "descendant-bold",
+          "larger-font",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "mda",
+      "label": "Management's Discussion and Analysis",
+      "itemNumber": "7",
+      "charLength": 67264,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "ITEM 7 - MANAGEMENT’S DISCUSSION AND ANALYSIS OF FINANCIAL               CONDITION AND RESULTS OF OPERATIONS",
+        "score": 9,
+        "signals": [
+          "descendant-bold",
+          "larger-font",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "quant-risk",
+      "label": "Quantitative and Qualitative Disclosures About Market Risk",
+      "itemNumber": "7A",
+      "charLength": 6841,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "ITEM 7A - QUANTITATIVE AND QUALITATIVE DISCLOSURES ABOUT MARKET                 RISK",
+        "score": 9,
+        "signals": [
+          "descendant-bold",
+          "larger-font",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "financial-statements",
+      "label": "Financial Statements",
+      "itemNumber": "8",
+      "charLength": 175470,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "ITEM 8 - FINANCIAL STATEMENTS AND SUPPLEMENTARY DATA",
+        "score": 9,
+        "signals": [
+          "descendant-bold",
+          "larger-font",
+          "all-caps",
+          "top-level-body-descendant"
+        ]
+      }
+    }
+  ],
+  "parserWarnings": [],
+  "missing": []
+}

@@ -29,5 +29,41 @@
   "CHD": {
     "videos": [],
     "notes": "Church & Dwight — mid-cap consumer staples, no analyst videos configured"
+  },
+  "MSFT": {
+    "videos": [
+      "https://www.youtube.com/watch?v=WtoMBbTkHjU"
+    ],
+    "notes": "microsoft"
+  },
+  "ADBE": {
+    "videos": [
+      "https://www.youtube.com/watch?v=x3eCgG9U3WE"
+    ],
+    "notes": "adobe"
+  },
+  "PYPL": {
+    "videos": [
+      "https://www.youtube.com/watch?v=IUqmsl1lVxc"
+    ],
+    "notes": "Paypal"
+  },
+  "NFLX": {
+    "videos": [
+      "https://www.youtube.com/watch?v=ry6i0HuEcyg"
+    ],
+    "notes": "Netflix"
+  },
+  "CDNS": {
+    "videos": [
+      "https://www.youtube.com/watch?v=i58jVhIn_II"
+    ],
+    "notes": "Cadence Design Systes"
+  },
+  "MELI": {
+    "videos": [
+      "https://www.youtube.com/watch?v=LIW5zhU9IEc"
+    ],
+    "notes": "MercadoLibre Inc"
   }
 }

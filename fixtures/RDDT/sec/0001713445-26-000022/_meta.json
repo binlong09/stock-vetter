@@ -1,0 +1,150 @@
+{
+  "ticker": "RDDT",
+  "cik": "0001713445",
+  "accession": "0001713445-26-000022",
+  "form": "10-K",
+  "filingDate": "2026-02-06",
+  "primaryDocument": "rddt-20251231.htm",
+  "parsedAt": "2026-05-10T06:57:03.580Z",
+  "cleanedTextLength": 436796,
+  "sections": [
+    {
+      "id": "business",
+      "label": "Business",
+      "itemNumber": "1",
+      "charLength": 17,
+      "confidence": "failed",
+      "warnings": [
+        "Section length 17 far below floor — likely TOC entry or missing content"
+      ],
+      "chosenAnchor": {
+        "text": "Item 1. Business",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "risk-factors",
+      "label": "Risk Factors",
+      "itemNumber": "1A",
+      "charLength": 83,
+      "confidence": "failed",
+      "warnings": [
+        "Section length 83 far below floor — likely TOC entry or missing content"
+      ],
+      "chosenAnchor": {
+        "text": "Item 1A. Risk Factors",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "properties",
+      "label": "Properties",
+      "itemNumber": "2",
+      "charLength": 20,
+      "confidence": "failed",
+      "warnings": [
+        "Section length 20 far below floor — likely TOC entry or missing content"
+      ],
+      "chosenAnchor": {
+        "text": "Item 2. Properties",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "legal-proceedings",
+      "label": "Legal Proceedings",
+      "itemNumber": "3",
+      "charLength": 205,
+      "confidence": "low",
+      "warnings": [
+        "Section length 205 below expected floor for legal-proceedings"
+      ],
+      "chosenAnchor": {
+        "text": "Item 3. Legal Proceedings",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "mda",
+      "label": "Management's Discussion and Analysis",
+      "itemNumber": "7",
+      "charLength": 95,
+      "confidence": "failed",
+      "warnings": [
+        "Section length 95 far below floor — likely TOC entry or missing content"
+      ],
+      "chosenAnchor": {
+        "text": "Item 7. Management’s Discussion and Analysis of Financial Condition and Results of Operations",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "quant-risk",
+      "label": "Quantitative and Qualitative Disclosures About Market Risk",
+      "itemNumber": "7A",
+      "charLength": 69,
+      "confidence": "failed",
+      "warnings": [
+        "Section length 69 far below floor — likely TOC entry or missing content"
+      ],
+      "chosenAnchor": {
+        "text": "Item 7A. Quantitative and Qualitative Disclosures About Market Risk",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "financial-statements",
+      "label": "Financial Statements",
+      "itemNumber": "8",
+      "charLength": 416337,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "Item 8. Financial Statements and Supplementary Data",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    }
+  ],
+  "parserWarnings": [
+    "Item not extracted cleanly: business",
+    "Item not extracted cleanly: risk-factors",
+    "Item not extracted cleanly: properties",
+    "Item not extracted cleanly: mda",
+    "Item not extracted cleanly: quant-risk"
+  ],
+  "missing": [
+    "business",
+    "risk-factors",
+    "properties",
+    "mda",
+    "quant-risk"
+  ]
+}
