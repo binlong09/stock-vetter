@@ -127,10 +127,25 @@ The pipeline stays on your laptop; only `apps/web/` deploys. On Vercel:
    - `AUTH_RESEND_KEY` — from https://resend.com/api-keys.
    - `EMAIL_FROM` — e.g. `Stock Vetter <onboarding@resend.dev>` (Resend's sandbox sender works without a verified domain).
    - `ALLOWED_EMAILS` — comma-separated allowlist.
+   - `CRON_SECRET` — bearer token for the EOD-price cron route. Generate with `openssl rand -hex 32`. Vercel cron sends this in the `Authorization: Bearer …` header; the route fails closed if it's missing.
 4. Deploy. The default `*.vercel.app` subdomain is fine.
 5. **Smoke-test on your phone**: visit the URL → bounced to `/signin` → enter an allowlisted email → magic link arrives → click → dashboard loads → close the browser, reopen, still signed in. Then try a non-allowlisted email → "not allowed" error, no email sent.
 
 **Redeploys on code changes are automatic** — Vercel rebuilds on every push to `main`. The CLI on your laptop is unaffected by deploys.
+
+### EOD prices on the dashboard
+
+After every analysis, the dashboard shows two prices per ticker: the **current end-of-day price** and the **price the analysis was run against** ("$612 today · was $598 on May 10 (+2.3%)"). The current price comes from a Vercel cron that fetches each ticker's latest close from Yahoo and upserts into a `quotes` table — configured in `apps/web/vercel.json` to run at 22:00 UTC (~18:00 ET) Monday–Friday, an hour after NYSE close. The dashboard reads `quotes` via a join; nothing on the request path calls Yahoo.
+
+Manual refresh (anytime, e.g. for a freshly added ticker before the next scheduled run):
+
+```
+curl -H "Authorization: Bearer $CRON_SECRET" https://<your-app>.vercel.app/api/cron/eod-prices
+```
+
+Returns `{ok: N, failed: [...], durationMs: …}`. Per-ticker failures don't stop the rest of the job.
+
+When a ticker has been analyzed but the cron hasn't run yet (or failed for that ticker), the dashboard gracefully falls back to "Analyzed at $X on May 10" — no broken UI.
 
 ## Reading the verdict
 
