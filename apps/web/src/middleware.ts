@@ -10,6 +10,9 @@ export default auth((req) => {
   const isPublic =
     pathname === '/signin' ||
     pathname.startsWith('/api/auth') ||
+    // Cron routes are bearer-token auth'd by the route handler itself, not the
+    // session cookie — they must skip the redirect-to-/signin middleware.
+    pathname.startsWith('/api/cron') ||
     pathname.startsWith('/_next') ||
     pathname === '/favicon.ico';
   if (isPublic) return;
