@@ -65,5 +65,67 @@
       "https://www.youtube.com/watch?v=LIW5zhU9IEc"
     ],
     "notes": "MercadoLibre Inc"
+  },
+  "AAPL": {
+    "videos": []
+  },
+  "INTC": {
+    "videos": []
+  },
+  "MMM": {
+    "videos": [],
+    "notes": "3M"
+  },
+  "EL": {
+    "videos": [],
+    "notes": "EStee launder"
+  },
+  "DIS": {
+    "videos": [],
+    "notes": "Disney"
+  },
+  "NKE": {
+    "videos": [],
+    "notes": "Nike"
+  },
+  "FICO": {
+    "videos": [
+      "https://www.youtube.com/watch?v=nHLrKyjHuGo"
+    ],
+    "notes": "FICO"
+  },
+  "CRM": {
+    "videos": [
+      "https://www.youtube.com/watch?v=eQ-v_8mcVDY"
+    ],
+    "notes": "Salesforce"
+  },
+  "WMT": {
+    "videos": [],
+    "notes": "Walmart"
+  },
+  "PWR": {
+    "videos": [],
+    "notes": "Quanta Services is a U.S. corporation that provides infrastructure services for the electric power, pipeline, industrial and communications industries. Its capabilities include planning, design, installation, program management, maintenance and repair of most types of network infrastructure"
+  },
+  "ABBV": {
+    "videos": [],
+    "notes": "AbbVie Inc. is an American pharmaceutical company headquartered in North Chicago, Illinois. They have produced drugs to treat a wide range of medical issues. The company is ranked sixth on the list of largest biomedical companies by revenue. It is ranked 77th on the Fortune 500 and 108th on the Forbes Global 2000"
+  },
+  "JNJ": {
+    "videos": [],
+    "notes": "Johnson & Johnson is an American multinational pharmaceutical, biotechnology, and medical technologies corporation headquartered in New Brunswick, New Jersey, and publicly traded on the New York Stock Exchange."
+  },
+  "MO": {
+    "videos": [],
+    "notes": "Altria Group, Inc. is an American corporation and one of the world's largest producers and marketers of tobacco, cigarettes, and medical products in the treatment of illnesses caused by tobacco. It operates worldwide and is headquartered in the city of Richmond, Virginia."
+  },
+  "VZ": {
+    "videos": [],
+    "notes": "Verizon Communications Inc. is an American telecommunications company headquartered in New York City. It is the world's second-largest telecommunications company by revenue and its mobile network is the largest wireless carrier in the United States, with 146.8 million subscribers as of March 31, 2026"
+  },
+  "Placeholder": {
+    "videos": [],
+    "notes": "Walmart"
   }
 }
