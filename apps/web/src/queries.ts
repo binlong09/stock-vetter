@@ -30,14 +30,24 @@ export interface TickerListRow {
   /** From the meta-card inputs — used to flag a reverse-DCF vs actual gap. */
   reverseDcfCentralImpliedCagr: number | null;
   actualFcf5yCagr: number | null;
+  /** Price at analysis time (from financials.snapshot_json.price). */
+  analysisPrice: number | null;
+  /** Latest EOD price from the cron-refreshed quotes table; null if not fetched yet. */
+  currentPrice: number | null;
+  /** ISO date for the EOD price's trading session. */
+  currentPriceAsOf: string | null;
 }
 
 /** All analyzed tickers, highest score first. */
 export async function listTickers(): Promise<TickerListRow[]> {
   const res = await db().execute(
-    `SELECT ticker, verdict, weighted_score, summary, analyst_video_count, generated_at, meta_card_json
-       FROM tickers
-      ORDER BY weighted_score DESC, ticker ASC`,
+    `SELECT t.ticker, t.verdict, t.weighted_score, t.summary, t.analyst_video_count, t.generated_at, t.meta_card_json,
+            json_extract(f.snapshot_json, '$.price') AS analysis_price,
+            q.price AS current_price, q.as_of AS current_price_as_of
+       FROM tickers t
+       LEFT JOIN financials f ON f.ticker = t.ticker
+       LEFT JOIN quotes q ON q.ticker = t.ticker
+      ORDER BY t.weighted_score DESC, t.ticker ASC`,
   );
   return res.rows.map((r) => {
     let implied: number | null = null;
@@ -60,6 +70,9 @@ export async function listTickers(): Promise<TickerListRow[]> {
       generatedAt: String(r.generated_at),
       reverseDcfCentralImpliedCagr: implied,
       actualFcf5yCagr: actual,
+      analysisPrice: r.analysis_price == null ? null : Number(r.analysis_price),
+      currentPrice: r.current_price == null ? null : Number(r.current_price),
+      currentPriceAsOf: r.current_price_as_of == null ? null : String(r.current_price_as_of),
     };
   });
 }
@@ -75,6 +88,9 @@ export interface TickerDetail {
   primaryChecklist: unknown;
   generatedAt: string;
   pushedAt: string;
+  /** Latest EOD price from `quotes`; null until the cron has run for this ticker. */
+  currentPrice: number | null;
+  currentPriceAsOf: string | null;
 }
 
 /** One ticker's meta-card + financials. Null if the ticker isn't in the DB. */
@@ -83,10 +99,12 @@ export async function getTickerDetail(ticker: string): Promise<TickerDetail | nu
   const res = await db().execute({
     sql: `SELECT t.ticker, t.generated_at, t.pushed_at, t.meta_card_json,
                  f.snapshot_json, f.reverse_dcf_json,
-                 p.checklist_json
+                 p.checklist_json,
+                 q.price AS current_price, q.as_of AS current_price_as_of
             FROM tickers t
             LEFT JOIN financials f ON f.ticker = t.ticker
             LEFT JOIN primary_source_runs p ON p.ticker = t.ticker
+            LEFT JOIN quotes q ON q.ticker = t.ticker
            WHERE t.ticker = ?`,
     args: [upper],
   });
@@ -104,6 +122,8 @@ export async function getTickerDetail(ticker: string): Promise<TickerDetail | nu
     primaryChecklist: row.checklist_json == null ? null : JSON.parse(String(row.checklist_json)),
     generatedAt: String(row.generated_at),
     pushedAt: String(row.pushed_at),
+    currentPrice: row.current_price == null ? null : Number(row.current_price),
+    currentPriceAsOf: row.current_price_as_of == null ? null : String(row.current_price_as_of),
   };
 }
 

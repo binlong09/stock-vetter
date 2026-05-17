@@ -6,6 +6,7 @@ import type { TickerListRow } from '@/queries';
 import { verdictMeta, VERDICT_ORDER } from '@/lib/verdict';
 import { valuationGap } from '@/lib/anomaly';
 import { ValuationGapBadge } from './ValuationGapBadge';
+import { PriceRow } from './PriceRow';
 
 function scoreColor(s: number): string {
   if (s >= 7.5) return 'text-emerald-700';
@@ -79,6 +80,14 @@ export function DashboardList({ rows }: { rows: TickerListRow[] }) {
                     <span aria-hidden>{m.emoji}</span>
                     {m.label}
                   </span>
+                </div>
+                <div className="mt-1">
+                  <PriceRow
+                    currentPrice={r.currentPrice}
+                    currentPriceAsOf={r.currentPriceAsOf}
+                    analysisPrice={r.analysisPrice}
+                    analyzedAt={r.generatedAt}
+                  />
                 </div>
                 {gap && (
                   <div className="mt-1.5">

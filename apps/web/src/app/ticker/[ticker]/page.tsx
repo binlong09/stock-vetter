@@ -9,6 +9,7 @@ import { CrossSourceFindings } from '@/components/CrossSourceFindings';
 import { Section } from '@/components/Section';
 import { DeepView } from '@/components/DeepView';
 import { ValuationGapBadge } from '@/components/ValuationGapBadge';
+import { PriceRow } from '@/components/PriceRow';
 import { valuationGap } from '@/lib/anomaly';
 import { usd, isoDate } from '@/lib/format';
 
@@ -42,6 +43,15 @@ export default async function TickerPage({ params }: { params: Promise<{ ticker:
         <div className="mt-1.5">
           <ScoreBadge value={m.weightedScore} />
           <span className="ml-2 text-[12px] text-slate-400">weighted across 6 dimensions</span>
+        </div>
+        <div className="mt-1.5">
+          <PriceRow
+            currentPrice={detail.currentPrice}
+            currentPriceAsOf={detail.currentPriceAsOf}
+            analysisPrice={financialSnapshot?.price ?? null}
+            analyzedAt={m.generatedAt}
+            size="lg"
+          />
         </div>
       </div>
 
