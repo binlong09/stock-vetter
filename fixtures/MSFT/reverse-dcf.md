@@ -1,10 +1,10 @@
 ## Reverse DCF — what is the current price assuming?
 
-At a current price of $412.66 per share and trailing FCF of $71.6B, the reverse DCF asks: what 10-year FCF growth rate would justify this price under various assumptions?
+At a current price of $407.77 per share and trailing FCF of $71.6B, the reverse DCF asks: what 10-year FCF growth rate would justify this price under various assumptions?
 
-Under the central assumptions (10% discount rate, 20× terminal P/FCF), the market is pricing in approximately 14.7% annual FCF growth for 10 years.
+Under the central assumptions (10% discount rate, 20× terminal P/FCF), the market is pricing in approximately 14.5% annual FCF growth for 10 years.
 For comparison, actual FCF CAGR has been 9.6% over the past 5 years and 3.2% over the past 3 years.
-The implied growth meaningfully exceeds the historical pace — the price requires acceleration the company has not yet demonstrated.
+The implied growth is roughly consistent with the historical pace — the price assumes the business continues to grow at its recent rate.
 
 Read the sensitivity grid below to see how this implied growth shifts under different discount rates and terminal multiples. A value-investing skeptic would ask whether the highest-implied-growth cells in the grid are achievable, and whether the assumptions that produce a more attractive picture are themselves reasonable.
 
@@ -12,9 +12,9 @@ Read the sensitivity grid below to see how this implied growth shifts under diff
 
 | Discount \ Terminal | 15× P/FCF | 20× P/FCF | 25× P/FCF |
 |---|---|---|---|
-| **8% discount** | 15.2% | 12.6% | 10.6% |
-| **10% discount** | 17.3% | 14.7% | 12.6% |
-| **12% discount** | 19.4% | 16.8% | 14.7% |
+| **8% discount** | 15.0% | 12.4% | 10.4% |
+| **10% discount** | 17.1% | 14.5% | 12.5% |
+| **12% discount** | 19.3% | 16.6% | 14.5% |
 
-*Starting FCF:* $71.61B per year. *Shares:* 7465M diluted. *Price:* $412.66.
+*Starting FCF:* $71.61B per year. *Shares:* 7465M diluted. *Price:* $407.77.
 *Historical FCF CAGR for comparison:* 5y actual: 9.6%, 3y actual: 3.2%.

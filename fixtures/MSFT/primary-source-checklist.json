@@ -4,102 +4,96 @@
     "filingAccession": "0000950170-25-100235",
     "scores": {
       "moatDurability": {
-        "score": 8,
-        "rationale": "Microsoft possesses a multi-dimensional moat anchored in platform network effects, switching costs embedded in enterprise contracts, and massive scale economies in cloud infrastructure. The Business section describes three mutually reinforcing cloud economies of scale and a sprawling ecosystem across productivity, cloud, gaming, and LinkedIn that creates deep customer lock-in. Risk Factors confirm competitive intensity is real—particularly from open-source AI models and vertically-integrated rivals—but characterize these as execution risks rather than fundamental threats to existing installed-base advantages. The combination of long-term Enterprise Agreements, the shift of customers from on-premises to cloud subscriptions (which deepens dependency), and proprietary AI integration into core workflows creates high switching costs that are structurally durable.",
+        "score": 7.5,
+        "rationale": "Microsoft's moat rests on multiple reinforcing layers: platform ecosystem lock-in across productivity (Microsoft 365), cloud infrastructure (Azure), and developer tools (GitHub/Visual Studio); genuine network effects in LinkedIn and Teams; and significant switching costs embedded in enterprise agreements and deep IT integration. The Business section articulates datacenter scale economies with specificity ('three economies of scale'), and the installed base of Office/Windows creates durable migration friction. However, Risk Factors are unusually candid about competitive intensity — explicitly acknowledging low barriers to entry in many segments, open-source erosion, and AI-first challengers — preventing a score in the 8–9 range reserved for near-fortress positions.",
         "citations": [
           {
             "section": "business",
             "quote": "Our cloud business benefits from three economies of scale: datacenters that deploy computational resources at significantly lower cost per unit than smaller ones; datacenters that coordinate and aggregate diverse customer, geographic, and application demand patterns",
-            "whyItMatters": "Management quantifies specific structural cost advantages that compound with scale, making it progressively harder for smaller competitors to match Azure's economics."
+            "whyItMatters": "Management quantifies structural cost advantages in cloud infrastructure — a real scale moat that is difficult for smaller rivals to replicate — rather than making vague claims about being 'the best.'"
           },
           {
             "section": "business",
             "quote": "A well-established ecosystem creates beneficial network effects among users, application developers, and the platform provider that can accelerate growth. Establishing significant scale in the marketplace is necessary to meet consumer demand and to achieve and maintain attractive margins.",
-            "whyItMatters": "This passage—from the Risk Factors section discussing competition—actually validates the network-effect moat by acknowledging that scale-driven ecosystems generate sustainable margin advantages, a dynamic Microsoft currently leads in enterprise software."
-          },
-          {
-            "section": "business",
-            "quote": "Enterprise Agreements are designed for medium or large organizations that want to license Microsoft products and services organization-wide over a three-year period.",
-            "whyItMatters": "Multi-year enterprise-wide agreements create high switching costs and predictable recurring revenue, a hallmark of durable pricing power that locks in organizational dependency."
+            "whyItMatters": "Management explicitly acknowledges network effects as a core competitive mechanism, and the breadth of the platform (Office, Windows, Azure, LinkedIn, Xbox) means these effects compound across segments."
           },
           {
             "section": "risk-factors",
             "quote": "Barriers to entry in many of our businesses are low and many of the areas in which we compete evolve rapidly with changing and disruptive technologies, shifting user needs, and frequent introductions of new products and services.",
-            "whyItMatters": "This is the primary counter-signal: management explicitly acknowledges low barriers in several segments, which tempers the moat score from a 9 and confirms the moat is strong but not impregnable."
+            "whyItMatters": "This legally required disclosure directly contradicts a 'fortress moat' narrative — management concedes that low entry barriers exist across meaningful portions of the business, capping the moat score."
+          },
+          {
+            "section": "risk-factors",
+            "quote": "Some companies compete with us by modifying and then distributing open source software at little or no cost to end users, developing, making available, or using AI models that are open, and earning revenue on advertising or integrated products and services. These firms do not bear the full costs of research and development for the open source products.",
+            "whyItMatters": "Open-source and zero-marginal-cost competitors structurally undercut Microsoft's pricing power in server software and AI, representing a genuine and ongoing erosion vector for the moat."
           }
         ],
-        "counterEvidence": "The Risk Factors section contains meaningful pushback on moat durability. Management explicitly states 'barriers to entry in many of our businesses are low' and flags that open-source AI competitors 'do not bear the full costs of research and development,' threatening the AI layer of Microsoft's stack where much future growth is premised. The section also notes that competing platforms (vertically integrated models like Apple's ecosystem) have succeeded against Microsoft in consumer segments, and that open-source alternatives 'mimic the features and functionality of our products.' These admissions prevent a score of 9 or above.",
+        "counterEvidence": "Risk Factors explicitly cite that AI is 'a highly competitive and rapidly evolving market, and new competitors continue to enter the market,' and that competing platforms (vertically integrated models, open-source alternatives) are gaining ground in both consumer and enterprise segments. The candid admission that 'barriers to entry in many of our businesses are low' — combined with the nation-state cybersecurity breach disclosure (which damaged enterprise trust) — limits the moat score below 8, as these are genuine structural vulnerabilities, not mere edge-case disclosures.",
         "samples": [
-          8,
-          8,
-          8
+          7.5
         ],
         "range": 0,
         "representativeSampleIndex": 0
       },
       "ownerEarningsQuality": {
-        "score": 6.5,
-        "rationale": "Microsoft's operating cash flow of $136.2B substantially exceeds net income of $101.8B (a ~1.34× ratio), driven by non-cash D&A and unearned revenue dynamics — a positive sign for owner earnings quality. However, SBC of $12.0B represents ~8.8% of operating cash flow, and true FCF after the massive $64.6B capex spend was only ~$71.6B in FY2025, compressing the FCF/net income ratio well below 1×. The AI-driven capex surge (nearly 2× prior year) and $92.7B in uncommenced lease commitments signal that reported earnings significantly overstate near-term extractable cash. Revenue recognition is complex but appears conservative (subscription-based ratable recognition, large unearned revenue balance), and SBC is cleanly disclosed.",
+        "score": 7,
+        "rationale": "Microsoft's FCF ($136.2B operating cash flow vs. $101.8B net income in FY2025) demonstrates healthy cash conversion, with operating cash flow consistently exceeding net income across all three years shown. SBC of $12.0B (~8.8% of operating cash flow) is meaningful but disclosed cleanly and partially offset by tax benefits. The primary drag on 'owner earnings' quality is the massive and accelerating capex program ($64.6B in FY2025 vs. $44.5B in FY2024 vs. $28.1B in FY2023), plus $92.7B in uncommenced lease commitments, which compresses true FCF to roughly $71.6B ($136.2B - $64.6B capex). This growth capex is defensible given cloud/AI investment thesis but materially reduces near-term distributable cash. The IRS dispute ($28.9B proposed adjustment) and $24.7B in unrecognized tax benefits are a meaningful contingent liability that a careful owner must discount.",
         "citations": [
           {
             "section": "financial-statements",
             "quote": "Net cash from operations 136,162 118,548 87,582",
-            "whyItMatters": "Operating cash flow of $136.2B in FY2025 vs. net income of $101.8B shows a healthy ~1.34× conversion ratio, confirming that non-cash charges (D&A, SBC, unearned revenue) meaningfully support cash generation above reported earnings."
-          },
-          {
-            "section": "financial-statements",
-            "quote": "Additions to property and equipment (64,551 ) (44,477 ) (28,107 )",
-            "whyItMatters": "Capex has surged from $28.1B (FY2023) to $64.6B (FY2025), meaning true FCF (operating cash flow minus capex) fell to roughly $71.6B against net income of $101.8B — reported earnings overstate extractable owner cash by ~42% in the current investment cycle."
+            "whyItMatters": "Operating cash flow has grown from $87.6B to $136.2B over three years and consistently exceeds net income ($101.8B in FY2025), confirming strong cash conversion quality."
           },
           {
             "section": "financial-statements",
             "quote": "Stock-based compensation expense $ 11,974 $ 10,734 $ 9,611",
-            "whyItMatters": "SBC has grown steadily to $12.0B annually, representing ~8.8% of operating cash flow; while not egregious for a company of this scale, it is a real dilutive cost that reduces true owner earnings and has been rising each year."
+            "whyItMatters": "SBC is rising steadily (~$12B in FY2025) and represents a real economic cost to owners; at ~8.8% of operating cash flow it is meaningful but not egregious, and the filing discloses it transparently."
           },
           {
             "section": "financial-statements",
             "quote": "As of June 30, 2025, we had additional leases, primarily for datacenters, that had not yet commenced of $92.7 billion.",
-            "whyItMatters": "The $92.7B in uncommenced lease obligations (not yet on-balance-sheet) represents a substantial future cash commitment that is invisible in current earnings or FCF figures, further widening the gap between reported earnings and long-term extractable owner cash."
+            "whyItMatters": "This off-balance-sheet commitment ($92.7B in future lease obligations not yet on the books) substantially raises total capital obligations beyond what the current balance sheet shows, reducing true owner cash flow."
+          },
+          {
+            "section": "financial-statements",
+            "quote": "the IRS is seeking an additional tax payment of $28.9 billion plus penalties and interest",
+            "whyItMatters": "A potential $28.9B+ tax liability (plus $24.7B in gross unrecognized tax benefits already on books) represents a contingent cash outflow that a long-term owner must weigh against reported earnings."
           }
         ],
-        "counterEvidence": "The unearned revenue balance of $67.3B (growing from $60.2B) and $375B in remaining performance obligations suggest revenue recognition is conservative and future cash collection will exceed current revenue — a positive offset to the capex concern. Additionally, the subscription-heavy model means revenue is recognized ratably, reducing aggressive front-loading risk. The 3-year OCF trajectory ($87.6B → $118.5B → $136.2B) shows consistent and accelerating cash generation even as capex ramped.",
+        "counterEvidence": "The 3-year FCF CAGR of only 3.2% (per financial context) vs. net income growth of ~18% CAGR over the same period signals that the accelerating capex cycle ($64.6B in FY2025, up 45% YoY) is consuming cash faster than earnings are growing. Depreciation of $22B lags capex by ~$42B in FY2025, meaning reported earnings include an implicit assumption that this investment will generate returns — if cloud/AI demand disappoints, both the asset values and the earnings quality case weaken simultaneously.",
         "samples": [
-          6.5,
-          6.5,
-          6.5
+          7
         ],
         "range": 0,
         "representativeSampleIndex": 0
       },
       "capitalAllocation": {
         "score": 5.5,
-        "rationale": "Microsoft's capital allocation is dominated by massive infrastructure reinvestment (capex of $64.6B in FY2025 vs. $44.5B in FY2024, a 45% increase), driven by AI buildout — a bet that may prove prescient or wasteful. Shareholder returns are consistent but modest relative to cash generation: $13B in buybacks and $24.7B in dividends against $136B in operating cash flow. The Activision Blizzard acquisition (~$69B in FY2024) was at a rich premium and is still being digested. The OpenAI investment ($13B committed) is speculative and has already generated significant equity-method losses. Buyback pace ($13B/year) is small relative to the $3T market cap and remaining authorization ($57.3B), suggesting management is not aggressively returning excess capital despite the stock trading below its 10-year median P/E.",
+        "rationale": "Microsoft returns substantial cash to shareholders via dividends and buybacks (~$37.7B combined in FY2025), but buyback execution is unremarkable — repurchasing at market prices during a period when MSFT traded at premium multiples rather than concentrating purchases at troughs. The dominant capital allocation story in FY2025 is a massive acceleration in capex ($64.6B vs. $44.5B prior year), with $397B in total contractual commitments including $178B in lease obligations and $110B in purchase commitments, reflecting a bet-the-franchise AI infrastructure buildout whose returns are unproven. The Activision Blizzard acquisition ($69B in FY2024 cash outflows) was large but has generated gaming revenue growth; the OpenAI equity method investment adds complexity. Capital allocation is not destructive, but the forward commitment load and buybacks at elevated valuations prevent a high score.",
         "citations": [
           {
             "section": "mda",
-            "quote": "Cash used in investing decreased $24.4 billion to $72.6 billion for fiscal year 2025, primarily due to a $63.2 billion decrease in cash used for acquisitions of companies, net of cash acquired and divestitures, and purchases of intangible and other assets, offset in part by a $22.3 billion increase in cash used in net investment purchases, sales, and maturities, and a $20.1 billion increase in additions to property and equipment.",
-            "whyItMatters": "This passage shows the pivot from M&A-heavy FY2024 (Activision) to capex-heavy FY2025 (AI infrastructure), with property additions surging $20B year-over-year — a capital intensity shift that compresses near-term FCF."
-          },
-          {
-            "section": "mda",
             "quote": "During fiscal years 2025 and 2024, we repurchased 31 million shares and 32 million shares of our common stock for $13.0 billion and $12.0 billion, respectively, through our share repurchase program.",
-            "whyItMatters": "Buybacks of ~$13B against $136B operating cash flow represent only ~10% of OCF returned via repurchases, and the pace has not meaningfully accelerated despite the large remaining authorization of $57.3B — suggesting capital is being redirected to capex rather than shareholders."
+            "whyItMatters": "Buybacks are modest relative to cash generation (~$136B operating cash flow) and were executed at peak valuations (implied ~$419-375/share avg price), suggesting limited valuation discipline in repurchase timing."
           },
           {
             "section": "mda",
-            "quote": "Other, net primarily reflects net recognized losses on equity method investments, including OpenAI.",
-            "whyItMatters": "The OpenAI investment is generating equity-method losses flowing through Other income (expense), net — the $4.7B 'Other, net' loss in FY2025 vs. $1.3B in FY2024 partially reflects the cost of this strategic bet, raising questions about the return profile of this capital deployment."
+            "quote": "Cash used in investing decreased $24.4 billion to $72.6 billion for fiscal year 2025, primarily due to a $63.2 billion decrease in cash used for acquisitions of companies, net of cash acquired and divestitures, and purchases of intangible and other assets, offset in part by a $22.3 billion increase in cash used in net investment purchases, sales, and maturities, and a $20.1 billion increase in additions to property and equipment.",
+            "whyItMatters": "The $20.1B year-over-year increase in property and equipment additions signals an aggressive capex ramp for AI infrastructure, compressing near-term FCF and creating execution risk."
+          },
+          {
+            "section": "mda",
+            "quote": "Operating and finance leases, including imputed interest (c) 12,798 165,903 178,701",
+            "whyItMatters": "The lease obligation table shows $178.7B in total operating and finance lease commitments, a massive off-balance-sheet-style obligation tied to datacenter expansion that represents a long-duration capital allocation decision whose IRR is uncertain."
           },
           {
             "section": "financial-statements",
             "quote": "Additions to property and equipment",
-            "whyItMatters": "The cash flow statement shows capex of $64.6B in FY2025 vs. $44.5B in FY2024 vs. $28.1B in FY2023 — a tripling in two years that exceeds depreciation and amortization of $34.2B, creating a large and widening gap that suppresses owner FCF while the AI infrastructure thesis is unproven at scale."
+            "whyItMatters": "The cash flow statement shows capex of $64.6B in FY2025 vs. $44.5B in FY2024 vs. $28.1B in FY2023 — a 130% increase in two years — while D&A was $34.2B, meaning capex is running at 1.9× depreciation, a significant reinvestment premium that will weigh on owner earnings if AI revenue ramps disappoint."
           }
         ],
-        "counterEvidence": "The dividend has been consistently growing ($2.72/share in FY2023 to $3.32/share in FY2025) and the $57.3B remaining buyback authorization gives management flexibility to accelerate returns. The FY2024 Activision acquisition, while expensive, was strategic and closed without a goodwill writedown in the period. The massive capex increase is at least transparently tied to a quantifiable demand signal (Azure growing 34%), not vanity spending.",
+        "counterEvidence": "The dividend has grown consistently ($2.72 → $3.00 → $3.32/share over three years) and is well-covered by cash flow, and operating cash flow of $136B gives management genuine flexibility. The Activision acquisition, while expensive, appears to be driving 16% Xbox content and services growth. The remaining $57.3B share repurchase authorization provides optionality. The capex surge may be rational if Azure AI demand continues at 34% growth, making it a high-conviction reinvestment rather than empire-building.",
         "samples": [
-          5.5,
-          5.5,
           5.5
         ],
         "range": 0,
@@ -107,33 +101,31 @@
       },
       "debtSustainability": {
         "score": 8.5,
-        "rationale": "Microsoft carries approximately $43.2B in total long-term debt (face value $49.2B) against FY2025 operating income of $128.5B and net cash from operations of $136.2B, implying interest coverage far above 50× (cash interest paid was only ~$1.6B). The debt is entirely investment-grade senior unsecured, rated AAA, with a well-laddered maturity schedule — only $3.0B due in FY2026, $9.25B in FY2027, then nothing until FY2029. The single meaningful complexity is the large and growing finance lease portfolio ($46.2B) tied to datacenter expansion, plus $92.7B of uncommenced lease commitments, which elevates total obligations substantially beyond the face value of debt alone. Even including these, the cash-generative power of the business makes solvency a non-issue.",
+        "rationale": "Microsoft carries roughly $49.2 billion face-value of long-term debt but holds $94.6 billion in cash and short-term investments, producing a net cash position at the liquid-asset level. FY2025 operating cash flow of $136.2 billion dwarfs annual interest expense of ~$2.4 billion, yielding interest coverage well above 50×. The maturity ladder is well-spread, with only $3.0 billion due in FY2026 and $9.25 billion in FY2027, against a business generating over $130 billion in operating cash annually. The main complication is the massive and growing finance-lease obligation ($46.2 billion, up from $27.1 billion) tied to AI datacenter buildout, plus $92.7 billion in uncommenced lease commitments, which meaningfully elevate total obligations beyond the balance-sheet debt line.",
         "citations": [
           {
             "section": "financial-statements",
             "quote": "As of June 30, 2025, our long-term unsecured debt rating was AAA, and cash investments were in excess of $1.0 billion. As a result, no collateral was required to be posted.",
-            "whyItMatters": "AAA credit rating confirms that counterparties and rating agencies view Microsoft's debt obligations as essentially risk-free, reflecting extreme balance-sheet strength and consistent cash generation."
+            "whyItMatters": "A AAA rating is the highest possible and signals that counterparties and rating agencies see essentially no solvency risk, confirming the structural strength of the balance sheet."
           },
           {
             "section": "financial-statements",
             "quote": "Cash paid for interest on our debt for fiscal years 2025, 2024, and 2023 was $1.6 billion, $1.7 billion, and $1.7 billion, respectively.",
-            "whyItMatters": "Against $136.2B of operating cash flow in FY2025, $1.6B of cash interest represents coverage of roughly 85×, making debt service essentially trivial and solvency risk negligible."
+            "whyItMatters": "With $136 billion in FY2025 operating cash flow against only $1.6 billion of cash interest paid on funded debt, interest coverage is approximately 85×, making debt service essentially riskless under any plausible scenario."
+          },
+          {
+            "section": "financial-statements",
+            "quote": "Total cash, cash equivalents, and short-term investments 94,565 75,543",
+            "whyItMatters": "Liquid assets of $94.6 billion exceed the $49.2 billion face value of total long-term debt, meaning Microsoft could retire all funded debt from cash on hand and still retain ~$45 billion in liquidity."
           },
           {
             "section": "financial-statements",
             "quote": "As of June 30, 2025, we had additional leases, primarily for datacenters, that had not yet commenced of $92.7 billion.",
-            "whyItMatters": "This $92.7B of uncommenced lease obligations is the key off-balance-sheet obligation that a value investor must layer on top of the $49.2B debt face value when assessing total capital commitments, though the cash-flow base comfortably absorbs it."
-          },
-          {
-            "section": "financial-statements",
-            "quote": "Total finance lease liabilities $ 46,172 $ 27,145",
-            "whyItMatters": "Finance lease liabilities of $46.2B (up from $27.1B a year earlier) represent substantial debt-like obligations tied to aggressive datacenter buildout; combined with formal debt of ~$43B, total debt-like obligations approach ~$89B, but still modest versus $136B annual operating cash flow."
+            "whyItMatters": "This off-balance-sheet commitment is the most significant debt-sustainability risk: $92.7 billion in future lease obligations not yet on the books, plus $46 billion already capitalized in finance leases, substantially increases total economic obligations beyond the funded-debt figure."
           }
         ],
-        "counterEvidence": "The rapid scaling of finance lease liabilities (from $27.1B to $46.2B in one year) and $92.7B of uncommenced datacenter leases represent a meaningful step-up in total obligations. If AI infrastructure investment disappoints in revenue conversion, Microsoft could find itself with elevated fixed lease costs at the same time free cash flow growth decelerates. Additionally, the IRS is seeking $28.9B in additional taxes plus penalties and interest related to intercompany transfer pricing for tax years 2004–2013; while Microsoft disputes this vigorously and has reserved appropriately, an adverse outcome would represent a significant one-time cash demand, though still manageable given the balance sheet.",
+        "counterEvidence": "The finance lease book has nearly doubled in one year (from $27.1B to $46.2B) as MSFT expands datacenter capacity, and $92.7B in uncommenced datacenter leases will flow onto the balance sheet between FY2026 and FY2031. Adding these to the $49.2B of funded debt and $22.9B of operating lease liabilities puts total economic obligations near $210B+. However, FY2025 EBITDA (operating income $128.5B + D&A $34.2B ≈ $163B) still yields a comfortable leverage ratio even on this expanded basis, and all lease cash flows are contractually matched to revenue-generating infrastructure.",
         "samples": [
-          8.5,
-          8.5,
           8.5
         ],
         "range": 0,
@@ -141,62 +133,58 @@
       },
       "insiderAlignment": {
         "score": 6.5,
-        "rationale": "Microsoft's Named Executives are subject to rigorous stock ownership requirements (5–15× base salary), and over 95% of the CEO's target compensation is performance-based with multi-year PSA vesting tied to quantitative metrics and a relative TSR modifier. However, this is professional management, not founder ownership — there is no evidence of large personal share purchases or founder-level concentration. The compensation structure is genuinely long-term oriented, but the primary driver of alignment is policy-mandated equity retention rather than organic founder commitment.",
+        "rationale": "Microsoft's compensation program is heavily performance-based (>95% of CEO pay at risk) with rigorous multi-year PSA structures, a relative TSR modifier, and stock ownership requirements of 5–15× base salary. However, Satya Nadella is a professional CEO, not a founder, and the proxy does not disclose his beneficial ownership as a percentage of shares outstanding in the sections provided — limiting confidence in the ownership dimension. The pay architecture is genuinely long-term oriented, but the absolute dollar amounts are enormous ($96.5M total for Nadella in FY2025), and compensation is set against a peer group where Microsoft is 'meaningfully larger than almost every company,' creating upward pay pressure that may not fully align CEO incentives with marginal shareholder value.",
         "citations": [
           {
             "section": "proxy",
-            "quote": "Each covered executive is required to acquire and maintain ownership of shares of Microsoft common stock equal to a specified multiple of his or her base salary, which for our Named Executives ranges from 5 to 15 times base salary",
-            "whyItMatters": "A 15× salary ownership requirement for the CEO (enforced with a 50% net-share retention rule until met) creates meaningful skin-in-the-game beyond typical professional-management norms."
+            "quote": "Over 95% of our CEO's annual target compensation opportunity was performance-based and over 50% of the total pay opportunity for other Named Executives was performance-based",
+            "whyItMatters": "Confirms the vast majority of CEO pay is contingent on hitting pre-established financial and operational goals, reducing the risk of pay for mere tenure."
           },
           {
             "section": "proxy",
-            "quote": "Over 95% of our CEO's annual target compensation opportunity was performance-based and over 50% of the total pay opportunity for other Named Executives was performance-based",
-            "whyItMatters": "The CEO's pay is almost entirely at-risk equity tied to multi-year performance metrics, directly linking his realized compensation to long-term shareholder value rather than base salary or discretionary bonuses."
+            "quote": "Each covered executive is required to acquire and maintain ownership of shares of Microsoft common stock equal to a specified multiple of his or her base salary, which for our Named Executives ranges from 5 to 15 times base salary",
+            "whyItMatters": "A 15× salary ownership requirement for the CEO creates a meaningful ongoing equity stake and discourages short-term thinking, a concrete structural alignment mechanism."
           },
           {
             "section": "proxy",
             "quote": "100% of our CEO's annual target equity opportunity was delivered in the form of a performance-based stock award (50% for our other Named Executives), with payouts based on achievement against pre-established quantitative performance metrics",
-            "whyItMatters": "Full PSA allocation for the CEO with a three-year performance period and relative TSR modifier (requiring above-60th-percentile S&P 500 performance to trigger upside) is a structurally strong long-term alignment mechanism."
+            "whyItMatters": "Full PSA allocation for the CEO, with no time-vested equity cushion, means realized equity pay depends entirely on measurable business performance and relative TSR — a genuinely rigorous design."
           },
           {
             "section": "proxy",
-            "quote": "Our TSR relative to the S&P 500 was at the 80th percentile of the S&P 500, which meets the at least 80th percentile performance condition required to receive the maximum 150.00% multiplier.",
-            "whyItMatters": "The FY2023 PSA cycle actually paid out at 161.52% of target due to demonstrated outperformance, confirming the pay-for-performance mechanism functioned as designed rather than being a formality."
+            "quote": "in order for the TSR modifier to affect the performance stock awards positively, our relative TSR must be above the 60th percentile of the S&P 500",
+            "whyItMatters": "The TSR modifier requires outperformance versus a broad index before executives receive above-target equity payouts, directly tying windfall gains to shareholder value creation."
           }
         ],
-        "counterEvidence": "The proxy does not disclose absolute share counts or dollar values of executive holdings in the window provided, making it impossible to verify whether the ownership requirements are met at levels that would constitute economically meaningful personal wealth concentration. Additionally, no open-market insider purchases are referenced, suggesting alignment is driven by policy rather than voluntary accumulation. There is also no founder ownership — Satya Nadella is a professional CEO, and his stake is a fraction of a percent of shares outstanding, limiting alignment to income-flow rather than wealth-stock.",
+        "counterEvidence": "The proxy window provided does not include the Beneficial Ownership table, so Nadella's actual share count and percentage ownership cannot be verified from the primary source. Additionally, total CEO compensation reached $96.5M in FY2025, up from $79.1M in FY2024 — a 22% increase — driven partly by Monte-Carlo simulation valuation mechanics on PSAs rather than realized shareholder gains, which could overstate alignment. The peer group comparison acknowledges Microsoft is 'meaningfully larger than almost every company in both peer groups,' yet pay is still benchmarked against those peers, creating structural upward bias in compensation levels.",
         "samples": [
-          6.5,
-          6,
           6.5
         ],
-        "range": 0.5,
+        "range": 0,
         "representativeSampleIndex": 0
       },
       "cyclicalityAwareness": {
         "score": 7.5,
-        "rationale": "Microsoft's business is predominantly subscription-based cloud and software services (Azure, Microsoft 365, LinkedIn), which exhibit low sensitivity to economic cycles compared to hardware or discretionary consumer spending. The Risk Factors do acknowledge that worsening macroeconomic conditions can reduce IT spending, but this is described as a general risk rather than a demonstrated historical pattern of severe revenue declines. The company's enterprise-focused recurring revenue model provides meaningful insulation: customers tend to maintain cloud and productivity tool subscriptions even during downturns because they are mission-critical. The MDA section provided is truncated and does not offer multi-year revenue comparisons, limiting full through-cycle verification.",
+        "rationale": "Microsoft's business is predominantly composed of cloud-based subscription services, enterprise software, and productivity tools — segments characterized by recurring revenue and sticky customer relationships that are structurally resistant to economic downturns. The Risk Factors section acknowledges macro sensitivity primarily as an edge case ('worsening economic conditions…may cause lower IT spending'), not as a defining business characteristic. The MDA overview confirms the diversified, recurring nature of the revenue model ('cloud-based solutions, content, and other services…licensing and supporting an array of software products'). Unlike hardware-heavy or consumer-discretionary peers, MSFT's enterprise contract base and mission-critical workloads provide meaningful through-cycle buffer, though it is not fully immune as IT budgets can compress in severe recessions.",
         "citations": [
           {
             "section": "risk-factors",
             "quote": "Worsening economic conditions, including inflation, recession, pandemic, or other changes in economic conditions, may cause lower IT spending and adversely affect our results of operations.",
-            "whyItMatters": "Management acknowledges macro sensitivity, but frames it as a general risk rather than citing historical instances of material revenue declines, suggesting the exposure is real but not dominant."
+            "whyItMatters": "Management acknowledges macro cyclicality as a risk but frames it as a secondary, conditional threat rather than a structural feature of the business model, suggesting limited inherent cyclicality."
+          },
+          {
+            "section": "mda",
+            "quote": "We generate revenue by offering a wide range of cloud-based solutions, content, and other services to people and businesses; licensing and supporting an array of software products; delivering relevant online advertising to a global audience; and designing and selling devices.",
+            "whyItMatters": "The diversified, subscription- and license-heavy revenue mix (cloud, enterprise software) is inherently more stable across cycles than transactional or commodity-based models, supporting a non-cyclical characterization."
           },
           {
             "section": "risk-factors",
-            "quote": "We generate revenue by offering a wide range of cloud-based solutions, content, and other services to people and businesses; licensing and supporting an array of software products",
-            "whyItMatters": "The mix of cloud subscriptions and software licensing—largely enterprise and mission-critical—is structurally less cyclical than hardware or advertising-dependent businesses, supporting a higher cyclicality resilience score."
-          },
-          {
-            "section": "risk-factors",
-            "quote": "If demand for computing power, PCs, servers, and other computing devices declines, or consumer or business spending for those products declines, our results of operations could be adversely affected.",
-            "whyItMatters": "The hardware segment (Surface, Xbox) and PC-adjacent revenue do carry cyclical exposure, partially offsetting the stability of the cloud and enterprise software segments."
+            "quote": "These conditions also may add uncertainty to the timing and budget for technology investment decisions by our customers and may cause supply chain disruptions for hardware manufacturers.",
+            "whyItMatters": "The filing distinguishes between hardware supply-chain exposure (more cyclical) and software/cloud demand (less cyclical), implying the core business is more resilient while the devices segment carries higher macro sensitivity."
           }
         ],
-        "counterEvidence": "The Risk Factors explicitly note that tariff volatility and geopolitical disruptions could 'impact cloud and devices supply chain cost competitiveness' and that 'economic uncertainty' from tariffs could affect demand. The devices segment (Xbox, Surface) is genuinely cyclical and consumer-discretionary. The MDA section was too truncated to verify actual revenue behavior through the 2020 or 2022–2023 macro slowdowns, which limits full confidence in the through-cycle resilience claim.",
+        "counterEvidence": "The Risk Factors note that MSFT derives meaningful revenue from devices (Xbox, Surface) and PC-related Windows OEM licensing, both of which are more cyclical consumer/enterprise hardware categories. The filing also flags that 'challenging economic conditions also may impair the ability of our customers to pay for products and services they have purchased,' and that tariff and geopolitical volatility could impact 'cloud and devices supply chain cost competitiveness,' indicating non-trivial exposure to macroeconomic cycles in certain segments.",
         "samples": [
-          7.5,
-          7.5,
           7.5
         ],
         "range": 0,
@@ -209,59 +197,32 @@
     "filingAccession": "0000950170-25-100235",
     "rebuttals": {
       "moatDurability": {
-        "rebuttal": "Pass 1's counter-evidence already addresses the primary competitive threats: low barriers to entry, open-source AI free-riding, vertically integrated platform competition, and open-source mimicry of Microsoft's products. I reviewed the primary sources independently looking for moat-durability evidence Pass 1 did not address. The Business section provides additional positive texture—specifically the three datacenter economies of scale (per-unit cost, demand aggregation, multi-tenancy labor savings), the description of Azure's hybrid cloud advantage, and the deep integration across Microsoft 365, Teams, Dynamics, and GitHub—but these are consistent with a score of 8 rather than evidence of an uncredited structural advantage that would warrant upward adjustment. The Risk Factors section's competition discussion (low barriers, open-source, vertically integrated rivals) is fully captured in Pass 1's counter-evidence. No new material concern or strength emerges from the primary sources that Pass 1 did not already weigh. The score of 8 is well-calibrated.",
+        "rebuttal": "Pass 1's counter-evidence already addresses the two primary moat concerns visible in the primary sources: (1) low barriers to entry and intense AI competition, and (2) the nation-state cybersecurity breach and its trust implications. On the positive side, the filing documents substantial platform-ecosystem network effects (multi-sided platforms across Azure, Microsoft 365, LinkedIn, GitHub, Xbox), scale economies in datacenter infrastructure explicitly described as three distinct economies of scale, deep enterprise entrenchment through multi-year Enterprise Agreements and volume licensing, and integrated security/compliance offerings that create switching costs. The filing's description of Azure AI Foundry, Copilot integration across the stack, and the OpenAI partnership as structural AI advantages are consistent with a 7.5 score. No primary-source evidence was found that Pass 1 failed to address — the score appropriately reflects strong but not unassailable moat characteristics.",
         "citations": [],
         "recommendedAdjustment": 0
       },
       "ownerEarningsQuality": {
-        "rebuttal": "Pass 1 scored ownerEarningsQuality at 6.5, noting the large capex ramp as the primary concern while treating the unearned revenue build and OCF trajectory as offsetting positives. I looked for primary-source evidence not addressed by Pass 1's counter-evidence, focusing on: (1) SBC as a non-cash charge diluting owner earnings, (2) finance lease obligations as off-P&L capex substitutes, (3) deferred tax dynamics, and (4) the IRS transfer-pricing contingency as a cash tax risk.\n\nOn SBC: Pass 1's counter-evidence does not mention SBC. SBC was $11.974B in FY2025, up from $10.734B in FY2024 and $9.611B in FY2023. This is a real economic cost excluded from reported FCF. At ~8.8% of OCF ($136.2B), it is material but not new to value-investing analysis of MSFT and does not change the dimension's character.\n\nOn finance leases: The filing discloses total finance lease liabilities of $46.172B (up from $27.145B in FY2024), plus $92.7B of uncommenced leases primarily for datacenters. Finance lease payments flow through financing cash flows ($2.283B) rather than capex, meaning reported capex of $64.6B understates the true capital consumption. The OCF statement also shows $1.372B of operating cash outflows from finance leases. This is a meaningful structural point — the true infrastructure investment is larger than the capex line suggests — but it is closely related to the capex concern Pass 1 already flagged. Pass 1 explicitly scored the capex ramp as the primary concern; the finance lease dynamic is an incremental addendum to the same concern rather than a wholly separate issue.\n\nOn the IRS contingency: Gross unrecognized tax benefits of $24.729B and a potential IRS claim of $28.9B plus penalties and interest are disclosed. Pass 1 did not address this in the counter-evidence section. However, this is a contingent liability, not a current cash flow item, and management states allowances are adequate. It does not directly impair current owner earnings quality.\n\nOn deferred taxes: The large deferred tax asset ($26.3B net) includes $16.891B from capitalized R&D, which represents a temporary timing difference; cash taxes paid ($28.7B) are running well ahead of the income statement provision ($21.795B), meaning reported earnings are actually more conservative than cash reality on this dimension.\n\nThe finance lease point — $46.2B in liabilities and $92.7B uncommenced — is the most substantive item not addressed by Pass 1. It means the true capital intensity of the cloud infrastructure build is materially understated by the capex line alone, which compounds the FCF yield concern (1.21% trailing). However, Pass 1 already gave this dimension a below-average score (6.5) specifically because of capex concerns, so this is an incremental quantification of a concern already reflected in the score rather than a new dimension-changing issue. A small downward adjustment is warranted to reflect that the capex concern is larger than the headline capex number alone implies.",
-        "citations": [
-          {
-            "section": "financial-statements — NOTE 13 — LEASES",
-            "quote": "Finance Leases Property and equipment, at cost $ 53,876 $ 32,248 Accumulated depreciation (9,861 ) (6,386 ) Property and equipment, net $ 44,015 $ 25,862 Other current liabilities $ 3,172 $ 2,349 Other long-term liabilities 43,000 24,796 Total finance lease liabilities $ 46,172 $ 27,145",
-            "whyItMatters": "Finance lease liabilities nearly doubled YoY to $46.2B and do not appear in the capex line, meaning reported FCF overstates true free cash available to owners. Pass 1 noted the capex ramp but did not address the additional capital commitment embedded in finance leases."
-          },
-          {
-            "section": "financial-statements — NOTE 13 — LEASES",
-            "quote": "As of June 30, 2025, we had additional leases, primarily for datacenters, that had not yet commenced of $92.7 billion. These leases will commence between fiscal year 2026 and fiscal year 2031 with lease terms of 1 year to 20 years.",
-            "whyItMatters": "$92.7B of uncommenced datacenter leases represents a forward capital commitment that will further suppress true owner earnings relative to reported OCF in coming years. This amplifies the capex concern Pass 1 identified but was not itself addressed."
-          },
-          {
-            "section": "financial-statements — CASH FLOWS STATEMENTS",
-            "quote": "Financing cash flows from finance leases 2,283 1,286 1,056",
-            "whyItMatters": "Finance lease principal payments of $2.3B flow through financing activities, not capex, understating the true cash cost of infrastructure investment when assessing owner earnings quality."
-          }
-        ],
-        "recommendedAdjustment": -0.5
+        "rebuttal": "Pass 1 correctly identified the capex/FCF divergence and the depreciation lag as the primary quality concern. Reviewing the primary sources for additional evidence not addressed by Pass 1: (1) Finance lease liabilities of $46.2B (up from $27.1B) plus $92.7B in uncommenced lease commitments represent a form of off-balance-sheet-adjacent obligation that suppresses reported capex in some periods — but the 10-K discloses these fully and they are additive to the capex burden Pass 1 already flagged, not a separate concern. (2) The IRS NOPAs seeking $28.9B plus penalties and interest on transfer pricing issues (tax years 2004-2013) represent a contingent liability that could affect cash taxes paid — unrecognized tax benefits now stand at $24.7B with $8.2B in accrued interest. However, Pass 1's counter-evidence focused on capex/FCF divergence and did not address the tax contingency as an earnings quality risk. That said, the $24.7B in unrecognized tax benefits is already reflected on-balance-sheet in long-term income taxes ($25.986B), so the cash tax risk is partially reserved. (3) Stock-based compensation of $11.974B (up from $10.734B) is a real cash cost excluded from FCF as typically calculated, representing ~11.7% of net income — but this is well-disclosed and industry-standard; Pass 1's score of 7 likely incorporated this standard adjustment. (4) The OpenAI equity method investment generated material losses in 'Other, net' of $(4.725B) in FY2025 vs $(1.319B) in FY2024 — this is a significant step-up in non-operating losses running through the income statement that depresses net income quality and was not specifically called out in Pass 1's counter-evidence. However, these losses flow through 'Other income (expense), net' and are visible; operating income of $128.5B is unaffected. The IRS contingency of $28.9B is the most material item Pass 1 did not address, but since the company has reserved $24.7B on balance sheet and management states allowances are adequate, this does not materially change the earnings quality picture beyond what is already apparent. No adjustment is warranted; Pass 1's score of 7 is well-calibrated given the disclosed primary-source evidence.",
+        "citations": [],
+        "recommendedAdjustment": 0
       },
       "capitalAllocation": {
-        "rebuttal": "Pass 1 scored capital allocation at 5.5 and its counter-evidence section already addressed the main moving parts: growing dividends, the $57.3B buyback authorization, the Activision acquisition, and the capex surge tied to Azure demand. I reviewed the primary sources for any material capital allocation concerns not already captured.\n\nOne item worth noting is the scale of the total contractual obligation footprint: $397B in total commitments ($148B due in fiscal 2026 alone), dominated by $178.7B in operating and finance leases and $109.95B in purchase commitments primarily related to datacenters. This is a structural commitment that limits future capital allocation flexibility in ways not fully reflected in Pass 1's framing. However, these commitments are disclosed transparently and are consistent with the capex narrative Pass 1 already acknowledged.\n\nA second item: the cash flow statement shows share repurchases of $18.4B in FY2025 (cash basis), but the stockholders' equity statement shows only $5.9B offset against paid-in capital and $12.6B against retained earnings — totaling $18.4B. Meanwhile, the $57.3B remaining authorization is large relative to the $13B repurchase pace implied in the MD&A narrative ('repurchased 31 million shares … for $13.0 billion'). The gap between the $18.4B cash used for repurchases and the $13.0B narrative figure reflects timing and settlement differences and does not constitute a hidden concern.\n\nThe OpenAI equity method investment loss is quantified in Other, net as a $4.725B charge in FY2025 vs $1.319B in FY2024 — a meaningful acceleration. This is a capital allocation decision (total funding commitments of $13B per Note 1) that is generating substantial mark-to-market or equity-method losses that reduce reported net income but are non-cash. Pass 1 did not specifically address the OpenAI investment loss trajectory as a capital allocation concern. However, the $13B commitment is disclosed and the losses reflect equity-method accounting on a strategic investment, not a deteriorating operating asset. The investment is strategic and disclosed; this is a marginal concern, not a material one.\n\nOn balance, Pass 1's score of 5.5 is reasonable. The capex surge ($64.6B in FY2025 vs $44.5B in FY2024), the enormous lease and purchase commitment base ($178.7B leases + $110B purchase commitments), and the accelerating OpenAI equity-method losses collectively create modest downward pressure not fully weighted by Pass 1, but the concerns are either disclosed or partially acknowledged. A minor adjustment of -0.5 is warranted solely for the lease and purchase commitment overhang scale, which at $397B total is a structural constraint on future capital flexibility that Pass 1's counter-evidence did not quantify.",
-        "citations": [
-          {
-            "section": "mda",
-            "quote": "Operating and finance leases, including imputed interest (c) 12,798 165,903 178,701 Purchase commitments (d) 103,940 6,013 109,953 Total $ 148,106 $ 248,939 $ 397,045",
-            "whyItMatters": "The $397B total contractual obligation base — dominated by $178.7B in leases and $110B in datacenter purchase commitments — is a structural capital allocation constraint that limits future flexibility. Pass 1's counter-evidence addressed the capex rationale but did not quantify the total committed capital footprint, which at this scale is material to assessing how much discretionary capital allocation remains."
-          },
-          {
-            "section": "mda",
-            "quote": "Other, net primarily reflects net recognized losses on equity method investments, including OpenAI.",
-            "whyItMatters": "The Other, net line in FY2025 was -$4.725B vs -$1.319B in FY2024, with the increase driven by OpenAI equity-method losses. Against a $13B total funding commitment (per Note 1), this accelerating loss trajectory is a capital allocation concern Pass 1 did not specifically address, though it is disclosed and strategic in nature."
-          }
-        ],
-        "recommendedAdjustment": -0.5
+        "rebuttal": "Pass 1's counter-evidence already addresses the key tensions in capital allocation: the capex surge rationalized by Azure AI demand, the Activision acquisition cost, the buyback authorization, and dividend growth. On independent review, the primary sources reveal one additional quantitative detail worth noting but not sufficient to move the score: the contractual obligations table shows total commitments of $397 billion ($148B due in 2026 alone), including $178.7B in operating and finance leases, $109.9B in purchase commitments (primarily datacenter), and $32.1B in construction commitments. This level of forward commitment — nearly 1.4× annual revenue — locks capital allocation choices for years and constrains future optionality materially. However, Pass 1's score of 5.5 implicitly accounts for the capex surge and the strategic reinvestment thesis, and the lease/purchase commitment scale is a natural consequence of the infrastructure build-out Pass 1 already flagged. Additionally, the cash flow statement shows share repurchases of $18.4B (cash basis) against operating cash flow of $136.2B, but with $64.6B in capex, net FCF available for shareholder returns is substantially compressed — the trailing FCF yield of 1.22% in the financial context confirms this. Pass 1's score appears to have incorporated the capex-driven FCF compression. No new primary-source evidence materially changes the calibration.",
+        "citations": [],
+        "recommendedAdjustment": 0
       },
       "debtSustainability": {
-        "rebuttal": "Pass 1 scored debtSustainability at 8.5 and its counter-evidence already addressed the two primary concerns I would raise: (1) the rapid scaling of finance lease liabilities to $46.2B with $92.7B of uncommenced datacenter leases, and (2) the $28.9B IRS transfer-pricing claim. I reviewed the primary sources for any additional material concerns not addressed.\n\nOn the positive side, the balance sheet shows cash and short-term investments of $94.6B against total long-term debt face value of $49.2B — a clearly net-investable position on a gross liquidity basis. Operating cash flow grew to $136.2B in FY2025 from $118.5B in FY2024. Interest expense was only $2.4B against $128.5B operating income, yielding an interest coverage ratio above 50x. The debt maturity schedule is manageable: $3.0B due in FY2026, $9.25B in FY2027, with the largest slug ($34.9B) deferred to 2030 and beyond. The company's long-term unsecured debt is rated AAA as confirmed in Note 5, with no covenant violations.\n\nOne item in the primary sources that Pass 1's counter-evidence does not explicitly address: the 'Other long-term liabilities' line on the balance sheet jumped from $27.1B to $45.2B in a single year — an $18.1B increase. Note 13 confirms this is driven primarily by finance lease liabilities ($43.0B in other long-term liabilities vs. $24.8B prior year). This is essentially the same finance lease scaling concern Pass 1 already captured. No new structural concern is present.\n\nThe deferred tax liability structure, uncertain tax positions ($24.7B gross unrecognized tax benefits on the balance sheet in long-term income taxes), and accrued interest on uncertain tax positions ($8.2B) are all disclosed but do not change the sustainability picture given the liquidity profile. Pass 1's counter-evidence already noted the IRS matter. The score of 8.5 appears well-calibrated.",
+        "rebuttal": "Pass 1's counter-evidence already addresses the primary debt sustainability concerns: the finance lease doubling, the $92.7B uncommenced datacenter leases, and the total economic obligation stack versus EBITDA. I reviewed the primary sources for any material concerns Pass 1 did not address. Two items warrant brief consideration but neither rises to an adjustment. First, the IRS NOPAs seek $28.9B plus penalties and interest for tax years 2004-2013, creating a contingent tax liability. However, Pass 1's score of 8.5 implicitly accounts for MSFT's strong cash generation, and the filing states management believes allowances are adequate and will vigorously contest. This is a contingent liability, not funded debt, and does not change the debt sustainability picture materially at MSFT's scale (~$163B EBITDA). Second, the long-term income taxes balance of $25.986B (including $24.7B in gross unrecognized tax benefits) represents a large off-balance-sheet-adjacent obligation, but it is already on the balance sheet as a liability and is well-disclosed. The AAA credit rating, $94.6B in liquid assets (cash + short-term investments), $136B operating cash flow, and manageable funded debt maturities ($3B due FY2026, $9.25B FY2027) all support the 8.5 score. No new primary-source evidence was found that Pass 1 failed to consider.",
         "citations": [],
         "recommendedAdjustment": 0
       },
       "insiderAlignment": {
-        "rebuttal": "Pass 1's counter-evidence already addresses the three core concerns: (1) absence of absolute share count/dollar value disclosures preventing verification of economically meaningful ownership, (2) no open-market purchases suggesting policy-driven rather than voluntary alignment, and (3) Nadella's fractional ownership stake limiting alignment to income-flow. Reading the primary sources independently, I find these concerns are accurately characterized. What I also note is that the proxy does confirm compliance with ownership requirements ('In fiscal year 2025, each of our Named Executives complied with our stock ownership policy') and discloses specific multiples (15x for Nadella, 8x for Hood/Althoff/Smith, 5x for Numoto), a robust clawback policy covering both restatement and misconduct scenarios, 100% PSA allocation for the CEO, a TSR modifier requiring above-60th-percentile relative performance for upside (and 80th percentile for maximum), and no change-in-control provisions — all of which are genuine alignment positives. One item Pass 1 did not explicitly address: the proxy confirms that Named Executives have no employment contracts and no change-in-control severance provisions ('No Named Executive is entitled to any payments or benefits following a change in control of Microsoft'), which is a structural positive for alignment not captured in the counter-evidence. However, this is a modest positive that, against the backdrop of the already-noted weaknesses (no founder ownership, small fractional stake, no voluntary purchases), does not materially change the score. The 6.5 is well-calibrated: it reflects strong structural alignment mechanisms (high PSA weighting, rigorous ownership requirements, clawback) discounted by the absence of founder-level ownership and voluntary accumulation. No adjustment is warranted.",
+        "rebuttal": "Pass 1's counter-evidence addresses the three main concerns: (1) beneficial ownership table unavailability, (2) Monte-Carlo valuation inflating reported compensation relative to realized gains, and (3) peer group structural upward bias. Reviewing the primary sources independently, I find no material concerns that Pass 1 did not already address. The proxy documents a 15x salary stock ownership requirement for Nadella with confirmed compliance, 100% PSA-based equity for the CEO (no time-vested stock awards), a relative TSR modifier requiring above-60th-percentile performance for any positive adjustment and above-80th-percentile for maximum, a broad clawback policy covering both restatement and misconduct scenarios, no change-in-control provisions, no pledging/hedging exceptions noted, and no discretionary bonus component. The FY2023 PSA completed cycle at 161.52% payout driven by 80th-percentile TSR — an outcome that reflects genuine shareholder value creation. The one structural feature worth noting — that Nadella and Smith's retirement eligibility means unvested awards could continue to vest upon retirement — is a standard governance feature disclosed on page 47 and does not represent an undisclosed concern. Pass 1's score of 6.5 appropriately reflects strong pay-for-performance structure tempered by the inability to verify actual ownership stake and the compensation quantum concern. No new primary-source evidence warrants adjustment.",
         "citations": [],
         "recommendedAdjustment": 0
       },
       "cyclicalityAwareness": {
-        "rebuttal": "Pass 1's counter-evidence already addresses the primary cyclicality concerns visible in these primary sources: tariff/geopolitical supply chain risk, consumer-discretionary devices exposure, and the truncated MDA limiting through-cycle verification. Reviewing the risk factors independently, no material new cyclicality evidence emerges that Pass 1 did not already consider. The 'Adverse economic or market conditions' risk factor confirms the general economic sensitivity Pass 1 noted, and the devices/Xbox/Surface exposure is explicitly acknowledged. The cloud-dominant, subscription-based revenue mix is well-understood as a structural dampener of cyclicality. The score of 7.5 appears well-calibrated given MSFT's predominantly recurring commercial revenue base offset by meaningful but minority consumer/device cyclicality and the supply chain concerns already flagged.",
+        "rebuttal": "Pass 1 already identified the key cyclicality concerns: consumer/hardware segments (Xbox, Surface, Windows OEM) being more cyclical, customer payment risk during downturns, and tariff/geopolitical supply chain exposure. Reviewing the primary sources, I find no material cyclicality evidence that Pass 1 did not address. The Risk Factors confirm MSFT's revenue mix is heavily weighted toward cloud-based subscriptions and enterprise software — inherently more recurring and less cyclical than transactional models — which supports the 7.5 score. The adverse economic conditions language and devices/gaming exposure are squarely within Pass 1's counter-evidence. No new structural cyclicality concern is surfaced in these sections.",
         "citations": [],
         "recommendedAdjustment": 0
       }
@@ -272,44 +233,44 @@
     "filingAccession": "0000950170-25-100235",
     "finalScores": {
       "moatDurability": {
-        "finalScore": 8,
-        "decision": "agreed-with-pass2",
-        "justification": "Pass 2 found no additional material concerns or strengths beyond what Pass 1 already weighed, explicitly confirming that the three datacenter economies of scale, hybrid cloud advantage, deep M365/Teams/Dynamics/GitHub integration, and the competitive risk factors (low barriers, open-source, vertically integrated rivals) were all properly captured in Pass 1's analysis. Pass 2's recommended adjustment was 0, and the primary sources confirm that a score of 8 is well-calibrated—strong multi-dimensional moat evidence tempered by management's own admission of low barriers in several segments and open-source AI threats. No adjustment is warranted."
+        "finalScore": 7.5,
+        "decision": "no-change",
+        "justification": "Pass 2 explicitly found no additional evidence that Pass 1 failed to address, recommended zero adjustment, and confirmed that the 7.5 score appropriately captures Microsoft's strong but not unassailable moat. Pass 1 already incorporated the key counter-evidence — low entry barriers, open-source erosion, AI competition, and the nation-state cybersecurity breach — directly into its scoring rationale. With Pass 2 offering no new citations or arguments, the original score stands unchanged."
       },
       "ownerEarningsQuality": {
-        "finalScore": 6,
-        "decision": "split",
-        "justification": "Pass 2's most substantive point — finance lease liabilities nearly doubling YoY to $46.2B with $2.3B of principal payments flowing through financing rather than capex — is directly confirmed by the primary source (Note 13) and represents an incremental quantification of capital intensity that Pass 1 did not explicitly address. Combined with the $92.7B uncommenced leases (which Pass 1 cited but did not integrate into the FCF math), true infrastructure capital consumption is meaningfully larger than the $64.6B capex line implies, further widening the gap between reported OCF and extractable owner earnings. However, Pass 2 itself acknowledges this is an addendum to the same capex concern Pass 1 already scored below average, and the IRS/deferred-tax points are either contingent or actually favorable. A partial adjustment of -0.5 applied at 50% weight (-0.25, rounded to -0.5 to reflect the materiality of the finance lease doubling) is appropriate, yielding a final score of 6.0."
+        "finalScore": 7,
+        "decision": "agreed-with-pass1",
+        "justification": "Pass 2's rebuttal did not surface material new evidence that Pass 1 missed or under-weighted. Pass 2 acknowledged the OpenAI equity-method losses ($4.725B in 'Other, net') as a new item, but correctly noted these flow through a below-operating-income line and do not impair operating cash flow quality. Pass 2 also confirmed the IRS contingency and lease obligations were already captured by Pass 1. The SBC point was already incorporated in Pass 1's score. Pass 2's recommendation of zero adjustment is consistent with Pass 1's score of 7, which appropriately reflects strong cash conversion and transparency offset by accelerating capex compression of true FCF and the tax contingency overhang."
       },
       "capitalAllocation": {
-        "finalScore": 5,
-        "decision": "split",
-        "justification": "Pass 2's citation of the $397B total contractual obligation table is genuinely material and not fully addressed in Pass 1's counter-evidence — the $178.7B in operating/finance leases plus $110B in purchase commitments plus $32B in construction commitments represents a structural capital allocation constraint that meaningfully limits future discretionary flexibility beyond what Pass 1 quantified. However, Pass 2 itself acknowledges these commitments are 'disclosed transparently and consistent with the capex narrative Pass 1 already acknowledged,' and the OpenAI loss acceleration point is partially addressed in Pass 1's citation [2]. The commitment overhang is real but partially mitigated by $136B annual OCF. Applying roughly half of Pass 2's -0.5 adjustment given the partial nature of the incremental insight."
+        "finalScore": 5.5,
+        "decision": "no-change",
+        "justification": "Pass 2 recommended zero adjustment and explicitly acknowledged that the primary sources it reviewed did not reveal material new evidence beyond what Pass 1 already incorporated. Pass 2's only substantive observation — the $397B total contractual obligations table — was already cited and analyzed in Pass 1's citation [2] covering the $178.7B lease obligation and the broader capex commitment narrative. Pass 1's score of 5.5 appropriately balances Microsoft's strong cash generation and dividend growth against the aggressive capex ramp, buybacks at elevated valuations, and the massive forward commitment load, and no new primary-source evidence warrants revision."
       },
       "debtSustainability": {
         "finalScore": 8.5,
         "decision": "no-change",
-        "justification": "Pass 2 recommended zero adjustment and explicitly confirmed that all material concerns (rapid finance lease scaling to $46.2B, $92.7B uncommenced datacenter leases, $28.9B IRS claim) were already captured in Pass 1's counter-evidence. Pass 2's only 'new' observation about Other long-term liabilities jumping from $27.1B to $45.2B was self-identified as the same finance lease scaling concern Pass 1 already addressed. With $136.2B operating cash flow, 85x cash interest coverage, AAA credit rating, and a well-laddered maturity schedule, Pass 1's 8.5 score is well-calibrated and no adjustment is warranted."
+        "justification": "Pass 2 recommended zero adjustment and explicitly confirmed that Pass 1's score of 8.5 is well-supported by the primary sources. The AAA rating, $94.6B in liquid assets exceeding the $49.2B face-value debt, ~85× interest coverage, and manageable near-term maturities ($3B FY2026, $9.25B FY2027) are all verified in the filing. Pass 2's two additional items—the IRS NOPA contingency ($28.9B plus penalties) and the $24.7B in gross unrecognized tax benefits—are already on-balance-sheet or well-disclosed contingent liabilities that do not materially alter debt sustainability at MSFT's ~$163B EBITDA scale. The primary risk Pass 1 acknowledged (finance lease book nearly doubling to $46.2B plus $92.7B uncommenced datacenter leases) is genuine but manageable given cash generation, and Pass 2 found no additional evidence to change that assessment."
       },
       "insiderAlignment": {
         "finalScore": 6.5,
         "decision": "agreed-with-pass1",
-        "justification": "Pass 2's rebuttal does not introduce materially new evidence that changes the scoring calculus. Pass 2 correctly identifies the no-change-in-control provision as a structural positive that Pass 1 omitted, but explicitly acknowledges this is a modest positive that does not materially alter the score against the backdrop of the already-noted weaknesses. Pass 2's recommended adjustment is 0, confirming agreement with Pass 1's 6.5. The primary sources confirm robust structural alignment mechanisms (15x ownership requirement, 100% PSA for CEO, clawback policy, compliance confirmed for FY2025) but do not overcome the fundamental absence of founder-level ownership, voluntary open-market purchases, or meaningful fractional stake — all of which Pass 1 already weighed correctly."
+        "justification": "Pass 2 provided no citations and offered no material new evidence beyond what Pass 1 already addressed. Pass 2's rebuttal largely restated Pass 1's own counter-evidence (Monte-Carlo valuation inflation, beneficial ownership unavailability, peer group upward bias) and confirmed that the FY2023 PSA 161.52% payout at 80th-percentile TSR reflects genuine value creation — which is consistent with Pass 1's positive characterization of the pay structure. The retirement-eligibility point Pass 2 raised is disclosed and not an undisclosed concern. Pass 1's score of 6.5 appropriately reflects strong structural alignment tempered by the compensation quantum, peer-group methodology, and inability to verify Nadella's actual percentage ownership from the primary sources provided."
       },
       "cyclicalityAwareness": {
         "finalScore": 7.5,
         "decision": "no-change",
-        "justification": "Pass 2 explicitly agrees with Pass 1's score of 7.5 and recommends zero adjustment, finding no material new cyclicality evidence beyond what Pass 1 already acknowledged. The primary sources confirm Pass 1's characterization: MSFT's predominantly subscription-based cloud and enterprise software revenue provides structural cyclical dampening, while the 'Adverse economic or market conditions' risk factor and devices exposure (Xbox, Surface) represent real but minority cyclical risks already incorporated into Pass 1's analysis. The truncated MDA limits through-cycle verification, but both analysts agree this is a known constraint rather than a decisive negative signal."
+        "justification": "Pass 2 recommended zero adjustment and agreed with Pass 1's assessment, finding no material cyclicality evidence beyond what Pass 1 already addressed. The primary sources confirm MSFT's revenue is predominantly cloud-based subscriptions and enterprise software (structurally recurring), with macro sensitivity framed as a conditional secondary risk. Pass 1's counter-evidence already captured the hardware/devices exposure and customer payment risk, and Pass 2 surfaced nothing new. The 7.5 score appropriately reflects a business that is largely non-cyclical but carries some through-cycle sensitivity in devices and OEM segments."
       }
     }
   },
   "pass1Verification": {
     "total": 23,
-    "exact": 19,
+    "exact": 20,
     "whitespaceNormalized": 0,
     "caseInsensitive": 0,
     "punctuationNormalized": 2,
-    "noMatch": 2,
+    "noMatch": 1,
     "details": [
       {
         "dimension": "moatDurability",
@@ -332,20 +293,20 @@
       {
         "dimension": "moatDurability",
         "citationIndex": 2,
-        "section": "business",
-        "quote": "Enterprise Agreements are designed for medium or large organizations that want to license Microsoft products and services organization-wide over a three-year period.",
-        "lookedIn": "sec-section-cache",
-        "matchTier": "exact",
-        "quotePreview": "Enterprise Agreements are designed for medium or large organizations that want t"
-      },
-      {
-        "dimension": "moatDurability",
-        "citationIndex": 3,
         "section": "risk-factors",
         "quote": "Barriers to entry in many of our businesses are low and many of the areas in which we compete evolve rapidly with changing and disruptive technologies, shifting user needs, and frequent introductions of new products and services.",
         "lookedIn": "sec-section-cache",
         "matchTier": "exact",
         "quotePreview": "Barriers to entry in many of our businesses are low and many of the areas in whi"
+      },
+      {
+        "dimension": "moatDurability",
+        "citationIndex": 3,
+        "section": "risk-factors",
+        "quote": "Some companies compete with us by modifying and then distributing open source software at little or no cost to end users, developing, making available, or using AI models that are open, and earning revenue on advertising or integrated products and services. These firms do not bear the full costs of research and development for the open source products.",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "Some companies compete with us by modifying and then distributing open source so"
       },
       {
         "dimension": "ownerEarningsQuality",
@@ -360,15 +321,6 @@
         "dimension": "ownerEarningsQuality",
         "citationIndex": 1,
         "section": "financial-statements",
-        "quote": "Additions to property and equipment (64,551 ) (44,477 ) (28,107 )",
-        "lookedIn": "sec-section-cache",
-        "matchTier": "exact",
-        "quotePreview": "Additions to property and equipment (64,551 ) (44,477 ) (28,107 )"
-      },
-      {
-        "dimension": "ownerEarningsQuality",
-        "citationIndex": 2,
-        "section": "financial-statements",
         "quote": "Stock-based compensation expense $ 11,974 $ 10,734 $ 9,611",
         "lookedIn": "sec-section-cache",
         "matchTier": "exact",
@@ -376,7 +328,7 @@
       },
       {
         "dimension": "ownerEarningsQuality",
-        "citationIndex": 3,
+        "citationIndex": 2,
         "section": "financial-statements",
         "quote": "As of June 30, 2025, we had additional leases, primarily for datacenters, that had not yet commenced of $92.7 billion.",
         "lookedIn": "sec-section-cache",
@@ -384,17 +336,17 @@
         "quotePreview": "As of June 30, 2025, we had additional leases, primarily for datacenters, that h"
       },
       {
-        "dimension": "capitalAllocation",
-        "citationIndex": 0,
-        "section": "mda",
-        "quote": "Cash used in investing decreased $24.4 billion to $72.6 billion for fiscal year 2025, primarily due to a $63.2 billion decrease in cash used for acquisitions of companies, net of cash acquired and divestitures, and purchases of intangible and other assets, offset in part by a $22.3 billion increase in cash used in net investment purchases, sales, and maturities, and a $20.1 billion increase in additions to property and equipment.",
+        "dimension": "ownerEarningsQuality",
+        "citationIndex": 3,
+        "section": "financial-statements",
+        "quote": "the IRS is seeking an additional tax payment of $28.9 billion plus penalties and interest",
         "lookedIn": "sec-section-cache",
         "matchTier": "exact",
-        "quotePreview": "Cash used in investing decreased $24.4 billion to $72.6 billion for fiscal year "
+        "quotePreview": "the IRS is seeking an additional tax payment of $28.9 billion plus penalties and"
       },
       {
         "dimension": "capitalAllocation",
-        "citationIndex": 1,
+        "citationIndex": 0,
         "section": "mda",
         "quote": "During fiscal years 2025 and 2024, we repurchased 31 million shares and 32 million shares of our common stock for $13.0 billion and $12.0 billion, respectively, through our share repurchase program.",
         "lookedIn": "sec-section-cache",
@@ -403,12 +355,21 @@
       },
       {
         "dimension": "capitalAllocation",
-        "citationIndex": 2,
+        "citationIndex": 1,
         "section": "mda",
-        "quote": "Other, net primarily reflects net recognized losses on equity method investments, including OpenAI.",
+        "quote": "Cash used in investing decreased $24.4 billion to $72.6 billion for fiscal year 2025, primarily due to a $63.2 billion decrease in cash used for acquisitions of companies, net of cash acquired and divestitures, and purchases of intangible and other assets, offset in part by a $22.3 billion increase in cash used in net investment purchases, sales, and maturities, and a $20.1 billion increase in additions to property and equipment.",
         "lookedIn": "sec-section-cache",
         "matchTier": "exact",
-        "quotePreview": "Other, net primarily reflects net recognized losses on equity method investments"
+        "quotePreview": "Cash used in investing decreased $24.4 billion to $72.6 billion for fiscal year "
+      },
+      {
+        "dimension": "capitalAllocation",
+        "citationIndex": 2,
+        "section": "mda",
+        "quote": "Operating and finance leases, including imputed interest (c) 12,798 165,903 178,701",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "Operating and finance leases, including imputed interest (c) 12,798 165,903 178,"
       },
       {
         "dimension": "capitalAllocation",
@@ -441,37 +402,37 @@
         "dimension": "debtSustainability",
         "citationIndex": 2,
         "section": "financial-statements",
+        "quote": "Total cash, cash equivalents, and short-term investments 94,565 75,543",
+        "lookedIn": "sec-section-cache",
+        "matchTier": "exact",
+        "quotePreview": "Total cash, cash equivalents, and short-term investments 94,565 75,543"
+      },
+      {
+        "dimension": "debtSustainability",
+        "citationIndex": 3,
+        "section": "financial-statements",
         "quote": "As of June 30, 2025, we had additional leases, primarily for datacenters, that had not yet commenced of $92.7 billion.",
         "lookedIn": "sec-section-cache",
         "matchTier": "exact",
         "quotePreview": "As of June 30, 2025, we had additional leases, primarily for datacenters, that h"
       },
       {
-        "dimension": "debtSustainability",
-        "citationIndex": 3,
-        "section": "financial-statements",
-        "quote": "Total finance lease liabilities $ 46,172 $ 27,145",
-        "lookedIn": "sec-section-cache",
-        "matchTier": "exact",
-        "quotePreview": "Total finance lease liabilities $ 46,172 $ 27,145"
-      },
-      {
         "dimension": "insiderAlignment",
         "citationIndex": 0,
         "section": "proxy",
-        "quote": "Each covered executive is required to acquire and maintain ownership of shares of Microsoft common stock equal to a specified multiple of his or her base salary, which for our Named Executives ranges from 5 to 15 times base salary",
+        "quote": "Over 95% of our CEO's annual target compensation opportunity was performance-based and over 50% of the total pay opportunity for other Named Executives was performance-based",
         "lookedIn": "fixtures-fallback",
-        "matchTier": "exact",
-        "quotePreview": "Each covered executive is required to acquire and maintain ownership of shares o"
+        "matchTier": "punctuation-normalized",
+        "quotePreview": "Over 95% of our CEO's annual target compensation opportunity was performance-bas"
       },
       {
         "dimension": "insiderAlignment",
         "citationIndex": 1,
         "section": "proxy",
-        "quote": "Over 95% of our CEO's annual target compensation opportunity was performance-based and over 50% of the total pay opportunity for other Named Executives was performance-based",
+        "quote": "Each covered executive is required to acquire and maintain ownership of shares of Microsoft common stock equal to a specified multiple of his or her base salary, which for our Named Executives ranges from 5 to 15 times base salary",
         "lookedIn": "sec-section-cache",
-        "matchTier": "punctuation-normalized",
-        "quotePreview": "Over 95% of our CEO's annual target compensation opportunity was performance-bas"
+        "matchTier": "exact",
+        "quotePreview": "Each covered executive is required to acquire and maintain ownership of shares o"
       },
       {
         "dimension": "insiderAlignment",
@@ -486,10 +447,10 @@
         "dimension": "insiderAlignment",
         "citationIndex": 3,
         "section": "proxy",
-        "quote": "Our TSR relative to the S&P 500 was at the 80th percentile of the S&P 500, which meets the at least 80th percentile performance condition required to receive the maximum 150.00% multiplier.",
+        "quote": "in order for the TSR modifier to affect the performance stock awards positively, our relative TSR must be above the 60th percentile of the S&P 500",
         "lookedIn": "sec-section-cache",
         "matchTier": "exact",
-        "quotePreview": "Our TSR relative to the S&P 500 was at the 80th percentile of the S&P 500, which"
+        "quotePreview": "in order for the TSR modifier to affect the performance stock awards positively,"
       },
       {
         "dimension": "cyclicalityAwareness",
@@ -503,76 +464,30 @@
       {
         "dimension": "cyclicalityAwareness",
         "citationIndex": 1,
-        "section": "risk-factors",
-        "quote": "We generate revenue by offering a wide range of cloud-based solutions, content, and other services to people and businesses; licensing and supporting an array of software products",
+        "section": "mda",
+        "quote": "We generate revenue by offering a wide range of cloud-based solutions, content, and other services to people and businesses; licensing and supporting an array of software products; delivering relevant online advertising to a global audience; and designing and selling devices.",
         "lookedIn": "sec-section-cache",
-        "matchTier": "no-match",
+        "matchTier": "exact",
         "quotePreview": "We generate revenue by offering a wide range of cloud-based solutions, content, "
       },
       {
         "dimension": "cyclicalityAwareness",
         "citationIndex": 2,
         "section": "risk-factors",
-        "quote": "If demand for computing power, PCs, servers, and other computing devices declines, or consumer or business spending for those products declines, our results of operations could be adversely affected.",
+        "quote": "These conditions also may add uncertainty to the timing and budget for technology investment decisions by our customers and may cause supply chain disruptions for hardware manufacturers.",
         "lookedIn": "sec-section-cache",
         "matchTier": "exact",
-        "quotePreview": "If demand for computing power, PCs, servers, and other computing devices decline"
+        "quotePreview": "These conditions also may add uncertainty to the timing and budget for technolog"
       }
     ]
   },
   "pass2Verification": {
-    "total": 5,
-    "exact": 5,
+    "total": 0,
+    "exact": 0,
     "whitespaceNormalized": 0,
     "caseInsensitive": 0,
     "punctuationNormalized": 0,
     "noMatch": 0,
-    "details": [
-      {
-        "dimension": "ownerEarningsQuality",
-        "citationIndex": 0,
-        "section": "financial-statements — NOTE 13 — LEASES",
-        "quote": "Finance Leases Property and equipment, at cost $ 53,876 $ 32,248 Accumulated depreciation (9,861 ) (6,386 ) Property and equipment, net $ 44,015 $ 25,862 Other current liabilities $ 3,172 $ 2,349 Other long-term liabilities 43,000 24,796 Total finance lease liabilities $ 46,172 $ 27,145",
-        "lookedIn": "sec-section-cache",
-        "matchTier": "exact",
-        "quotePreview": "Finance Leases Property and equipment, at cost $ 53,876 $ 32,248 Accumulated dep"
-      },
-      {
-        "dimension": "ownerEarningsQuality",
-        "citationIndex": 1,
-        "section": "financial-statements — NOTE 13 — LEASES",
-        "quote": "As of June 30, 2025, we had additional leases, primarily for datacenters, that had not yet commenced of $92.7 billion. These leases will commence between fiscal year 2026 and fiscal year 2031 with lease terms of 1 year to 20 years.",
-        "lookedIn": "sec-section-cache",
-        "matchTier": "exact",
-        "quotePreview": "As of June 30, 2025, we had additional leases, primarily for datacenters, that h"
-      },
-      {
-        "dimension": "ownerEarningsQuality",
-        "citationIndex": 2,
-        "section": "financial-statements — CASH FLOWS STATEMENTS",
-        "quote": "Financing cash flows from finance leases 2,283 1,286 1,056",
-        "lookedIn": "sec-section-cache",
-        "matchTier": "exact",
-        "quotePreview": "Financing cash flows from finance leases 2,283 1,286 1,056"
-      },
-      {
-        "dimension": "capitalAllocation",
-        "citationIndex": 0,
-        "section": "mda",
-        "quote": "Operating and finance leases, including imputed interest (c) 12,798 165,903 178,701 Purchase commitments (d) 103,940 6,013 109,953 Total $ 148,106 $ 248,939 $ 397,045",
-        "lookedIn": "sec-section-cache",
-        "matchTier": "exact",
-        "quotePreview": "Operating and finance leases, including imputed interest (c) 12,798 165,903 178,"
-      },
-      {
-        "dimension": "capitalAllocation",
-        "citationIndex": 1,
-        "section": "mda",
-        "quote": "Other, net primarily reflects net recognized losses on equity method investments, including OpenAI.",
-        "lookedIn": "sec-section-cache",
-        "matchTier": "exact",
-        "quotePreview": "Other, net primarily reflects net recognized losses on equity method investments"
-      }
-    ]
+    "details": []
   }
 }
