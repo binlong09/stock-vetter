@@ -81,8 +81,20 @@ type Flags = {
   reset: boolean;
   since: string;
   holder: string;
+  allowBacklog: boolean;
   thesisIds: string[];
 };
+
+// Cold-start guard. A thesis with an empty cursor (newly added, or a new ticker
+// added to an existing thesis) would otherwise evaluate its whole backlog on
+// the first run — potentially dozens of pairs, tripping the $1.50 abort by
+// accident. Above this many pairs on a cold start we refuse and print an
+// estimate, unless --allow-backlog is passed (deliberate opt-in).
+const COLD_START_PAIR_LIMIT = 8;
+// Rough cost per evaluated pair, for the estimate: extract + critique + 3 judge
+// samples ≈ $0.04-0.06 in practice. Use the upper end so the estimate is a
+// conservative ceiling, not a lowball.
+const EST_COST_PER_PAIR = 0.06;
 
 function parseArgs(argv: string[]): Flags {
   const oneYearAgo = (() => {
@@ -96,6 +108,7 @@ function parseArgs(argv: string[]): Flags {
     reset: false,
     since: oneYearAgo,
     holder: `manual:${hostname()}`,
+    allowBacklog: false,
     thesisIds: [],
   };
   for (let i = 0; i < argv.length; i++) {
@@ -103,6 +116,7 @@ function parseArgs(argv: string[]): Flags {
     if (a === '--no-eval') flags.noEval = true;
     else if (a === '--dry-run') flags.dryRun = true;
     else if (a === '--reset') flags.reset = true;
+    else if (a === '--allow-backlog') flags.allowBacklog = true;
     else if (a === '--since') {
       const v = argv[++i];
       if (!v) throw new Error('--since requires a YYYY-MM-DD date');
@@ -257,6 +271,27 @@ async function main(): Promise<void> {
       // for the bull-index trend summary.
       const evalEvents = collapseRevisionsForEval(newEvents);
       const pairs = mapEventsToWatchItems(thesis, evalEvents);
+
+      // Cold-start guard: an empty cursor means this thesis (or a newly added
+      // ticker on it) has never run, so `pairs` is the whole backlog, not a
+      // steady-state delta. Refuse a large backlog unless explicitly opted in,
+      // so adding a 6th ticker never trips the abort by accident. Steady-state
+      // cursor-gated runs (cursor already populated) skip this entirely.
+      const isColdStart = cursor.seenKeys.length === 0;
+      if (isColdStart && pairs.length > COLD_START_PAIR_LIMIT && !flags.allowBacklog) {
+        const est = (pairs.length * EST_COST_PER_PAIR).toFixed(2);
+        console.log(
+          `  ⛔ COLD START: empty cursor, ${pairs.length} pairs (~$${est}) exceeds the ` +
+            `${COLD_START_PAIR_LIMIT}-pair backlog limit.\n` +
+            `     This is a backlog run, not a steady-state delta. Re-run with a narrower\n` +
+            `     --since window to shrink it, or --allow-backlog to evaluate the full\n` +
+            `     backlog deliberately. Skipping this thesis; cursor NOT advanced.`,
+        );
+        continue;
+      }
+      if (isColdStart) {
+        console.log(`  (cold start: empty cursor, ${pairs.length} pairs ~$${(pairs.length * EST_COST_PER_PAIR).toFixed(2)} — within limit)`);
+      }
       console.log(`  evaluating ${pairs.length} (event × watch-item) pair(s)…`);
       for (const t of new Set(pairs.map((p) => p.event.ticker))) {
         if (!dcfByTicker.has(t.toUpperCase())) dcfByTicker.set(t.toUpperCase(), await buildTickerReverseDcf(t));
