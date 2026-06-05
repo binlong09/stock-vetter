@@ -53,6 +53,27 @@ const SEC_BODY_CHAR_LIMIT = 70_000;
 const SEC_USER_AGENT =
   process.env.SEC_USER_AGENT ?? 'stock-vetter (https://example.com / contact@example.com)';
 
+// Collapse the monthly fmp-revisions snapshots to the LATEST one per ticker
+// before they become evaluation pairs. The older months are redundant for
+// classification — the critique reads the whole trend (latest deltas) from
+// summarizeBullIndexTrend regardless — so feeding each month as its own pair
+// would be ~10× the cost for the same judgment. Pass the FULL event set
+// (all months) to evaluatePair as `allEvents` so the trend summary still sees
+// every month; only the evaluated PAIRs are collapsed.
+export function collapseRevisionsForEval(events: Event[]): Event[] {
+  const latestRevByTicker = new Map<string, Event>();
+  const passthrough: Event[] = [];
+  for (const e of events) {
+    if (e.source !== 'fmp-revisions') {
+      passthrough.push(e);
+      continue;
+    }
+    const cur = latestRevByTicker.get(e.ticker);
+    if (!cur || e.date > cur.date) latestRevByTicker.set(e.ticker, e);
+  }
+  return [...passthrough, ...latestRevByTicker.values()];
+}
+
 // ---- mapping (the zero-token cost filter) --------------------------------
 
 // An event maps to a watch-item iff the watch-item declares the event's source.

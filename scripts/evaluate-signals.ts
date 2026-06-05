@@ -39,6 +39,7 @@ import {
 import {
   fetchTickerEvents,
   toManualEvent,
+  collapseRevisionsForEval,
   mapEventsToWatchItems,
   buildTickerReverseDcf,
   evaluatePair,
@@ -101,25 +102,6 @@ function manualMatches(ev: Event, thesis: Thesis): boolean {
   return taggedThesis === thesis.id || thesis.tickers.includes(ev.ticker);
 }
 
-// Collapse the monthly fmp-revisions snapshots to the LATEST one per ticker.
-// The older months are redundant for evaluation: the critique reads the whole
-// trend (latest 3 deltas) from summarizeBullIndexTrend regardless, so feeding
-// each month as its own (event × watch-item) pair would be ~10× the cost for
-// the same judgment. We keep the newest snapshot as the representative event.
-function collapseRevisions(events: Event[]): Event[] {
-  const latestRevByTicker = new Map<string, Event>();
-  const passthrough: Event[] = [];
-  for (const e of events) {
-    if (e.source !== 'fmp-revisions') {
-      passthrough.push(e);
-      continue;
-    }
-    const cur = latestRevByTicker.get(e.ticker);
-    if (!cur || e.date > cur.date) latestRevByTicker.set(e.ticker, e);
-  }
-  return [...passthrough, ...latestRevByTicker.values()];
-}
-
 async function gatherThesisEvents(thesis: Thesis, manual: Event[], since: string): Promise<Event[]> {
   const events: Event[] = [];
   if (thesis.watchItems.some((w) => w.feed === 'auto')) {
@@ -178,7 +160,7 @@ async function main(): Promise<void> {
     const events = await gatherThesisEvents(thesis, manual, flags.since);
     // Evaluate against the collapsed set (one revision event per ticker), but
     // keep `events` (all months) for the bull-index trend summary.
-    const evalEvents = collapseRevisions(events);
+    const evalEvents = collapseRevisionsForEval(events);
     const pairs = mapEventsToWatchItems(thesis, evalEvents);
     console.log(
       `  ${events.length} event(s) in window (${evalEvents.length} after collapsing monthly revisions); ` +

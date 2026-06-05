@@ -30,6 +30,7 @@ export {
 } from './diff.js';
 
 export {
+  collapseRevisionsForEval,
   eventMapsToWatchItem,
   mapEventsToWatchItems,
   summarizeBullIndexTrend,
@@ -40,3 +41,15 @@ export {
 } from './evaluate.js';
 
 export { renderThesisCard, provisionalStatus } from './render.js';
+
+export { computeThesisStatus } from './theses.js';
+
+export {
+  isTursoConfigured,
+  loadCursorFromTurso,
+  saveCursorToTurso,
+  loadThesisStatus,
+  saveThesisStatus,
+  acquireRunLock,
+  releaseRunLock,
+} from './persistence.js';

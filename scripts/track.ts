@@ -1,39 +1,44 @@
 #!/usr/bin/env tsx
 /**
- * scripts/track.ts — Signal Tracker orchestrator (Phase 1: ingestion + diff,
- * NO LLM).
+ * scripts/track.ts — Signal Tracker orchestrator.
  *
- * For each thesis in data/theses.json:
- *   1. gather candidate Events for the thesis's tickers (SEC 8-K/10-Q/10-K +
- *      FMP annual consensus + FMP ratings-bull-index), via packages/signals,
- *   2. diff them against the thesis's cursor (last-seen state under
- *      .cache/signals/), and
- *   3. print the NEW events since the last run.
- * Then advance + persist the cursor (unless --dry-run).
+ * Production path: ingest → diff against the Turso cursor → evaluate ONLY the
+ * new events → update tripwire state → persist (cursor + thesis status) to
+ * Turso. Cursor-gated, so steady-state runs are cheap (only genuinely new
+ * filings/estimates are evaluated). Authoritative state lives in Turso so the
+ * scheduled cron (ephemeral runner, no .cache) doesn't re-process the backlog.
  *
- * Manual watch-items (e.g. TSMC capex, a foreign filer not on EDGAR/Starter)
- * are NOT fetched — they're surfaced from data/manual-events.json if present
- * (an array of toManualEvent inputs), so the schema supports them without
- * requiring a feed.
+ * Without Turso configured, it falls back to the local .cache/signals/ cursor
+ * store and skips status persistence — a local-dev convenience.
  *
- * Usage:
- *   pnpm track                     # all theses; advances cursors
- *   pnpm track NVDA-margin-durability   # one thesis by id
- *   pnpm track --dry-run           # print new events but DON'T advance cursors
- *   pnpm track --reset             # delete cursors first (re-surface full backlog)
- *   pnpm track --since 2025-01-01  # bound the SEC query (default: 1 year back)
+ * Modes:
+ *   --no-eval    ingest + diff only, print new events, NO LLM (Phase-1 behavior)
+ *   (default)    ingest + diff + evaluate new events + update + persist state
  *
- * Requires FMP_API_KEY (estimates/revisions) and optionally SEC_USER_AGENT.
- * SEC works without a key; FMP sources are skipped per-ticker if FMP errors.
+ * Flags:
+ *   pnpm track                          # all theses, evaluate new events
+ *   pnpm track NVDA-margin-durability   # one thesis
+ *   pnpm track --no-eval                # diff only (no LLM)
+ *   pnpm track --dry-run                # don't persist cursors/status
+ *   pnpm track --reset                  # clear this thesis's cursor first (backlog)
+ *   pnpm track --since 2026-04-01       # bound the SEC query
+ *   pnpm track --holder cron            # run-lock holder label (default: manual:<host>)
+ *
+ * Cost guard (reused): warn $0.75, ABORT $1.50 per run.
+ * Requires FMP_API_KEY (+ ANTHROPIC_API_KEY unless --no-eval). TURSO_* for
+ * persistence; SEC_USER_AGENT recommended.
  */
 
 import 'dotenv/config';
-import { readFile, rm } from 'node:fs/promises';
+import { hostname } from 'node:os';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
   ThesesFile,
   Event as EventSchema,
   type Event,
+  type ReverseDcfReport,
+  type Signal,
   type Thesis,
 } from '@stock-vetter/schema';
 import {
@@ -41,37 +46,71 @@ import {
   toManualEvent,
   loadCursor,
   saveCursor,
-  diffEvents,
   emptyCursor,
+  diffEvents,
+  collapseRevisionsForEval,
+  mapEventsToWatchItems,
+  buildTickerReverseDcf,
+  evaluatePair,
+  renderThesisCard,
+  computeThesisStatus,
+  isTursoConfigured,
+  loadCursorFromTurso,
+  saveCursorToTurso,
+  loadThesisStatus,
+  saveThesisStatus,
+  acquireRunLock,
+  releaseRunLock,
 } from '@stock-vetter/signals';
+import { newCostTracker, summarizeCost } from '@stock-vetter/core';
 
 const CACHE_SIGNALS_DIR = join(process.env.STOCK_VETTER_CACHE_DIR ?? '.cache', 'signals');
+const COST_WARN = 0.75;
+const COST_ABORT = 1.5;
+
+class CostAbort extends Error {
+  constructor(public readonly total: number) {
+    super(`track aborted: cost exceeded $${COST_ABORT.toFixed(2)} (current $${total.toFixed(3)})`);
+    this.name = 'CostAbort';
+  }
+}
 
 type Flags = {
+  noEval: boolean;
   dryRun: boolean;
   reset: boolean;
   since: string;
+  holder: string;
   thesisIds: string[];
 };
 
 function parseArgs(argv: string[]): Flags {
-  // Default SEC lookback: ~1 year. EDGAR's `recent` block covers more, but this
-  // keeps a first run from dumping years of 8-Ks.
   const oneYearAgo = (() => {
     const d = new Date();
     d.setFullYear(d.getFullYear() - 1);
     return d.toISOString().slice(0, 10);
   })();
-
-  const flags: Flags = { dryRun: false, reset: false, since: oneYearAgo, thesisIds: [] };
+  const flags: Flags = {
+    noEval: false,
+    dryRun: false,
+    reset: false,
+    since: oneYearAgo,
+    holder: `manual:${hostname()}`,
+    thesisIds: [],
+  };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]!;
-    if (a === '--dry-run') flags.dryRun = true;
+    if (a === '--no-eval') flags.noEval = true;
+    else if (a === '--dry-run') flags.dryRun = true;
     else if (a === '--reset') flags.reset = true;
     else if (a === '--since') {
       const v = argv[++i];
       if (!v) throw new Error('--since requires a YYYY-MM-DD date');
       flags.since = v;
+    } else if (a === '--holder') {
+      const v = argv[++i];
+      if (!v) throw new Error('--holder requires a value');
+      flags.holder = v;
     } else if (a.startsWith('--')) {
       throw new Error(`unknown flag: ${a}`);
     } else {
@@ -82,129 +121,199 @@ function parseArgs(argv: string[]): Flags {
 }
 
 async function loadTheses(): Promise<Thesis[]> {
-  const body = await readFile('data/theses.json', 'utf-8');
-  const parsed = ThesesFile.parse(JSON.parse(body));
-  return parsed.theses;
+  return ThesesFile.parse(JSON.parse(await readFile('data/theses.json', 'utf-8'))).theses;
 }
 
-// Optional hand-entered events (manual watch-items). File is an array of
-// toManualEvent() inputs. Absent file ⇒ no manual events (not an error).
 async function loadManualEvents(): Promise<Event[]> {
   try {
-    const body = await readFile('data/manual-events.json', 'utf-8');
-    const raw = JSON.parse(body) as Array<Parameters<typeof toManualEvent>[0]>;
+    const raw = JSON.parse(await readFile('data/manual-events.json', 'utf-8')) as Array<
+      Parameters<typeof toManualEvent>[0]
+    >;
     return raw.map(toManualEvent);
   } catch {
     return [];
   }
 }
 
-// Does this manual event belong to this thesis? Match by ticker OR by an
-// explicit thesisId tag in the manual entry's payload.
-function manualEventMatchesThesis(ev: Event, thesis: Thesis): boolean {
-  const tickerMatch = thesis.tickers.includes(ev.ticker) || ev.ticker === thesis.id.toUpperCase();
+function manualMatches(ev: Event, thesis: Thesis): boolean {
   const taggedThesis = typeof ev.payload.thesisId === 'string' ? ev.payload.thesisId : null;
-  return taggedThesis === thesis.id || tickerMatch;
-}
-
-// Which Event sources does any watch-item in this thesis care about?
-function thesisUsesAutoFeeds(thesis: Thesis): boolean {
-  return thesis.watchItems.some((w) => w.feed === 'auto');
+  return (
+    taggedThesis === thesis.id ||
+    thesis.tickers.includes(ev.ticker) ||
+    ev.ticker === thesis.id.toUpperCase()
+  );
 }
 
 async function gatherThesisEvents(
   thesis: Thesis,
-  manualEvents: Event[],
+  manual: Event[],
   since: string,
 ): Promise<Event[]> {
   const events: Event[] = [];
-
-  if (thesisUsesAutoFeeds(thesis)) {
-    // De-dupe tickers (a ticker can appear in multiple theses; here just within).
+  if (thesis.watchItems.some((w) => w.feed === 'auto')) {
     const tickers = [...new Set(thesis.tickers.map((t) => t.toUpperCase()))];
-    const perTicker = await Promise.all(
-      tickers.map((t) => fetchTickerEvents(t, { sinceDate: since })),
-    );
+    const perTicker = await Promise.all(tickers.map((t) => fetchTickerEvents(t, { sinceDate: since })));
     events.push(...perTicker.flat());
   }
-
-  // Manual events relevant to this thesis.
-  events.push(...manualEvents.filter((ev) => manualEventMatchesThesis(ev, thesis)));
-
-  // Validate every event against the schema at the boundary (catches adapter
-  // drift early — these flow into diff/cursor).
+  events.push(...manual.filter((ev) => manualMatches(ev, thesis)));
   return events.map((e) => EventSchema.parse(e));
 }
 
-function printEvents(thesisId: string, newEvents: Event[]): void {
-  if (!newEvents.length) {
-    console.log(`  (no new events)`);
-    return;
-  }
-  for (const ev of newEvents) {
-    console.log(`  • [${ev.date}] (${ev.source}) ${ev.ticker} — ${ev.title}`);
-    if (ev.url) console.log(`      ${ev.url}`);
-    console.log(`      data quality: ${ev.dataQuality}`);
+// Cursor abstraction over Turso (authoritative) with .cache fallback.
+const usingTurso = isTursoConfigured();
+
+async function readCursor(thesisId: string, reset: boolean) {
+  if (reset) return emptyCursor(thesisId);
+  return usingTurso ? loadCursorFromTurso(thesisId) : loadCursor(thesisId);
+}
+
+async function writeCursor(thesisId: string, newEvents: Event[], nextCursor: ReturnType<typeof diffEvents>['nextCursor']): Promise<void> {
+  if (usingTurso) {
+    await saveCursorToTurso(thesisId, newEvents);
+  } else {
+    await saveCursor(nextCursor);
   }
 }
 
 async function main(): Promise<void> {
   const flags = parseArgs(process.argv.slice(2));
-  const allTheses = await loadTheses();
+  const all = await loadTheses();
   const theses = flags.thesisIds.length
-    ? allTheses.filter((t) => flags.thesisIds.includes(t.id))
-    : allTheses;
-
+    ? all.filter((t) => flags.thesisIds.includes(t.id))
+    : all;
   if (!theses.length) {
-    const known = allTheses.map((t) => t.id).join(', ');
-    throw new Error(
-      flags.thesisIds.length
-        ? `no thesis matched ${flags.thesisIds.join(', ')}. Known: ${known}`
-        : 'data/theses.json has no theses.',
-    );
+    throw new Error(`no thesis matched. Known: ${all.map((t) => t.id).join(', ')}`);
   }
 
-  const manualEvents = await loadManualEvents();
+  const manual = await loadManualEvents();
+  const now = new Date().toISOString();
 
   console.log(
-    `Signal Tracker — Phase 1 ingest+diff` +
-      `${flags.dryRun ? ' (dry-run: cursors NOT advanced)' : ''}` +
-      `${flags.reset ? ' (reset: cursors cleared first)' : ''}\n` +
-      `SEC lookback since ${flags.since}; ${theses.length} thesis/es; ` +
-      `${manualEvents.length} manual event(s) loaded.\n`,
+    `Signal Tracker — ${flags.noEval ? 'ingest+diff (no LLM)' : 'ingest+diff+evaluate'}` +
+      `${flags.dryRun ? ' (dry-run: state NOT persisted)' : ''}` +
+      `${flags.reset ? ' (reset: cursor cleared first)' : ''}\n` +
+      `state: ${usingTurso ? 'Turso (authoritative)' : '.cache/signals (local fallback — no status persistence)'}; ` +
+      `SEC since ${flags.since}; ${theses.length} thesis/es; ${manual.length} manual event(s).` +
+      (flags.noEval ? '' : `  Cost guard: warn $${COST_WARN}, abort $${COST_ABORT}.`) +
+      '\n',
   );
 
-  let totalNew = 0;
-  for (const thesis of theses) {
-    console.log(`\n=== ${thesis.id} ===`);
-    console.log(`    ${thesis.claim}`);
-    console.log(`    tickers: ${thesis.tickers.join(', ')}`);
-
-    if (flags.reset) {
-      await rm(join(CACHE_SIGNALS_DIR, `cursor-${thesis.id.replace(/[^a-zA-Z0-9._-]/g, '_')}.json`), {
-        force: true,
-      });
+  // Run-lock: the cron is the authoritative writer; a manual run that finds a
+  // live lock backs off (unless dry-run, which never writes).
+  let lockHeld = false;
+  if (usingTurso && !flags.dryRun) {
+    lockHeld = await acquireRunLock(flags.holder);
+    if (!lockHeld) {
+      throw new Error(
+        'another run holds the Turso run-lock (the cron is the authoritative writer). ' +
+          'Wait for it to finish, or re-run with --dry-run.',
+      );
     }
-
-    const cursor = flags.reset ? emptyCursor(thesis.id) : await loadCursor(thesis.id);
-    const fetched = await gatherThesisEvents(thesis, manualEvents, flags.since);
-    const { newEvents, nextCursor } = diffEvents(cursor, fetched);
-
-    console.log(
-      `  ${fetched.length} candidate event(s); ${cursor.seenKeys.length} previously seen; ` +
-        `${newEvents.length} NEW:`,
-    );
-    printEvents(thesis.id, newEvents);
-
-    totalNew += newEvents.length;
-    if (!flags.dryRun) await saveCursor(nextCursor);
   }
 
-  console.log(`\n---\nTotal new events across ${theses.length} thesis/es: ${totalNew}.`);
-  if (flags.dryRun) console.log('(dry-run — cursors unchanged; re-run without --dry-run to advance.)');
+  let warned = false;
+  const tracker = newCostTracker((total) => {
+    if (!warned && total > COST_WARN) {
+      warned = true;
+      process.stderr.write(`[track] WARNING: cost exceeded $${COST_WARN.toFixed(2)} (current $${total.toFixed(3)})\n`);
+    }
+    if (total > COST_ABORT) throw new CostAbort(total);
+  });
+
+  if (!flags.noEval) await mkdir('fixtures/theses', { recursive: true });
+  const dcfByTicker = new Map<string, ReverseDcfReport | null>();
+
+  let totalNew = 0;
+  let totalSignals = 0;
+  const flips: string[] = [];
+
+  try {
+    for (const thesis of theses) {
+      console.log(`\n=== ${thesis.id} ===`);
+
+      if (flags.reset && !usingTurso) {
+        await rm(join(CACHE_SIGNALS_DIR, `cursor-${thesis.id.replace(/[^a-zA-Z0-9._-]/g, '_')}.json`), { force: true });
+      }
+
+      const cursor = await readCursor(thesis.id, flags.reset);
+      const fetched = await gatherThesisEvents(thesis, manual, flags.since);
+      const { newEvents, nextCursor } = diffEvents(cursor, fetched);
+      totalNew += newEvents.length;
+      console.log(`  ${fetched.length} candidate event(s); ${cursor.seenKeys.length} seen; ${newEvents.length} NEW.`);
+
+      if (flags.noEval) {
+        for (const ev of newEvents) console.log(`  • [${ev.date}] (${ev.source}) ${ev.ticker} — ${ev.title}`);
+        if (!flags.dryRun) await writeCursor(thesis.id, newEvents, nextCursor);
+        continue;
+      }
+
+      if (!newEvents.length) {
+        console.log('  (no new events — nothing to evaluate)');
+        continue;
+      }
+
+      // Evaluate only the NEW events (cursor-gated). Collapse redundant monthly
+      // revision snapshots into one pair per ticker; pass the full fetched set
+      // for the bull-index trend summary.
+      const evalEvents = collapseRevisionsForEval(newEvents);
+      const pairs = mapEventsToWatchItems(thesis, evalEvents);
+      console.log(`  evaluating ${pairs.length} (event × watch-item) pair(s)…`);
+      for (const t of new Set(pairs.map((p) => p.event.ticker))) {
+        if (!dcfByTicker.has(t.toUpperCase())) dcfByTicker.set(t.toUpperCase(), await buildTickerReverseDcf(t));
+      }
+
+      const signals: Signal[] = [];
+      let noCandidate = 0;
+      for (const { event, watchItem } of pairs) {
+        const outcome = await evaluatePair({
+          thesis,
+          watchItem,
+          event,
+          allEvents: fetched,
+          reverseDcfByTicker: dcfByTicker,
+          tracker,
+        });
+        if (outcome.kind === 'signal') {
+          signals.push(outcome.signal);
+          console.log(`  • SIGNAL ${watchItem.id}: ${outcome.signal.direction} mag=${outcome.signal.magnitude.toFixed(2)}`);
+        } else {
+          noCandidate++;
+        }
+      }
+      totalSignals += signals.length;
+
+      // Tripwire state: fold this run's signals into the (sticky) thesis status.
+      const prior = usingTurso ? await loadThesisStatus(thesis.id) : null;
+      const status = computeThesisStatus({ thesis, signals, priorStatus: prior, now });
+      console.log(`  status: ${status.health.toUpperCase()}${status.trippedWatchItemIds.length ? ` — TRIPPED: ${status.trippedWatchItemIds.join(', ')}` : ''}`);
+      if (status.trippedWatchItemIds.length) {
+        for (const id of status.trippedWatchItemIds) flips.push(`${thesis.id}/${id}`);
+      }
+
+      // Card snapshot.
+      const card = renderThesisCard({ thesis, signals, noCandidateCount: noCandidate, evaluatedPairs: pairs.length, generatedAt: now });
+      await writeFile(join('fixtures/theses', `${thesis.id}.md`), card, 'utf-8');
+
+      if (!flags.dryRun) {
+        await writeCursor(thesis.id, newEvents, nextCursor);
+        if (usingTurso) await saveThesisStatus(status);
+      }
+    }
+  } finally {
+    if (lockHeld) await releaseRunLock(flags.holder);
+  }
+
+  const summary = summarizeCost(tracker);
+  console.log(
+    `\n---\nNew events: ${totalNew}. Signals: ${totalSignals}. ` +
+      `Tripwire flips: ${flips.length ? flips.join(', ') : 'none'}. ` +
+      `LLM cost: $${summary.total.toFixed(3)}.` +
+      (flags.dryRun ? '  (dry-run — state unchanged.)' : ''),
+  );
 }
 
 main().catch((err) => {
-  console.error(`\ntrack failed: ${err instanceof Error ? err.message : String(err)}`);
+  if (err instanceof CostAbort) console.error(`\n${err.message}`);
+  else console.error(`\ntrack failed: ${err instanceof Error ? err.message : String(err)}`);
   process.exitCode = 1;
 });
