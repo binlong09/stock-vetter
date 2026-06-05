@@ -13,6 +13,9 @@
     "analyze-ticker": "tsx scripts/analyze-ticker.ts",
     "push-fixtures": "tsx scripts/push-fixtures.ts",
     "allow-email": "tsx scripts/allow-email.ts",
+    "signals-spike": "tsx scripts/signals-spike.ts",
+    "track": "tsx scripts/track.ts",
+    "evaluate-signals": "tsx scripts/evaluate-signals.ts",
     "eval": "tsx scripts/eval.ts"
   },
   "devDependencies": {
@@ -25,6 +28,7 @@
     "@stock-vetter/core": "workspace:*",
     "@stock-vetter/pipeline": "workspace:*",
     "@stock-vetter/schema": "workspace:*",
+    "@stock-vetter/signals": "workspace:*",
     "dotenv": "^16.4.7"
   }
 }

@@ -1,0 +1,85 @@
+{
+  "_doc": "Encoded theses for the Signal Tracker (packages/signals), analogous to data/tickers.json. Each thesis: an id, a plain-English claim, the tickers/entities it depends on, and watch-items with tripwire thresholds. `sources` lists which Event sources can satisfy a watch-item; `feed` is 'auto' (a feed adapter populates it) or 'manual' (hand-entered Event required — used where our FMP Starter tier / EDGAR doesn't cover the source, e.g. foreign filers like TSMC). Validated by ThesesFile in packages/schema. Phase 1 only ingests + diffs events; tripwire evaluation is Phase 2/3.",
+  "theses": [
+    {
+      "id": "NVDA-margin-durability",
+      "claim": "NVIDIA sustains data-center gross margins in the low-to-mid 70s% as competition (custom silicon, AMD) and customer concentration pressure pricing; margin compression below the low-70s would break the premium-valuation case.",
+      "tickers": ["NVDA"],
+      "entities": ["hyperscaler customers", "AMD", "custom ASIC competition"],
+      "watchItems": [
+        {
+          "id": "nvda-gross-margin-guide",
+          "label": "Forward gross-margin guidance direction (8-K Ex-99.1 / 10-Q MD&A)",
+          "sources": ["sec-8k", "sec-10q", "sec-10k"],
+          "feed": "auto",
+          "tripwire": "Guided or reported non-GAAP gross margin falls below 72%, or guidance language flags sustained pricing pressure.",
+          "tripwireDirection": "weakens"
+        },
+        {
+          "id": "nvda-consensus-eps-revision",
+          "label": "Consensus FY EPS revision (are estimates catching up / rolling over?)",
+          "sources": ["fmp-estimates", "fmp-revisions"],
+          "feed": "auto",
+          "tripwire": "Forward-year consensus EPS revised DOWN, or analyst bull-index drops >10 month-over-month (sentiment rolling over).",
+          "tripwireDirection": "weakens"
+        }
+      ]
+    },
+    {
+      "id": "infra-cycle-accelerating",
+      "claim": "The AI-infrastructure build-out is still accelerating, not plateauing: hyperscaler capex guidance keeps rising and the supply chain (TSMC, Micron HBM) stays sold out. A capex-guide cut or an HBM-glut signal would mark the cycle top.",
+      "tickers": ["NVDA", "MSFT", "GOOGL", "AMZN", "MU"],
+      "entities": ["TSMC", "hyperscaler capex", "Micron HBM"],
+      "watchItems": [
+        {
+          "id": "hyperscaler-capex-guide",
+          "label": "Hyperscaler capex guidance vs prior quarter (MSFT/GOOGL/AMZN 8-K / 10-Q)",
+          "sources": ["sec-8k", "sec-10q", "sec-10k"],
+          "feed": "auto",
+          "tripwire": "Any hyperscaler guides capex FLAT or DOWN sequentially, or explicitly signals a build-out pause.",
+          "tripwireDirection": "weakens"
+        },
+        {
+          "id": "micron-hbm-window",
+          "label": "Micron HBM sold-out window (10-Q MD&A / 8-K)",
+          "sources": ["sec-8k", "sec-10q", "sec-10k"],
+          "feed": "auto",
+          "tripwire": "Micron stops extending the HBM sold-out window, or language softens from 'sold out' to 'strong demand'.",
+          "tripwireDirection": "weakens"
+        },
+        {
+          "id": "tsmc-capex-guide",
+          "label": "TSMC capex guide direction (MANUAL — foreign filer, not on EDGAR/Starter)",
+          "sources": ["manual"],
+          "feed": "manual",
+          "tripwire": "TSMC cuts or holds its annual capex guide vs prior guide (proxy for leading-edge demand topping).",
+          "tripwireDirection": "weakens"
+        }
+      ]
+    },
+    {
+      "id": "GOOGL-TPU-not-in-consensus",
+      "claim": "Google's TPU external-revenue opportunity (selling/renting TPUs beyond internal use) is not yet in sell-side consensus; first evidence of material external TPU revenue would be a non-consensus positive. Once consensus prices it in, the edge is gone.",
+      "tickers": ["GOOGL"],
+      "entities": ["TPU external revenue", "Google Cloud"],
+      "watchItems": [
+        {
+          "id": "googl-tpu-disclosure",
+          "label": "TPU external-revenue disclosure in filings (8-K / 10-Q / 10-K MD&A)",
+          "sources": ["sec-8k", "sec-10q", "sec-10k"],
+          "feed": "auto",
+          "tripwire": "Google first discloses or quantifies external/third-party TPU revenue in a filing.",
+          "tripwireDirection": "strengthens"
+        },
+        {
+          "id": "googl-consensus-prices-in-tpu",
+          "label": "Consensus / ratings catching up to the TPU story",
+          "sources": ["fmp-estimates", "fmp-revisions"],
+          "feed": "auto",
+          "tripwire": "Consensus revenue revised UP sharply or bull-index rises >10 month-over-month AFTER a TPU disclosure (edge getting priced in — thesis becomes consensus).",
+          "tripwireDirection": "either"
+        }
+      ]
+    }
+  ]
+}
