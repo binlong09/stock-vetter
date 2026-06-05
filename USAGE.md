@@ -70,7 +70,7 @@ How it works:
 
 - After a successful `analyze-ticker` run, the CLI **pushes the full decision card into Turso** (a hosted libSQL database, free tier) — but only if `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` are set in `.env`. If they're not set, the CLI works exactly as before (fixtures only). If the push fails, the run still succeeds locally — it just logs a warning.
 - The web app reads from Turso and renders: a dashboard (all tickers, sorted by score, filterable by verdict bucket), a per-ticker **default view** (verdict + score + the six-dimension table + valuation context + analyst-vs-primary findings), and a **deep view** below it (per-dimension 3-pass reasoning + citations, the reverse-DCF grid, historical financials, the analyst-video detail pages).
-- Login is magic-link email (Auth.js + Resend) with an allowlist — only addresses in `ALLOWED_EMAILS` can sign in.
+- Login is magic-link email (Auth.js + Resend) with an allowlist — only emails in the `allowed_emails` Turso table can sign in. Add one with `pnpm allow-email <addr>` (no redeploy; see "Adding a new allowed email" below).
 
 **Deployed at: _<set after first deploy — see "Deploying the web viewer" below>_**
 
@@ -98,20 +98,38 @@ How it works:
 
 ### Adding a new allowed email
 
-The allowlist is the `ALLOWED_EMAILS` env var — comma-separated, e.g. `me@example.com,family@example.com`. To add someone:
+The allowlist lives in the `allowed_emails` Turso table — the same database the
+CLI already pushes to — **not** an env var. So adding a reader is one command
+from your laptop, with **no env change and no Vercel redeploy**:
 
-- **Production**: edit `ALLOWED_EMAILS` in the Vercel project's environment variables, then redeploy (Vercel → Deployments → Redeploy, or just push any commit). New value takes effect on the next deploy.
-- **Local dev**: edit `ALLOWED_EMAILS` in `apps/web/.env` and restart `pnpm dev`.
+```
+pnpm allow-email their@email.com "optional note"   # add (creates the table on first run)
+pnpm allow-email --list                            # show the current allowlist
+pnpm allow-email --remove their@email.com          # revoke access
+```
 
-Fails closed: if `ALLOWED_EMAILS` is unset or empty, nobody can sign in.
+It takes effect on their **next sign-in attempt** — production and local dev
+both read the same table, so there's nothing to restart or redeploy. Requires
+`TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN` in the repo-root `.env` (same as the
+other CLI commands).
+
+Fails closed: if the table is empty (or the DB is unreachable), nobody can sign
+in. **Seed yourself before the first deploy of this change**, or you'll lock
+yourself out:
+
+```
+pnpm allow-email you@example.com "owner"
+pnpm allow-email --list                            # confirm you're listed, then deploy
+```
 
 ### Running the web app locally
 
 ```
 cd apps/web
 cp .env.example .env     # fill in TURSO_*, AUTH_SECRET (openssl rand -base64 32),
-                          #   AUTH_RESEND_KEY, EMAIL_FROM, ALLOWED_EMAILS
+                          #   AUTH_RESEND_KEY, EMAIL_FROM
 pnpm dev                  # http://localhost:3000
+                          # allowlist is in the DB — add yourself with `pnpm allow-email`
 ```
 
 ### Deploying the web viewer
@@ -126,7 +144,7 @@ The pipeline stays on your laptop; only `apps/web/` deploys. On Vercel:
    - `AUTH_URL` — the deployed origin, e.g. `https://stock-vetter-<you>.vercel.app`. This makes magic-link callback URLs in emails point at production, not a per-deployment preview URL.
    - `AUTH_RESEND_KEY` — from https://resend.com/api-keys.
    - `EMAIL_FROM` — e.g. `Stock Vetter <onboarding@resend.dev>` (Resend's sandbox sender works without a verified domain).
-   - `ALLOWED_EMAILS` — comma-separated allowlist.
+   - (No `ALLOWED_EMAILS` — the sign-in allowlist lives in the `allowed_emails` Turso table now. Seed it with `pnpm allow-email you@example.com` **before** the first deploy, or sign-in fails closed and locks you out.)
    - `CRON_SECRET` — bearer token for the EOD-price cron route. Generate with `openssl rand -hex 32`. Vercel cron sends this in the `Authorization: Bearer …` header; the route fails closed if it's missing.
 4. Deploy. The default `*.vercel.app` subdomain is fine.
 5. **Smoke-test on your phone**: visit the URL → bounced to `/signin` → enter an allowlisted email → magic link arrives → click → dashboard loads → close the browser, reopen, still signed in. Then try a non-allowlisted email → "not allowed" error, no email sent.

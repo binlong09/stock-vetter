@@ -27,9 +27,9 @@ import {
   type PrimaryDimensionKey,
   type CrossSourceFinding,
 } from '@stock-vetter/schema';
-import { llmCallJson, newCostTracker, type CostTracker } from './llm.js';
-import { loadPrompt } from './prompts.js';
-import { getLlmOutput, putLlmOutput, hashInputs } from './cache.js';
+import { llmCallJson, newCostTracker, type CostTracker } from '@stock-vetter/core';
+import { loadPrompt } from '@stock-vetter/core';
+import { getLlmOutput, putLlmOutput, hashInputs } from '@stock-vetter/core';
 
 // Per-dimension weights. Mirrors the analyst-pipeline weights on similar
 // dimensions and reflects value-investing emphasis: business quality and

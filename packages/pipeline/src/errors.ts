@@ -1,9 +1,12 @@
-export class PipelineError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'PipelineError';
-  }
-}
+// Pipeline-domain errors (YouTube transcript / ticker resolution). The shared
+// base `PipelineError` and the LLM/cost-guard errors moved to
+// @stock-vetter/core; we re-export them here so existing
+// `import { PipelineError } from './errors.js'` and instanceof checks keep
+// working unchanged.
+
+import { PipelineError } from '@stock-vetter/core';
+
+export { PipelineError, LLMValidationError, CostCeilingError } from '@stock-vetter/core';
 
 export class MissingCaptionsError extends PipelineError {
   constructor(public readonly videoId: string) {
@@ -23,23 +26,5 @@ export class UnknownTickerError extends PipelineError {
   constructor(public readonly ticker: string) {
     super(`Unknown ticker: ${ticker}. No financial data available.`);
     this.name = 'UnknownTickerError';
-  }
-}
-
-export class LLMValidationError extends PipelineError {
-  constructor(
-    public readonly stage: string,
-    public readonly validationError: string,
-    public readonly rawOutput?: string,
-  ) {
-    super(`LLM output failed validation in stage "${stage}": ${validationError}`);
-    this.name = 'LLMValidationError';
-  }
-}
-
-export class CostCeilingError extends PipelineError {
-  constructor(public readonly costSoFar: number) {
-    super(`Pipeline aborted: cost exceeded $1.50 (current: $${costSoFar.toFixed(3)})`);
-    this.name = 'CostCeilingError';
   }
 }

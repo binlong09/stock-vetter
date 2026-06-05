@@ -16,6 +16,9 @@ export {
   migrate,
   pushTicker,
   pushTickerFromFixtures,
+  addAllowedEmail,
+  removeAllowedEmail,
+  listAllowedEmails,
   type PushTickerInput,
 } from './turso.js';
 export {
@@ -23,3 +26,24 @@ export {
   hasDecisionCard,
   type LoadedTickerFixtures,
 } from './fixture-loader.js';
+
+// ---- Re-exports from @stock-vetter/core ----------------------------------
+// These moved to core in the Phase 3 extraction. We re-export them from the
+// pipeline barrel so existing `@stock-vetter/pipeline` consumers (scripts) keep
+// working unchanged; new code (signals) should import from @stock-vetter/core
+// directly.
+export {
+  llmCall,
+  llmCallJson,
+  newCostTracker,
+  summarizeCost,
+  loadPrompt,
+  fetchAndParseFiling,
+  fetchFinancialSnapshot,
+  buildReverseDcf,
+  renderReverseDcfMarkdown,
+  type CostTracker,
+  type CacheableSegment,
+  type PromptName,
+  type FilingMeta,
+} from '@stock-vetter/core';
