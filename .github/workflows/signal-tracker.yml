@@ -59,6 +59,14 @@ jobs:
           # SEC requires an identifying UA. Set this repo/org secret to
           # "Your Name your@email.com" form.
           SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+          # Email digest on tripwire flips (optional). Reuses the web app's
+          # Resend key / from-address. SIGNAL_DIGEST_TO is the recipient;
+          # SIGNAL_TRACKER_BASE_URL is the deployed web origin for detail links.
+          # If any are unset, no digest is sent (the run still works).
+          AUTH_RESEND_KEY: ${{ secrets.AUTH_RESEND_KEY }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          SIGNAL_DIGEST_TO: ${{ secrets.SIGNAL_DIGEST_TO }}
+          SIGNAL_TRACKER_BASE_URL: ${{ secrets.SIGNAL_TRACKER_BASE_URL }}
         run: |
           # Default to a NARROW 10-day window so a cold-started thesis/ticker
           # (empty cursor) self-seeds with only a few pairs instead of tripping

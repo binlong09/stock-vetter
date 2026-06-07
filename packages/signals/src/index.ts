@@ -45,6 +45,12 @@ export { renderThesisCard, provisionalStatus } from './render.js';
 export { computeThesisStatus } from './theses.js';
 
 export {
+  detectFlips,
+  renderDigest,
+  type WatchItemFlip,
+} from './digest.js';
+
+export {
   isTursoConfigured,
   loadCursorFromTurso,
   saveCursorToTurso,

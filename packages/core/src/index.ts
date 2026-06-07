@@ -79,3 +79,6 @@ export { buildReverseDcf, renderReverseDcfMarkdown } from './reverse-dcf.js';
 
 // Turso (libSQL) client + migration runner.
 export { isTursoConfigured, getTursoClient, migrate } from './turso.js';
+
+// Generic Resend email sender (cron digests; magic-link email stays in web).
+export { isMailerConfigured, sendEmail, type SendEmailInput } from './mailer.js';
