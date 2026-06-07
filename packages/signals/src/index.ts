@@ -50,6 +50,8 @@ export {
   saveCursorToTurso,
   loadThesisStatus,
   saveThesisStatus,
+  saveSignals,
+  loadSignalsForThesis,
   acquireRunLock,
   releaseRunLock,
 } from './persistence.js';

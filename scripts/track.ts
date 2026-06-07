@@ -59,6 +59,7 @@ import {
   saveCursorToTurso,
   loadThesisStatus,
   saveThesisStatus,
+  saveSignals,
   acquireRunLock,
   releaseRunLock,
 } from '@stock-vetter/signals';
@@ -331,7 +332,13 @@ async function main(): Promise<void> {
 
       if (!flags.dryRun) {
         await writeCursor(thesis.id, newEvents, nextCursor);
-        if (usingTurso) await saveThesisStatus(status);
+        if (usingTurso) {
+          // Persist the individual signals (web-view source) AND the aggregate
+          // status. Signals upsert by (thesis, watch-item, event) so a re-run
+          // doesn't duplicate.
+          await saveSignals(signals, now);
+          await saveThesisStatus(status);
+        }
       }
     }
   } finally {
