@@ -60,6 +60,7 @@ import {
   loadThesisStatus,
   saveThesisStatus,
   saveSignals,
+  saveThesisDefinition,
   acquireRunLock,
   releaseRunLock,
 } from '@stock-vetter/signals';
@@ -245,6 +246,11 @@ async function main(): Promise<void> {
   try {
     for (const thesis of theses) {
       console.log(`\n=== ${thesis.id} ===`);
+
+      // Mirror the thesis definition (claim, watch-items) into Turso so the web
+      // app reads it from there — runs every time, regardless of new events, so
+      // a data/theses.json edit propagates on the next run.
+      if (usingTurso && !flags.dryRun) await saveThesisDefinition(thesis, now);
 
       if (flags.reset && !usingTurso) {
         await rm(join(CACHE_SIGNALS_DIR, `cursor-${thesis.id.replace(/[^a-zA-Z0-9._-]/g, '_')}.json`), { force: true });

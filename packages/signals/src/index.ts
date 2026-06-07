@@ -51,6 +51,7 @@ export {
   loadThesisStatus,
   saveThesisStatus,
   saveSignals,
+  saveThesisDefinition,
   loadSignalsForThesis,
   acquireRunLock,
   releaseRunLock,
