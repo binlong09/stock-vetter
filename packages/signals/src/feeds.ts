@@ -78,15 +78,20 @@ async function fmpGet(
 
   // FMP gates whole endpoints AND individual parameter values by tier, and
   // reports both with HTTP 402. Distinguish them:
-  //   - "Restricted Endpoint" / "Special Endpoint" → the whole endpoint is
-  //     gated: a true tier signal for the series.
-  //   - "Premium Query Parameter" / "Special Parameters" → the endpoint IS in
-  //     the tier but a specific param value (e.g. limit too high, period=quarter)
-  //     is not. That's a caller bug (bad param), not a series-coverage gap, so
-  //     we surface it as a normal error to be fixed, not an FmpTierError.
-  const isParamGating = /Premium Query Parameter|Special Parameters/i.test(body);
+  //   - "Restricted Endpoint" / "Special Endpoint" → the endpoint, or a
+  //     specific SYMBOL on it, is not in the tier (coverage gap). A clean tier
+  //     signal we skip. FMP sometimes prefixes these with "Premium Query
+  //     Parameter:" (e.g. "Premium Query Parameter: 'Special Endpoint : this
+  //     value set for 'symbol' is not available…" for MU on Starter) — the
+  //     "Special Endpoint" / unsupported-symbol meaning wins regardless.
+  //   - "Premium Query Parameter" / "Special Parameters" WITHOUT a Special/
+  //     Restricted-Endpoint marker → the endpoint IS in the tier but a param
+  //     VALUE we control is wrong (limit too high, period=quarter). That's a
+  //     caller bug, surfaced as a normal error to fix.
   const isEndpointGating = /Restricted Endpoint|Special Endpoint/i.test(body);
-  if (isEndpointGating && !isParamGating) {
+  const isParamGating =
+    !isEndpointGating && /Premium Query Parameter|Special Parameters/i.test(body);
+  if (isEndpointGating) {
     throw new FmpTierError(path, body.slice(0, 300));
   }
   if (res.status === 402 && isParamGating) {
@@ -598,6 +603,17 @@ export function toManualEvent(input: {
 // revisions), best-effort per source. A source that errors (e.g. FMP tier gate,
 // SEC hiccup) is logged to stderr and skipped — one dead source shouldn't blank
 // the whole run. `sinceDate` bounds the SEC query.
+// Log a per-source fetch failure. A FmpTierError is EXPECTED coverage (e.g. MU
+// isn't on the FMP Starter tier) — log it as a concise one-line "skipped",
+// not a scary multi-line error, since it recurs every run and isn't actionable.
+function logSourceIssue(source: string, ticker: string, err: unknown): void {
+  if (err instanceof FmpTierError) {
+    process.stderr.write(`[feeds:${source}] ${ticker}: not on FMP tier — skipped\n`);
+  } else {
+    process.stderr.write(`[feeds:${source}] ${ticker}: ${err instanceof Error ? err.message : err}\n`);
+  }
+}
+
 export async function fetchTickerEvents(
   ticker: string,
   opts: { sinceDate?: string } = {},
@@ -609,7 +625,7 @@ export async function fetchTickerEvents(
     const filings = await fetchRecentSecFilings(ticker, opts.sinceDate);
     events.push(...filings.map(toSecEvent));
   } catch (err) {
-    process.stderr.write(`[feeds:sec] ${ticker}: ${err instanceof Error ? err.message : err}\n`);
+    logSourceIssue('sec', ticker, err);
   }
 
   // Consensus estimates (one collapsed event).
@@ -618,7 +634,7 @@ export async function fetchTickerEvents(
     const ev = toEstimatesEvent(ticker, estimates);
     if (ev) events.push(ev);
   } catch (err) {
-    process.stderr.write(`[feeds:estimates] ${ticker}: ${err instanceof Error ? err.message : err}\n`);
+    logSourceIssue('estimates', ticker, err);
   }
 
   // Ratings-distribution revisions (one event per month, newest first; attach
@@ -630,7 +646,7 @@ export async function fetchTickerEvents(
       events.push(toRevisionEvent(revs[i]!, prior ? prior.bullIndex : null));
     }
   } catch (err) {
-    process.stderr.write(`[feeds:revisions] ${ticker}: ${err instanceof Error ? err.message : err}\n`);
+    logSourceIssue('revisions', ticker, err);
   }
 
   return events.sort((a, b) => b.date.localeCompare(a.date));

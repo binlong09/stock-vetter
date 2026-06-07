@@ -60,8 +60,14 @@ jobs:
           # "Your Name your@email.com" form.
           SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
         run: |
-          ARGS="--holder cron"
-          if [ -n "${{ inputs.since }}" ]; then ARGS="$ARGS --since ${{ inputs.since }}"; fi
+          # Default to a NARROW 10-day window so a cold-started thesis/ticker
+          # (empty cursor) self-seeds with only a few pairs instead of tripping
+          # the cold-start guard on the full 1-year backlog every run. A daily
+          # cron sees ~10 days the first time, then steady-state deltas. Override
+          # with the workflow_dispatch `since` input for an explicit backfill.
+          SINCE="${{ inputs.since }}"
+          if [ -z "$SINCE" ]; then SINCE="$(date -u -d '10 days ago' +%Y-%m-%d)"; fi
+          ARGS="--holder cron --since $SINCE"
           if [ "${{ inputs.allow_backlog }}" = "true" ]; then ARGS="$ARGS --allow-backlog"; fi
           echo "Running: pnpm track $ARGS"
           pnpm track $ARGS
