@@ -59,10 +59,15 @@ import {
   saveCursorToTurso,
   loadThesisStatus,
   saveThesisStatus,
+  saveSignals,
+  saveThesisDefinition,
   acquireRunLock,
   releaseRunLock,
+  detectFlips,
+  renderDigest,
+  type WatchItemFlip,
 } from '@stock-vetter/signals';
-import { newCostTracker, summarizeCost } from '@stock-vetter/core';
+import { newCostTracker, summarizeCost, isMailerConfigured, sendEmail } from '@stock-vetter/core';
 
 const CACHE_SIGNALS_DIR = join(process.env.STOCK_VETTER_CACHE_DIR ?? '.cache', 'signals');
 const COST_WARN = 0.75;
@@ -82,6 +87,7 @@ type Flags = {
   since: string;
   holder: string;
   allowBacklog: boolean;
+  digestTo: string | null;
   thesisIds: string[];
 };
 
@@ -109,6 +115,7 @@ function parseArgs(argv: string[]): Flags {
     since: oneYearAgo,
     holder: `manual:${hostname()}`,
     allowBacklog: false,
+    digestTo: process.env.SIGNAL_DIGEST_TO ?? null,
     thesisIds: [],
   };
   for (let i = 0; i < argv.length; i++) {
@@ -117,7 +124,11 @@ function parseArgs(argv: string[]): Flags {
     else if (a === '--dry-run') flags.dryRun = true;
     else if (a === '--reset') flags.reset = true;
     else if (a === '--allow-backlog') flags.allowBacklog = true;
-    else if (a === '--since') {
+    else if (a === '--digest-to') {
+      const v = argv[++i];
+      if (!v) throw new Error('--digest-to requires an email address');
+      flags.digestTo = v;
+    } else if (a === '--since') {
       const v = argv[++i];
       if (!v) throw new Error('--since requires a YYYY-MM-DD date');
       flags.since = v;
@@ -239,11 +250,18 @@ async function main(): Promise<void> {
 
   let totalNew = 0;
   let totalSignals = 0;
-  const flips: string[] = [];
+  // Flips are STATE TRANSITIONS (prior persisted → new), not current state — so
+  // a thesis that stays red day over day does NOT re-flip (and won't re-email).
+  const flips: WatchItemFlip[] = [];
 
   try {
     for (const thesis of theses) {
       console.log(`\n=== ${thesis.id} ===`);
+
+      // Mirror the thesis definition (claim, watch-items) into Turso so the web
+      // app reads it from there — runs every time, regardless of new events, so
+      // a data/theses.json edit propagates on the next run.
+      if (usingTurso && !flags.dryRun) await saveThesisDefinition(thesis, now);
 
       if (flags.reset && !usingTurso) {
         await rm(join(CACHE_SIGNALS_DIR, `cursor-${thesis.id.replace(/[^a-zA-Z0-9._-]/g, '_')}.json`), { force: true });
@@ -321,8 +339,13 @@ async function main(): Promise<void> {
       const prior = usingTurso ? await loadThesisStatus(thesis.id) : null;
       const status = computeThesisStatus({ thesis, signals, priorStatus: prior, now });
       console.log(`  status: ${status.health.toUpperCase()}${status.trippedWatchItemIds.length ? ` — TRIPPED: ${status.trippedWatchItemIds.join(', ')}` : ''}`);
-      if (status.trippedWatchItemIds.length) {
-        for (const id of status.trippedWatchItemIds) flips.push(`${thesis.id}/${id}`);
+
+      // Digest fires on the prior→new TRANSITION, computed BEFORE we overwrite
+      // the persisted prior with saveThesisStatus below. No transition ⇒ no flip.
+      const thesisFlips = detectFlips({ thesis, priorStatus: prior, newStatus: status, signals });
+      for (const f of thesisFlips) {
+        flips.push(f);
+        console.log(`  ⚑ FLIP ${f.watchItemId}: ${f.from} → ${f.to}`);
       }
 
       // Card snapshot.
@@ -331,17 +354,44 @@ async function main(): Promise<void> {
 
       if (!flags.dryRun) {
         await writeCursor(thesis.id, newEvents, nextCursor);
-        if (usingTurso) await saveThesisStatus(status);
+        if (usingTurso) {
+          // Persist the individual signals (web-view source) AND the aggregate
+          // status. Signals upsert by (thesis, watch-item, event) so a re-run
+          // doesn't duplicate.
+          await saveSignals(signals, now);
+          await saveThesisStatus(status);
+        }
       }
     }
   } finally {
     if (lockHeld) await releaseRunLock(flags.holder);
   }
 
+  // Email digest — ONLY when there were real state transitions this run, and
+  // only after state was persisted (so the next run sees the new baseline and
+  // won't re-email the same flip). Silence is the default.
+  if (flips.length && !flags.dryRun) {
+    if (isMailerConfigured() && flags.digestTo) {
+      const baseUrl = process.env.SIGNAL_TRACKER_BASE_URL ?? 'https://example.com';
+      const { subject, html, text } = renderDigest(flips, baseUrl);
+      try {
+        await sendEmail({ to: flags.digestTo, subject, html, text });
+        console.log(`\n📧 Digest sent to ${flags.digestTo} (${flips.length} flip(s)).`);
+      } catch (err) {
+        process.stderr.write(`[track] digest send failed: ${err instanceof Error ? err.message : err}\n`);
+      }
+    } else {
+      console.log(
+        `\n📧 ${flips.length} flip(s) detected but no digest sent ` +
+          `(${flags.digestTo ? 'mailer not configured' : 'no --digest-to recipient'}).`,
+      );
+    }
+  }
+
   const summary = summarizeCost(tracker);
   console.log(
     `\n---\nNew events: ${totalNew}. Signals: ${totalSignals}. ` +
-      `Tripwire flips: ${flips.length ? flips.join(', ') : 'none'}. ` +
+      `Tripwire flips: ${flips.length ? flips.map((f) => `${f.thesisId}/${f.watchItemId}(${f.from}→${f.to})`).join(', ') : 'none'}. ` +
       `LLM cost: $${summary.total.toFixed(3)}.` +
       (flags.dryRun ? '  (dry-run — state unchanged.)' : ''),
   );
