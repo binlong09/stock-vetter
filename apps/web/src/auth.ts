@@ -42,10 +42,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: 'jwt' },
   pages: {
     signIn: '/signin',
-    // Auth.js renders its own "check your email" + error pages by default; we
-    // point errors back at /signin so the UI is consistent (the ?error= param
-    // is read there).
-    verifyRequest: '/signin?sent=1',
+    // Auth.js v5 requires each `pages` value to be a BARE PATH — a query string
+    // here (e.g. '/signin?sent=1') corrupts v5's action routing and makes it
+    // throw `UnknownAction: Cannot handle action: verify-request` after the
+    // magic-link email is sent. Keep these as plain routes. The "check your
+    // email" banner is driven by the sign-in form's own redirect to
+    // /signin?sent=1, not by this config.
+    verifyRequest: '/signin',
     error: '/signin',
   },
   providers: [
