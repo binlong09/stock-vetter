@@ -186,6 +186,13 @@ async function loadEventContent(event: Event): Promise<string> {
       return `(SEC document fetch error: ${err instanceof Error ? err.message : String(err)})`;
     }
   }
+  // A manual event may carry a long free-text body (e.g. an earnings-call
+  // transcript) under payload.transcriptText — return it as RAW text so the
+  // extractor sees clean prose, not a JSON-escaped blob. Otherwise the payload
+  // IS the structured fact, so serialize it.
+  if (typeof event.payload.transcriptText === 'string') {
+    return `${event.title}\n\n${event.payload.transcriptText}`;
+  }
   // FMP / manual: the payload is the fact.
   return `${event.title}\n\n${JSON.stringify(event.payload, null, 2)}`;
 }
