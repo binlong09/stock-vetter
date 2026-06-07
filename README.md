@@ -12,7 +12,7 @@ This is built and in use. See **[USAGE.md](USAGE.md)** for how to operate it. In
 - **A read-only web app reads the results on your phone.** `apps/web/` — a small Next.js app on Vercel's free tier, magic-link login with an email allowlist. Dashboard of all tickers + a default per-ticker view + a deep view with the full 3-pass reasoning, citations, reverse-DCF grid, and analyst-card detail pages. **The pipeline is not deployed** — only the viewer.
   - Deployed at: _<set after first deploy — see "Deploying the web viewer" in USAGE.md>_
 - **Adding a ticker**: edit `data/tickers.json`, run `analyze-ticker`, done — the push to the web app is automatic.
-- **Adding a reader**: add their email to `ALLOWED_EMAILS` in the Vercel env vars and redeploy.
+- **Adding a reader**: run `pnpm allow-email their@email.com` — adds them to the `allowed_emails` Turso table. Takes effect on their next sign-in; no env change, no redeploy.
 - **Costs**: ~$1.45 in LLM calls per fresh ticker (or ~$2 with an analyst video); $0 on cached re-runs; ~$30–45 for a 20–30 ticker exploration. Vercel / Turso / Resend are all free-tier. Full breakdown in USAGE.md.
 
 For a packaging / handoff overview see **[HANDOFF.md](HANDOFF.md)**. The rest of this file is the original build spec, kept for history.

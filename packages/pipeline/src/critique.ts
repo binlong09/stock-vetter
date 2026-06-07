@@ -7,8 +7,8 @@ import {
   type ExtractedAnalysis,
   type FinancialSnapshot,
 } from '@stock-vetter/schema';
-import { llmCallJson, type CostTracker } from './llm.js';
-import { loadPrompt, type PromptName } from './prompts.js';
+import { llmCallJson, type CostTracker } from '@stock-vetter/core';
+import { loadPrompt, type PromptName } from '@stock-vetter/core';
 
 const FindingArray = z.array(CritiqueFinding);
 const StressTestArray = z.array(StressTestFinding);

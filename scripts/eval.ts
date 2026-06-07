@@ -89,7 +89,11 @@ async function main() {
     ? process.argv[process.argv.indexOf('--cases') + 1]!
     : 'scripts/eval-cases.json';
 
-  const cases: Case[] = JSON.parse(await readFile(casesPath, 'utf-8'));
+  // eval-cases.json now also holds Signal Tracker cases (kind: "signal") used
+  // by the Phase 2 hand-check record. This video-pipeline harness only runs the
+  // video cases; skip anything tagged with a non-video kind.
+  const rawCases = JSON.parse(await readFile(casesPath, 'utf-8')) as Array<Case & { kind?: string }>;
+  const cases: Case[] = rawCases.filter((c) => c.kind === undefined);
 
   const results: Result[] = [];
   for (const c of cases) {

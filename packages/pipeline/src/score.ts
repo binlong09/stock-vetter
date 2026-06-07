@@ -6,8 +6,8 @@ import {
   type ExtractedAnalysis,
   type FinancialSnapshot,
 } from '@stock-vetter/schema';
-import { llmCallJson, type CostTracker } from './llm.js';
-import { loadPrompt } from './prompts.js';
+import { llmCallJson, type CostTracker } from '@stock-vetter/core';
+import { loadPrompt } from '@stock-vetter/core';
 
 export async function scoreAnalysis(opts: {
   extraction: ExtractedAnalysis;

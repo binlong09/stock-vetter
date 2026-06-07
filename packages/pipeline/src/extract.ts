@@ -1,6 +1,6 @@
 import { ExtractedAnalysis, type VideoBundle } from '@stock-vetter/schema';
-import { llmCallJson, type CostTracker } from './llm.js';
-import { loadPrompt } from './prompts.js';
+import { llmCallJson, type CostTracker } from '@stock-vetter/core';
+import { loadPrompt } from '@stock-vetter/core';
 import { formatTranscriptForLLM } from './transcript-format.js';
 
 export async function extractAnalysis(opts: {

@@ -21,10 +21,10 @@ import {
   type PrimaryDimensionKey,
 } from '@stock-vetter/schema';
 import { runPrimarySourcePass1 } from '../packages/pipeline/src/primary-source.js';
-import { fetchFinancialSnapshot } from '../packages/pipeline/src/financials.js';
-import { buildReverseDcf } from '../packages/pipeline/src/reverse-dcf.js';
+import { fetchFinancialSnapshot } from '@stock-vetter/core';
+import { buildReverseDcf } from '@stock-vetter/core';
 import { verifyChecklistCitations } from '../packages/pipeline/src/citation-verifier.js';
-import { newCostTracker, summarizeCost } from '../packages/pipeline/src/llm.js';
+import { newCostTracker, summarizeCost } from '@stock-vetter/core';
 
 const HAIKU = 'claude-haiku-4-5-20251001';
 

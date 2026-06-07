@@ -15,7 +15,7 @@ import {
   type PrimarySourceCitation,
   type PrimarySourceSkeptic,
 } from '@stock-vetter/schema';
-import { getSecSection } from './cache.js';
+import { getSecSection } from '@stock-vetter/core';
 
 // Match strength tiers, from strongest to weakest. Anything below
 // `punctuation-normalized` means the underlying text isn't in the source —

@@ -1,6 +1,6 @@
 import type { VideoBundle } from '@stock-vetter/schema';
-import { llmCall, type CostTracker } from './llm.js';
-import { loadPrompt } from './prompts.js';
+import { llmCall, type CostTracker } from '@stock-vetter/core';
+import { loadPrompt } from '@stock-vetter/core';
 import { formatTranscriptForLLM, reparseTranscript } from './transcript-format.js';
 
 /**

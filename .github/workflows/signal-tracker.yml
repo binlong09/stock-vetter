@@ -1,0 +1,67 @@
+name: Signal Tracker
+
+# Daily cursor-gated run: ingest new SEC filings + FMP estimates/revisions,
+# diff against the Turso cursor, evaluate ONLY new events, update tripwire
+# state, persist to Turso. Steady-state runs are cents (only genuinely new
+# events are evaluated); the cold-start guard in track.ts prevents a newly
+# added thesis/ticker from running its whole backlog by accident.
+#
+# The cron is the AUTHORITATIVE writer (track.ts takes a Turso run-lock with
+# holder=cron). Avoid concurrent manual `pnpm track` runs while this is active.
+
+on:
+  schedule:
+    # 06:30 UTC daily — after US market close + overnight filing/estimate
+    # updates settle. Cron has no market-hours awareness; daily cadence is the
+    # point (this tool should make you act less, not more).
+    - cron: '30 6 * * *'
+  workflow_dispatch:
+    inputs:
+      since:
+        description: 'SEC lookback start (YYYY-MM-DD). Leave blank for the 1-year default.'
+        required: false
+        type: string
+      allow_backlog:
+        description: 'Evaluate a full cold-start backlog (skips the cost guard).'
+        required: false
+        type: boolean
+        default: false
+
+# Never let two runs write cursors at once.
+concurrency:
+  group: signal-tracker
+  cancel-in-progress: false
+
+jobs:
+  track:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Run the tracker (cursor-gated, cron is authoritative writer)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          FMP_API_KEY: ${{ secrets.FMP_API_KEY }}
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+          # SEC requires an identifying UA. Set this repo/org secret to
+          # "Your Name your@email.com" form.
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+        run: |
+          ARGS="--holder cron"
+          if [ -n "${{ inputs.since }}" ]; then ARGS="$ARGS --since ${{ inputs.since }}"; fi
+          if [ "${{ inputs.allow_backlog }}" = "true" ]; then ARGS="$ARGS --allow-backlog"; fi
+          echo "Running: pnpm track $ARGS"
+          pnpm track $ARGS

@@ -16,7 +16,7 @@
 
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { writeCacheEntry } from './cache.js';
+import { writeCacheEntry } from '@stock-vetter/core';
 
 const NAMESPACE = 'variance-history';
 

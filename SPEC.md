@@ -1,373 +1,185 @@
-# Stock Vetter — Project Spec
-
-## What this is
-
-A tool that takes a YouTube video of a fundamental stock analysis, extracts the analyst's thesis, runs an LLM critique against current financials, and produces a single quantified "decision card" with a 1–10 score, weighted pros/cons, and a list of things to verify yourself.
-
-Built for value investing on established companies. Not a stock recommender. A second-pass critic that compresses 3 hours of due diligence into 5 minutes of focused review.
-
-## Stack
-
-- **Runtime**: Node.js 20+ (TypeScript)
-- **Frontend**: Next.js 14 (App Router) + Tailwind
-- **Database**: Turso (SQLite at edge) — already familiar from reseller project
-- **Hosting**: Vercel
-- **LLM**: Anthropic API, `claude-sonnet-4-6` for extraction and critique
-- **Transcripts**: `youtube-transcript-api` (Python script invoked from Node) OR `youtubei.js` (pure Node)
-- **Financials**: `yahoo-finance2` (Node, free) for prices/multiples; SEC EDGAR API for 10-year history
-
-Use TypeScript end-to-end. No Python services unless `youtube-transcript-api` is meaningfully more reliable than `youtubei.js` — try the Node option first.
-
-## Repository layout
-
-```
-stock-vetter/
-├── apps/
-│   └── web/                    # Next.js app
-│       ├── app/
-│       │   ├── page.tsx        # Dashboard (list of decision cards)
-│       │   ├── video/[id]/     # Detail view
-│       │   ├── new/            # Submit new video URL
-│       │   └── api/
-│       │       ├── ingest/     # POST URL → kicks off pipeline
-│       │       └── videos/     # CRUD on stored videos
-│       └── components/
-│           ├── DecisionCard.tsx
-│           ├── ScoreBreakdown.tsx
-│           └── ProsConsTable.tsx
-├── packages/
-│   ├── pipeline/               # Core pipeline (no Next.js deps)
-│   │   ├── src/
-│   │   │   ├── transcript.ts   # YouTube transcript fetch
-│   │   │   ├── financials.ts   # Yahoo + SEC data
-│   │   │   ├── extract.ts      # LLM pass 1: structured extraction
-│   │   │   ├── critique.ts     # LLM pass 2: multi-angle critique
-│   │   │   ├── score.ts        # Compute weighted score
-│   │   │   ├── normalize.ts    # Clean garbled transcript proper nouns
-│   │   │   └── orchestrate.ts  # Top-level pipeline runner
-│   │   └── prompts/            # All prompts as .md files
-│   │       ├── normalize.md
-│   │       ├── extract.md
-│   │       ├── critique-consistency.md
-│   │       ├── critique-stress-test.md
-│   │       ├── critique-comps.md
-│   │       ├── critique-missing-risks.md
-│   │       ├── critique-value-checklist.md
-│   │       └── score.md
-│   └── schema/
-│       └── src/
-│           └── types.ts        # Zod schemas + TS types
-├── scripts/
-│   ├── run-pipeline.ts         # CLI: run pipeline on a URL, print card
-│   └── eval.ts                 # Run on known-opinion stocks, compare
-├── .env.example
-├── package.json
-└── README.md
-```
-
-Use a pnpm workspace. The pipeline package must be runnable standalone (no Next.js coupling) so the CLI works without the web app.
-
-## Build order (strict)
-
-Do not skip ahead. Each phase has a checkpoint where you stop and verify before moving on.
-
-### Phase 1: Pipeline core, CLI only
-
-1. `transcript.ts` — given a YouTube URL, return `{ videoId, title, channel, channelId, publishedAt, description, tags, chapters[], transcript, durationSeconds }`. Chapters parsed from description timestamps. Handle missing captions gracefully (throw a typed `MissingCaptionsError`). `channelId` is captured separately from `channel` (name) per the Future direction constraint #5. Implementation: try `youtubei.js` first; if it fails on a video, fall back to spawning `yt-dlp --write-auto-sub --skip-download --sub-lang en` and parsing the resulting VTT.
-2. `financials.ts` — given a ticker, return `FinancialSnapshot` (see schema). 10 years of annual data + last 4 quarters + current price/multiples. If ticker unknown, return null and let the pipeline degrade gracefully.
-3. `normalize.ts` — single LLM call to fix garbled proper nouns using description + tags as context. Cheap. Skip if transcript was manually uploaded (heuristic: very few all-caps clusters, normal punctuation).
-4. `extract.ts` — LLM call producing `ExtractedAnalysis` (see schema). Strict JSON output, validated with Zod.
-5. `critique.ts` — five separate LLM calls, one per critique angle, each returning structured findings. Run in parallel. The comps critique requires a peer set; peers are configured in `comps.ts` as a hand-edited `TICKER_PEERS` map. When a ticker has no peers configured, the comps critique is skipped and a single "config gap" finding is surfaced rather than running with a guess.
-6. `score.ts` — deterministic function: takes extraction + critiques + financials, calls LLM once to produce `ScoredAnalysis` with the rubric below. The LLM must cite for every score.
-7. `orchestrate.ts` — wires the above into one pipeline. Returns the full `DecisionCard`.
-
-**Checkpoint 1**: Run `scripts/run-pipeline.ts` against the Sea Limited video. Output should be a markdown decision card to stdout. Verify by reading it: do the scores make sense? Do citations point to real transcript moments?
-
-### Phase 2: Storage + persistence
-
-8. Turso schema + migrations. Tables: `videos`, `extractions`, `critiques`, `scores`, `decision_cards`. Store everything keyed by `videoId`. Pipeline writes once; UI reads many times.
-9. `scripts/eval.ts` — run pipeline on 3 stocks where you have a prior opinion. Diff the verdict bucket against your prior. Log disagreements with the LLM's reasoning.
-
-**Checkpoint 2**: At least 5 videos stored. Eval script shows where LLM agrees/disagrees with you. If disagreement rate is >50%, prompts need tuning before moving on.
-
-### Phase 3: Web app
-
-10. `app/new/page.tsx` — form: paste URL, submit, see progress.
-11. `app/api/ingest/route.ts` — kicks off pipeline. Long-running, so use streaming response or a job queue. For v1, just block (videos are <60s to process) and stream status updates.
-12. `app/page.tsx` — dashboard. List of decision cards sorted by score. Filter by channel, ticker, date, verdict bucket.
-13. `app/video/[id]/page.tsx` — detail view. Full decision card with all score citations expandable.
-14. Components: `DecisionCard`, `ScoreBreakdown`, `ProsConsTable`, `RealityCheck`.
-
-**Checkpoint 3**: 10+ videos in dashboard, can submit new ones via UI, detail view shows everything.
-
-### Phase 4: Watchlist re-run (later)
-
-15. Cron job that re-runs the *critique + score* (not extraction — transcript doesn't change) against fresh financials weekly. Diff scores over time. Surface drift.
-
-Skip this until Phases 1–3 are solid.
-
-## Schemas
-
-See `packages/schema/src/types.ts`. Highlights:
-
-```typescript
-type FinancialSnapshot = {
-  ticker: string;
-  asOf: string; // ISO date
-  price: number;
-  marketCap: number;
-  enterpriseValue: number;
-  netCash: number;
-  // Current multiples
-  peRatio: number | null;
-  evEbit: number | null;
-  evSales: number | null;
-  fcfYield: number | null;
-  // 10-year medians for comparison
-  peRatio10yMedian: number | null;
-  evEbit10yMedian: number | null;
-  // Annual history (10 years)
-  annual: Array<{
-    year: number;
-    revenue: number;
-    ebit: number;
-    netIncome: number;
-    fcf: number;
-    sharesOutstanding: number; // tracks dilution
-    roic: number | null;
-    debtToEquity: number | null;
-  }>;
-  // Quality flags
-  isProfitable: boolean;
-  hasPositiveFcf: boolean;
-  // Computed over a 3-year window to smooth one-off events (single buyback, secondary).
-  // CAGR > +2%/yr → growing, < −1%/yr → shrinking, else flat.
-  shareCountTrend: 'shrinking' | 'flat' | 'growing';
-};
-
-type ExtractedAnalysis = {
-  ticker: string;
-  companyName: string;
-  analyst: string;
-  videoDate: string;
-  thesisOneLiner: string;
-  segments: Array<{
-    name: string;
-    revenue?: number;
-    ebit?: number;
-    growthRate?: number;
-    keyDrivers: string[];
-    citation: { startSec: number; endSec: number };
-  }>;
-  competitiveLandscape: Array<{
-    competitor: string;
-    threatLevel: 'low' | 'medium' | 'high';
-    analystView: string;
-    citation: { startSec: number; endSec: number };
-  }>;
-  risks: Array<{
-    risk: string;
-    severity: 'low' | 'medium' | 'high';
-    analystAddressedWell: boolean;
-    citation: { startSec: number; endSec: number };
-  }>;
-  valuation: {
-    method: string; // "DCF" | "10-year compounding" | "comps" | etc.
-    timeHorizonYears: number;
-    keyAssumptions: Array<{
-      assumption: string;
-      value: string;
-      analystConfidence: 'low' | 'medium' | 'high';
-      citation: { startSec: number; endSec: number };
-    }>;
-    impliedReturn?: { low: number; high: number };
-    impliedPriceTarget?: number;
-  };
-  qualitativeFactors: {
-    managementQuality: string;
-    moat: string;
-    insiderOwnership: string | null;
-    capitalAllocation: string;
-  };
-};
-
-type CritiqueFinding = {
-  type: 'agree' | 'partial' | 'disagree' | 'missing';
-  topic: string;
-  analystClaim: string;
-  llmPushback: string;
-  severity: 'nit' | 'concern' | 'blocker';
-  evidence: string; // financial data or transcript citation
-};
-
-// Stress-test findings carry a richer structure than the prompt's bear/base/bull triple
-// because the LLM emits per-direction rationale + per-direction return delta.
-type StressTestFinding = {
-  assumption: string;
-  baseValue: string;
-  bearCase: { value: string; rationale: string; impliedReturnDelta: number };
-  bullCase: { value: string; rationale: string; impliedReturnDelta: number };
-  sensitivity: 'low' | 'medium' | 'high';
-};
-
-type Critiques = {
-  consistency: CritiqueFinding[];
-  stressTest: StressTestFinding[];
-  comps: CritiqueFinding[];                // Empty + a "config gap" finding when no peers configured.
-  missingRisks: CritiqueFinding[];
-  valueChecklist: {
-    moatDurability: { score: 1|2|3|4|5; rationale: string };
-    ownerEarningsQuality: { score: 1|2|3|4|5; rationale: string };
-    capitalAllocation: { score: 1|2|3|4|5; rationale: string };
-    insiderAlignment: { score: 1|2|3|4|5; rationale: string };
-    debtSustainability: { score: 1|2|3|4|5; rationale: string };
-    cyclicalityAwareness: { score: 1|2|3|4|5; rationale: string };
-  };
-};
-
-// Each scored dimension is a discriminated union: either a numeric score with
-// rationale + citations, OR a sentinel marking the dimension insufficient.
-// Downstream code MUST pattern-match on the union explicitly. Any single
-// dimension being insufficient flips the overall verdict to "Insufficient Data".
-type ScoredDimension =
-  | { value: number; rationale: string; citations: string[] }
-  | { value: 'insufficient'; reason: string };
-
-type ScoredAnalysis = {
-  scores: {
-    businessQuality: ScoredDimension;
-    financialHealth: ScoredDimension;
-    valuationAttractiveness: ScoredDimension;
-    marginOfSafety: ScoredDimension;
-    analystRigor: ScoredDimension;
-  };
-  weightedScore: number;
-  verdict: 'Strong Candidate' | 'Watchlist' | 'Pass' | 'Insufficient Data';
-  prosConsTable: Array<{
-    topic: string;
-    analystView: string;
-    llmPushback: string;
-    agreement: 'agree' | 'partial' | 'disagree';
-  }>;
-  thingsToVerify: string[];
-  // Phase 1: always null. Phase 2 will wire up historical price data and
-  // post-video event lookups alongside the database.
-  realityCheck: string | null;
-};
-
-type DecisionCard = {
-  videoId: string;
-  ticker: string;       // Indexed in Phase 2 — decision cards are keyed by (ticker, videoId).
-  channelId: string;    // Captured at ingest for future analyst-rigor weighting in meta-cards.
-  generatedAt: string;
-  extraction: ExtractedAnalysis;
-  critiques: Critiques;
-  scored: ScoredAnalysis;
-  financialSnapshot: FinancialSnapshot | null;  // null when ticker is unknown.
-};
-```
-
-## Scoring weights (config, not hardcoded)
-
-```typescript
-export const DEFAULT_WEIGHTS = {
-  marginOfSafety: 0.30,
-  valuationAttractiveness: 0.25,
-  businessQuality: 0.20,
-  financialHealth: 0.15,
-  analystRigor: 0.10,
-};
-```
-
-Surface these in a settings page eventually. For v1, hardcoded is fine.
-
-## Verdict bucketing
-
-`anyInsufficient` is computed by pattern-matching on the `ScoredDimension` union — any dimension whose `value` is `'insufficient'` flips the verdict regardless of weighted score.
-
-```typescript
-function isInsufficient(d: ScoredDimension): d is { value: 'insufficient'; reason: string } {
-  return d.value === 'insufficient';
-}
-
-function verdict(scores: ScoredAnalysis['scores'], weighted: number): Verdict {
-  if (Object.values(scores).some(isInsufficient)) return 'Insufficient Data';
-  if (weighted >= 8.0) return 'Strong Candidate';
-  if (weighted >= 6.0) return 'Watchlist';
-  return 'Pass';
-}
-```
-
-The weighted-score helper excludes insufficient dimensions from the sum (they re-route to "Insufficient Data" anyway).
-
-## Cost ceiling per video
-
-Target: under $0.50 per video on Sonnet 4.6.
-
-Breakdown:
-- Normalize: ~$0.03
-- Extract: ~$0.10
-- Critique × 5 (parallel): ~$0.20 total
-- Score: ~$0.05
-- Buffer: ~$0.10
-
-If a single video exceeds $0.75, log a warning. If it exceeds $1.50, abort and surface to user.
-
-## Caching rules
-
-- Transcript: cache forever, keyed by `videoId`
-- Financial snapshot: cache 24h, keyed by `ticker`
-- Extraction: cache forever (transcript doesn't change)
-- Critique: re-run when financial snapshot is stale (>7 days)
-- Score: re-run whenever critique re-runs
-
-## Error handling
-
-Fail loudly with typed errors. The pipeline should never silently produce a half-formed decision card. If extraction fails Zod validation, retry once with the validation error appended to the prompt; on second failure, surface to user with the raw LLM output for debugging.
-
-## Eval harness (don't skip this)
-
-`scripts/eval.ts` takes a list of `{ ticker, your_view: 'buy' | 'avoid' | 'unsure', notes: string }`. Runs pipeline on 1–2 representative videos per ticker. Outputs:
-
-```
-Ticker | Your view | LLM verdict | Agreement | LLM's main pushback
-SE     | unsure    | Watchlist   | ✓         | Lending book growth pace
-KO     | avoid     | Pass        | ✓         | Limited growth runway
-BRK.B  | buy       | Watchlist   | partial   | Succession risk weight
-```
-
-Run this every time you change a prompt. If a prompt change flips agreement on a stock, decide deliberately whether the new behavior is right.
-
-## What NOT to build in v1
-
-- Multi-user accounts. Single user (you).
-- Auto-discovery of new videos from channels. Manual URL submission only.
-- Slack/email alerts. Just the dashboard.
-- Portfolio tracking. This is a vetting tool, not a portfolio manager.
-- Backtesting LLM scores against actual stock returns. Tempting, but the sample size won't be meaningful for years.
-
-## Open questions for you to resolve before coding
-
-1. Are you OK with sending transcripts to Anthropic's API? (Probably yes given existing usage, but worth confirming.)
-2. Turso vs. local SQLite for v1? Local is simpler; Turso is better if you want it on Vercel.
-3. Do you want the dashboard public or behind auth? If public, no PII in transcripts is fine; if you add personal notes, add auth.
-
-Ship Phase 1 first. Don't touch the web app until the CLI produces decision cards you trust on 5+ videos.
-
-## Future direction (read before designing schema)
-
-A future phase will add **per-ticker meta-cards**: a single view that aggregates multiple analysts' decision cards for the same stock and produces a consensus view, divergence highlights, a rigor-weighted aggregate score, and a primary-source freshness check that compares the analysts' factual claims against the latest 10-K and earnings calls.
-
-This is not built in Phase 1 or Phase 2. But the schema decisions made now must not foreclose it. Specifically:
-
-1. **Decision cards are keyed by `(ticker, videoId)`**, not by `videoId` alone. Phase 2's database schema must reflect this. A `videos` table is fine; a `decision_cards` table must include `ticker` as an indexed column. Eventually a `tickers` table will be added with a `meta_card` JSON column that's null until the meta-card feature ships.
-
-2. **Extraction must capture quantitative claims with enough precision to fact-check later.** When the analyst says "Sea has $10B net cash" or "lending book grew 80% YoY", the extraction must store the specific number, not a paraphrase like "strong cash position" or "rapid lending growth". If Phase 1 extraction is too vague to fact-check against a future 10-K, the fact-check pass won't work. Validate this on the Sea Limited test video: the extracted thesis should contain concrete numbers, not just qualitative summaries.
-
-3. **The `ExtractedAnalysis.valuation.keyAssumptions` field is the contract for future fact-checking.** Each assumption with a specific numeric value will become a checkable claim later. Make sure the extraction prompt produces specific, falsifiable values here ("30% topline growth for 10 years"), not abstract ones ("aggressive growth trajectory").
-
-4. **No video-centric URL routing in the web app.** When Phase 3 builds the dashboard, organize routes around tickers first (`/ticker/SE`) and videos second (`/ticker/SE/video/:id`). This way meta-cards slot in naturally at `/ticker/SE` without a routing refactor.
-
-5. **Channel metadata should be stored.** When ingesting, capture channel name and channel ID separately. The future feature weights aggregate scores by analyst rigor, which means the system needs to track which analyst said what. This is essentially free to capture now and expensive to backfill later.
-
-These five decisions cost nothing in Phase 1 but save a refactor later. Do not build the meta-card feature itself — just don't paint into a corner that prevents it.
+# Signal Tracker — Build Plan (for Claude Code)
+
+A sibling tool to **stock-vetter**, living in the same monorepo. Where stock-vetter
+vets a *company* on demand, the signal tracker watches a small set of *theses* on a
+schedule and flags when new evidence meaningfully changes one. It reuses stock-vetter's
+LLM engine, schemas, reverse-DCF, Turso push, and web viewer.
+
+> **Design principle that governs every decision below:** this is a *noise filter*, not a
+> news feed. Its job is to suppress the ~95% of market chatter that is noise and surface
+> only events that move an explicitly-encoded thesis. A "signal" = information that is
+> **predictive** (changes the probability of an outcome) **and non-consensus** (not already
+> in the price). If a phase ever turns this into a generic headline firehose, it has failed,
+> regardless of whether it runs. Build it to argue with the user, not to feed them.
+
+---
+
+## What we are reusing from stock-vetter (do NOT rebuild)
+
+From `packages/pipeline/src/`:
+- `llm.ts` — Anthropic client wrapper, cost tracking, prompt caching. Reuse as-is.
+- `prompts.ts` — `.md` prompt loader. Reuse; point it at the new signal prompts too.
+- `critique.ts` — the parallel-critique pattern (5 LLM calls in parallel). The signal
+  evaluator's adversarial step is a direct adaptation of this.
+- `score.ts` — final-synthesis pattern. The signal "judge" step adapts this.
+- `render.ts` — decision-card → markdown. Adapt into thesis-status-card → markdown.
+- `financials.ts` — Yahoo + SEC (EDGAR) fetch. Reuse the SEC path for 8-K/10-Q ingestion.
+- the **reverse-DCF** module — import it directly for the "priced-in vs gravy" check.
+
+From `packages/schema/src/`:
+- `types.ts` — extend with `Thesis`, `Signal`, `ThesisStatus` Zod schemas. Same Zod-for-all-LLM-I/O discipline.
+
+Infra patterns:
+- Turso push from the CLI (same as `analyze-ticker.ts` pushes decision cards).
+- `apps/web/` magic-link + `ALLOWED_EMAILS` allowlist + Resend — reuse for the new view and for email alerts.
+- `scripts/eval.ts` + `eval-cases.json` agreement-table harness — reuse to eval signal classification.
+
+**Decision point (do this):** extract the shared helpers (`llm.ts`, `prompts.ts`, the SEC
+fetch in `financials.ts`, and the reverse-DCF) into a `packages/core` package that both
+`packages/pipeline` and the new `packages/signals` import. If that's too invasive in one
+pass, instead export them from `packages/pipeline`'s `index.ts` and have `signals` depend on
+`pipeline`. Prefer `packages/core`; fall back to the export approach only if extraction
+balloons the diff.
+
+---
+
+## New surface area (the only genuinely new work)
+
+New package `packages/signals/src/`:
+- `feeds.ts` — pull new events for a ticker since a cursor: SEC 8-K/10-Q/10-K (reuse SEC path),
+  earnings-call transcripts (Financial Modeling Prep), analyst estimates + **estimate revisions**
+  (FMP), price (Yahoo). One adapter function per source, normalized to a common `Event` type.
+- `diff.ts` — "what changed since last check": compare fetched events against last-seen state
+  (by filing accession no. / transcript date / estimate snapshot hash) and return only new events.
+- `evaluate.ts` — the reused 3-step engine, per (Event × Thesis):
+  1. **extract** — is there a candidate signal in this event relevant to this thesis? (LLM)
+  2. **critique** — adversarial pass (adapt `critique.ts`): *Is this already priced in?
+     Is it noise dressed as signal? What's the bear reading?* Run the priced-in check with
+     two inputs: the estimate-revision trend (rising revisions ⇒ consensus catching up ⇒
+     getting priced in) and the imported reverse-DCF ("does the current price already
+     require this, or is it gravy?"). (LLM + numeric)
+  3. **judge** — does it move the thesis probability enough to surface, and in which direction?
+     (adapt `score.ts`) Output: direction (strengthens / weakens / neutral), magnitude, confidence,
+     and citations to the exact filing/transcript line.
+- `theses.ts` — thesis state model: status (`green` confirmed / `amber` watch / `red` tripped),
+  the tripwire thresholds, and the update logic.
+- `track.ts` — orchestrator: for each thesis, gather relevant new events via `diff.ts`,
+  run `evaluate.ts`, update status, collect any tripped tripwires.
+
+New data file:
+- `data/theses.json` — the encoded theses (analogous to `data/tickers.json`). Each thesis:
+  an id, a plain-English claim, the tickers/entities it depends on, the specific watch-items
+  (e.g. "TSMC capex guide direction", "hyperscaler capex guide vs prior quarter",
+  "Micron HBM sold-out window extends", "GOOGL TPU external revenue in consensus"), and a
+  tripwire threshold per watch-item. Seed it with the theses from our analysis:
+  NVDA-margin-durability, infra-cycle-still-accelerating, GOOGL-TPU-not-in-consensus.
+
+Scheduling (no server needed):
+- A **GitHub Actions cron** runs `pnpm tsx scripts/track.ts` on a schedule (e.g. daily +
+  on a webhook if you add one later), writing results to Turso. This matches the existing
+  "CLI does the work, web only reads" split and keeps Vercel/Turso on free tiers.
+
+Web (last):
+- `apps/web/app/theses/` — thesis dashboard with status chips (reuse the verdict-filter-chip
+  component) and a per-thesis detail page showing the signals, their direction/magnitude,
+  the evidence citations, and the reverse-DCF grid. Read-only, same as today.
+
+Alerts (last):
+- When a tripwire flips, send an email digest via Resend (reuse the magic-link mailer). One
+  digest per run, listing only flips — never per-event noise.
+
+---
+
+## Phases (build in order; stop at each checkpoint and verify before continuing)
+
+### Phase 0 — De-risk the paid data source (spike, ~½ day)
+Wire **only** the FMP adapter in `feeds.ts`. Prove you can pull, for one ticker (NVDA):
+the latest earnings-call transcript, current consensus estimates, and the estimate-revision
+history. Print them to stdout. No theses, no LLM, no DB.
+- **Checkpoint:** real transcript text + a revision time-series for NVDA print correctly.
+  Confirm FMP tier covers all three before spending further effort.
+
+### Phase 1 — Schema + ingestion + diff (CLI only, no LLM)
+Define the Zod schemas (`Thesis`, `Event`, `Signal`, `ThesisStatus`) in `packages/schema`.
+Build `feeds.ts` (all sources) and `diff.ts`. Encode 2–3 theses in `data/theses.json`.
+`scripts/track.ts` runs ingestion + diff and prints "new events since last run" per thesis.
+- **Checkpoint:** run it twice in a row; the second run correctly reports *no* new events.
+  Then add a stale cursor and confirm it correctly reports the backlog.
+
+### Phase 2 — The signal evaluator (the reused 3-step engine)
+Build `evaluate.ts` and the new prompts (`prompts/signal-extract.md`,
+`prompts/signal-critique.md`, `prompts/signal-judge.md`). For each new event × thesis,
+classify and write a markdown thesis-status card to `fixtures/theses/<thesis-id>.md`.
+Keep cost tracking + the warn/abort cost guards from `llm.ts`. Triple-sample the
+guidance-direction judgment (reuse the variance-reduction approach) since it's fuzzy.
+- **Checkpoint (the real gate):** hand-check on actual recent events. Feed it NVDA's last
+  capex commentary and a real GOOGL TPU news item. Read each card and answer: did it read
+  the direction the way you would? Are the citations real (point to actual transcript/filing
+  lines)? Did it correctly resist calling already-consensus news a "signal"? If ~4 of 5 are
+  right, Phase 2 is done. Wire these cases into `eval-cases.json`.
+
+### Phase 3 — Persistence + tripwire state + scheduler
+Persist thesis state and last-seen cursors in Turso (reuse the push pattern). Implement
+tripwire flips in `theses.ts`. Add the GitHub Actions cron running `scripts/track.ts`.
+- **Checkpoint:** let it run on schedule for a few days; confirm state advances correctly
+  and a manually-lowered threshold produces a flip.
+
+### Phase 4 — Web view + email alerts (only after the pipeline is trusted)
+Add `apps/web/app/theses/`. Add the Resend digest on tripwire flips.
+- **Checkpoint:** the phone view shows current thesis statuses with working citations; a
+  forced flip sends exactly one digest email.
+
+---
+
+## Non-goals (explicit — these keep it a filter, not a feed)
+- No trade execution, no buy/sell calls, no position sizing.
+- No price-target or price-direction prediction.
+- No generic news firehose: an event is only ingested if it maps to a watch-item in
+  `data/theses.json`. Untracked headlines are dropped on purpose.
+- No real-time / intraday. Daily (or event-triggered) cadence is the point — it should make
+  you act *less*, not more.
+- No new auth, no second web app, no second database. Reuse stock-vetter's.
+
+---
+
+## Data sources
+- **SEC EDGAR** — 8-K / 10-Q / 10-K. Free. Reuse `financials.ts` SEC path. Covers earnings,
+  guidance, and capex language.
+- **Financial Modeling Prep** (paid, ~$30–50/mo) — earnings-call transcripts, analyst
+  consensus estimates, **estimate revisions**, price targets. This is the one purchase.
+- **Yahoo** — price. Free. Reuse existing path.
+- **Koyfin** — NOT used in the build (no API; data export blocked by vendor). Optional human
+  dashboard only.
+- Macro/cycle watch-items (TSMC capex guide, hyperscaler capex guides) come from
+  filings/transcripts/news parsed by the LLM, not a structured field — handled by `evaluate.ts`.
+
+## Cost
+- FMP subscription: ~$30–50/mo (the only fixed cost).
+- LLM: only NEW events × relevant theses are evaluated, with the thesis context cached —
+  cents per run. Keep `llm.ts`'s per-run warn/abort thresholds.
+- Vercel / Turso / Resend / GitHub Actions: free tiers.
+
+## Style (inherit stock-vetter's)
+- Functional composition over classes. One file per concept, named after the concept.
+- Zod for all LLM I/O. Throw on unrecoverable errors; do not return error objects. No `any`.
+- All prompts as `.md` files loaded via `prompts.ts` — never inlined in code.
+- Prettier defaults.
+
+---
+
+## For Claude Code — reading order
+1. `SPEC.md` and `README.md` (existing) — learn the conventions and the existing pipeline.
+2. This file (`SIGNAL-TRACKER-PLAN.md`) in full.
+3. `packages/pipeline/src/llm.ts`, `prompts.ts`, `critique.ts`, `score.ts`, `render.ts`,
+   `financials.ts`, and the reverse-DCF module — the code you will reuse.
+4. `packages/schema/src/types.ts` — the schemas you will extend.
+5. `data/tickers.json` and `scripts/analyze-ticker.ts` — the data-file + push pattern to mirror.
+
+## Suggested first prompt to Claude Code
+> Read SPEC.md and README.md to learn the existing conventions, then read
+> SIGNAL-TRACKER-PLAN.md in full. Then read packages/pipeline/src/{llm,prompts,critique,score,render,financials}.ts,
+> the reverse-DCF module, and packages/schema/src/types.ts. Do Phase 0 only: add a Financial
+> Modeling Prep adapter in a new packages/signals/src/feeds.ts and prove you can fetch NVDA's
+> latest earnings transcript, consensus estimates, and estimate-revision history to stdout.
+> No theses, no LLM, no DB yet. Stop at the Phase 0 checkpoint so I can confirm the FMP tier
+> covers all three before we go further.

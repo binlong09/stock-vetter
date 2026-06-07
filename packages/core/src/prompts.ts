@@ -2,9 +2,8 @@ import { readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// Prompts live at the repo root (../../prompts/ relative to the package),
-// per README's resolution. Resolved from this source file:
-//   packages/pipeline/src/prompts.ts → ../../../prompts/
+// Prompts live at the repo root. Resolved from this source file:
+//   packages/core/src/prompts.ts → ../../../prompts/  (core → packages → root)
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PROMPTS_DIR = resolve(HERE, '../../../prompts');
 
@@ -20,7 +19,11 @@ export type PromptName =
   | 'primary-source-checklist'
   | 'primary-source-skeptic'
   | 'primary-source-judge'
-  | 'meta-card';
+  | 'meta-card'
+  // Signal Tracker (packages/signals) — Phase 2 evaluator prompts.
+  | 'signal-extract'
+  | 'signal-critique'
+  | 'signal-judge';
 
 const cache = new Map<PromptName, string>();
 
