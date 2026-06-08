@@ -71,6 +71,16 @@ const ITEM_RE = /^\s*item\s+(\d+[a-z]?)\s*\.?/i;
 // Trailing page number indicates TOC entry: "Item 8.Financial Statements...82"
 const HAS_TRAILING_PAGE_NUMBER = /\d+\s*$/;
 
+// Normalize anchor text for keyword matching: lowercase, collapse whitespace,
+// and fold curly apostrophes to straight (filings use both in "Management's").
+function normalizeAnchorText(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/[‘’]/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function styleHasBold(style: string): boolean {
   // SEC filings often use inline styles. font-weight:700 or font-weight:bold both indicate bold.
   // Treat anything >=600 as bold-ish.
@@ -334,7 +344,25 @@ export function parseFiling(html: string, items: ItemDef[], options: ParseOption
   const chosenAnchors: { item: ItemDef; anchor: AnchorCandidate; rejected: AnchorCandidate[] }[] = [];
   const missing: string[] = [];
   for (const item of items) {
-    const cands = dedupeNestedAnchors(candidatesByItem.get(item.itemNumber) ?? []);
+    let cands = dedupeNestedAnchors(candidatesByItem.get(item.itemNumber) ?? []);
+    // Title-keyword disambiguation for cross-Part item-number collisions. On a
+    // 10-Q, "Item 2" is both Part I MD&A and Part II Unregistered Sales (and
+    // "Item 1" is both Part I Financial Statements and Part II Legal
+    // Proceedings); the bare-number scorer can't tell them apart and tie-break
+    // by position picks the wrong (Part II) one. When an item declares
+    // `titleKeywords`, prefer candidates whose anchor text actually contains one
+    // of the section's title words ("management's discussion", "financial
+    // statements"). This needs no Part-boundary detection — the title is the
+    // discriminator. Skipped entirely for items without `titleKeywords` (every
+    // 10-K item; 10-Q risk-factors), so 10-K parsing is byte-identical. Falls
+    // back to all candidates if none match the title, so it never forces a miss.
+    if (item.titleKeywords && item.titleKeywords.length && cands.length > 1) {
+      const titled = cands.filter((c) => {
+        const t = normalizeAnchorText(c.text);
+        return item.titleKeywords!.some((kw) => t.includes(kw));
+      });
+      if (titled.length) cands = titled;
+    }
     if (!cands.length) {
       missing.push(item.id);
       continue;
