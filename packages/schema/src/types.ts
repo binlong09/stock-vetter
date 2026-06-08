@@ -481,6 +481,19 @@ export const TenqDelta = z.object({
   // from the annual baseline. Empty-ish when nothing material changed.
   summary: z.string(),
   changes: z.array(TenqChange),
+  // Scoped headline that states what was ACTUALLY assessed — e.g.
+  // "10 changes" when full coverage, or "10 risk-factor changes; MD&A not
+  // assessed" when a depended-on section failed extraction. The card shows this
+  // verbatim so a reader scanning only the count sees the honest scope without
+  // reading a footnote. Computed from section confidence, never the model.
+  headline: z.string(),
+  // Data-quality stamp: one entry per depended-on section (MD&A, risk factors)
+  // that failed extraction or was missing, so the limitation is visible on the
+  // card rather than hidden behind a confident change count. Empty when both
+  // compared sections parsed cleanly. Same spirit as the SEC dataQuality note
+  // and the transcript-normalization stamp. NOTE: this flags an extraction
+  // failure; it does not fix the parser.
+  coverageWarnings: z.array(z.string()),
 });
 export type TenqDelta = z.infer<typeof TenqDelta>;
 

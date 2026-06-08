@@ -40,7 +40,7 @@ import { buildReverseDcf, renderReverseDcfMarkdown } from '@stock-vetter/core';
 import { buildMetaCard } from '../packages/pipeline/src/meta-card.js';
 import { renderMetaCardMarkdown } from '../packages/pipeline/src/meta-card-render.js';
 import { DecisionCard, type FinancialSnapshot, type MetaCard, type PrimarySourceChecklist, type PrimarySourceJudgment, type PrimarySourceSkeptic, type ReverseDcfReport } from '@stock-vetter/schema';
-import { isTursoConfigured, pushTickerFromFixtures, fetchEarningsTranscriptBundle, runTenqDelta, type TenqDeltaSourceText } from '@stock-vetter/pipeline';
+import { isTursoConfigured, pushTickerFromFixtures, fetchEarningsTranscriptBundle, runTenqDelta, type TenqDeltaSourceText, type SectionConfidence } from '@stock-vetter/pipeline';
 import { mostRecentQuarter } from '@stock-vetter/signals';
 import { getSecSection } from '@stock-vetter/core';
 
@@ -211,14 +211,23 @@ async function processProxy(ticker: string): Promise<void> {
 }
 
 // Load the MD&A + risk-factor text for a filing from the SEC section cache
-// (populated when processSec ran fetchAndParseFiling for this accession). Missing
-// sections come back null and the delta pass treats them as unavailable.
-async function loadDeltaSections(accession: string): Promise<TenqDeltaSourceText> {
+// (populated when processSec ran fetchAndParseFiling for this accession), along
+// with each section's parser confidence from the FilingMeta so the delta pass
+// can refuse to mine a section that failed extraction and stamp the limitation
+// on the card. A section absent from meta.sections is reported as 'missing'.
+async function loadDeltaSections(meta: FilingMeta): Promise<TenqDeltaSourceText> {
   const [mda, riskFactors] = await Promise.all([
-    getSecSection<string>(accession, 'mda'),
-    getSecSection<string>(accession, 'risk-factors'),
+    getSecSection<string>(meta.accession, 'mda'),
+    getSecSection<string>(meta.accession, 'risk-factors'),
   ]);
-  return { mda, riskFactors };
+  const confOf = (id: string): SectionConfidence =>
+    (meta.sections.find((s) => s.id === id)?.confidence as SectionConfidence | undefined) ?? 'missing';
+  return {
+    mda,
+    riskFactors,
+    mdaConfidence: confOf('mda'),
+    riskFactorsConfidence: confOf('risk-factors'),
+  };
 }
 
 // ADDITIVE 10-Q-vs-10-K change-detection pass. Runs independently of the scoring
@@ -235,8 +244,8 @@ async function processTenqDelta(
   );
   try {
     const [tenkText, tenqText] = await Promise.all([
-      loadDeltaSections(tenK.accession),
-      loadDeltaSections(tenQ.accession),
+      loadDeltaSections(tenK),
+      loadDeltaSections(tenQ),
     ]);
     if (!tenqText.mda && !tenqText.riskFactors) {
       console.error('[ticker] 10-Q delta skipped: 10-Q has no MD&A or risk-factor text');
@@ -245,10 +254,13 @@ async function processTenqDelta(
     const result = await runTenqDelta({ tenkMeta: tenK, tenqMeta: tenQ, tenkText, tenqText, tracker });
     const v = result.verification;
     console.error(
-      `[ticker] 10-Q delta: ${result.delta.changes.length} change(s); ` +
+      `[ticker] 10-Q delta: ${result.delta.headline}; ` +
         `citations resolved ${v.resolved}/${v.total} ` +
         `(10-Q no-match ${v.tenqNoMatch}, 10-K no-match ${v.tenkNoMatch}, truncated ${v.truncatedQuotes})`,
     );
+    for (const w of result.delta.coverageWarnings) {
+      console.error(`[ticker] 10-Q delta COVERAGE: ${w}`);
+    }
     if (v.tenqNoMatch > 0 || v.tenkNoMatch > 0) {
       console.error('[ticker] 10-Q delta WARNING: some citations did not resolve to source text');
     }
@@ -548,7 +560,7 @@ async function main() {
   console.error(`  10-Q: ${results.tenQ ? `${results.tenQ.sections.length} sections` : 'failed'}`);
   if (results.tenqDelta) {
     const v = results.tenqDelta.verification;
-    console.error(`  10-Q delta: ${results.tenqDelta.delta.changes.length} change(s), citations resolved ${v.resolved}/${v.total}`);
+    console.error(`  10-Q delta: ${results.tenqDelta.delta.headline}, citations resolved ${v.resolved}/${v.total}`);
   }
   if (results.metaCard) {
     console.error(`  decision: ${results.metaCard.verdict} (${results.metaCard.weightedScore.toFixed(1)} / 10)`);

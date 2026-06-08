@@ -50,11 +50,32 @@ const TenqDeltaLlmOutput = z.object({
 // (current) companyfacts-driven reverse DCF, so we deliberately exclude them.
 const COMPARED_SECTIONS = ['mda', 'risk-factors'] as const;
 
+// Confidence in a parsed section, mirroring FilingMeta.sections[].confidence.
+// 'missing' is our local addition for a section the parser didn't emit at all.
+export type SectionConfidence = 'high' | 'low' | 'failed' | 'missing';
+
 export type TenqDeltaSourceText = {
   // Section id → text, for one filing. Missing/empty sections are simply absent.
   mda: string | null;
   riskFactors: string | null;
+  // Parser confidence per section, so the pass can refuse to mine a section that
+  // failed extraction (e.g. a 10-Q MD&A mis-anchored to Part II) and stamp the
+  // limitation on the card. Defaults to 'high' when unknown, preserving prior
+  // behavior for callers that don't supply confidence.
+  mdaConfidence?: SectionConfidence;
+  riskFactorsConfidence?: SectionConfidence;
 };
+
+// A section is reliable for change-detection only when it parsed at high or low
+// confidence AND has text. 'failed'/'missing' means do not mine it.
+function sectionReliable(
+  text: string | null,
+  confidence: SectionConfidence | undefined,
+): boolean {
+  if (!text || text.trim().length === 0) return false;
+  const c = confidence ?? 'high';
+  return c === 'high' || c === 'low';
+}
 
 export type TenqDeltaVerification = {
   total: number;
@@ -121,14 +142,85 @@ function isResolved(tier: QuoteResolution): boolean {
   return tier !== 'no-match';
 }
 
+function confidenceFor(src: TenqDeltaSourceText, section: string): SectionConfidence | undefined {
+  if (section === 'mda') return src.mdaConfidence;
+  if (section === 'risk-factors') return src.riskFactorsConfidence;
+  return undefined;
+}
+
+// Build the per-filing text block for the prompt. A section that failed
+// extraction is NOT pasted as if it were real content — instead we emit an
+// explicit DO-NOT-USE marker so the model is told (not left to infer) that the
+// text is unreliable and must not be mined. This makes the MSFT-style "model
+// happened to notice the garbage" save a guarantee rather than luck.
 function buildFilingBlock(label: string, src: TenqDeltaSourceText): string {
   const parts: string[] = [`### ${label}`];
   for (const section of COMPARED_SECTIONS) {
     const text = sectionTextFor(src, section);
+    const reliable = sectionReliable(text, confidenceFor(src, section));
     parts.push(`\n#### section id: ${section}`);
-    parts.push(text && text.trim().length > 0 ? text : '(not available in this filing)');
+    if (!text || text.trim().length === 0) {
+      parts.push('(not available in this filing — do not invent changes for this section)');
+    } else if (!reliable) {
+      parts.push(
+        `(UNRELIABLE: this section failed extraction and the text below is mis-parsed — ` +
+          `DO NOT use it as a source of changes or citations. Do not report any change whose ` +
+          `citation would come from this section.)`,
+      );
+    } else {
+      parts.push(text);
+    }
   }
   return parts.join('\n');
+}
+
+// Human label for a section id, for warning text.
+const SECTION_LABEL: Record<string, string> = {
+  mda: 'MD&A',
+  'risk-factors': 'risk factors',
+};
+
+// Derive coverage warnings and which sections were actually assessable. We key
+// off the 10-Q (quarter) side — that's the document whose changes we mine — but
+// also warn if the 10-K baseline section is unusable. mdaAssessed gates the
+// headline so the count states honest scope.
+function computeCoverage(
+  tenqText: TenqDeltaSourceText,
+  tenkText: TenqDeltaSourceText,
+): { coverageWarnings: string[]; mdaAssessed: boolean } {
+  const warnings: string[] = [];
+  let mdaAssessed = true;
+
+  for (const section of COMPARED_SECTIONS) {
+    const label = SECTION_LABEL[section] ?? section;
+    const qReliable = sectionReliable(sectionTextFor(tenqText, section), confidenceFor(tenqText, section));
+    const kReliable = sectionReliable(sectionTextFor(tenkText, section), confidenceFor(tenkText, section));
+    if (!qReliable) {
+      const conf = confidenceFor(tenqText, section) ?? 'missing';
+      warnings.push(
+        `10-Q ${label} incompletely parsed (section ${conf === 'missing' ? 'missing' : 'failed extraction'}) — ` +
+          `${label} change detection not performed.`,
+      );
+      if (section === 'mda') mdaAssessed = false;
+    } else if (!kReliable) {
+      const conf = confidenceFor(tenkText, section) ?? 'missing';
+      warnings.push(
+        `10-K baseline ${label} incompletely parsed (section ${conf === 'missing' ? 'missing' : 'failed extraction'}) — ` +
+          `${label} changes could not be compared against the annual baseline.`,
+      );
+      if (section === 'mda') mdaAssessed = false;
+    }
+  }
+  return { coverageWarnings: warnings, mdaAssessed };
+}
+
+// Scope the headline count to what was assessed. When MD&A wasn't assessed, the
+// changes can only be risk-factor changes, so say so in the count itself.
+function buildHeadline(changeCount: number, mdaAssessed: boolean): string {
+  const noun = changeCount === 1 ? 'change' : 'changes';
+  if (mdaAssessed) return `${changeCount} ${noun}`;
+  const rfNoun = changeCount === 1 ? 'risk-factor change' : 'risk-factor changes';
+  return `${changeCount} ${rfNoun}; MD&A not assessed`;
 }
 
 /**
@@ -193,6 +285,14 @@ export async function runTenqDelta(args: {
     tenkCitation: c.tenkCitation,
   }));
 
+  // Coverage stamp. A depended-on section is "unreliable" when the 10-Q's copy
+  // of it failed extraction (the comparison's quarter side is what we mine; a
+  // bad 10-K baseline is rarer but flagged too). We compute warnings + a scoped
+  // headline from confidence — never from the model — so the count on the card
+  // states what was actually assessed.
+  const { coverageWarnings, mdaAssessed } = computeCoverage(tenqText, tenkText);
+  const headline = buildHeadline(changes.length, mdaAssessed);
+
   const delta: TenqDelta = {
     tenqAccession: tenqMeta.accession,
     tenqFilingDate: tenqMeta.filingDate,
@@ -200,6 +300,8 @@ export async function runTenqDelta(args: {
     tenkFilingDate: tenkMeta.filingDate,
     summary: out.summary,
     changes,
+    headline,
+    coverageWarnings,
   };
 
   // Verify each dual citation against its OWN filing's text — never merged.

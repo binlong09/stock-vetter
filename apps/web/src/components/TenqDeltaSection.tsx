@@ -18,8 +18,17 @@ const DIRECTION_META: Record<
 };
 
 export function TenqDeltaSection({ delta }: { delta: TenqDelta }) {
+  // The collapsed header must state honest scope. When coverage is limited we
+  // fold the scoped headline into the title (e.g. "… — 10 risk-factor changes;
+  // MD&A not assessed") and drop the bare numeric count so the header never
+  // shows a misleading "10". With full coverage, keep the clean numeric count.
+  const limited = delta.coverageWarnings.length > 0;
+  const title = limited
+    ? `Changes since annual baseline (10-Q) — ${delta.headline}`
+    : 'Changes since annual baseline (10-Q)';
+
   return (
-    <DeepSection title="Changes since annual baseline (10-Q)" count={delta.changes.length}>
+    <DeepSection title={title} count={limited ? undefined : delta.changes.length}>
       <p className="mb-2 text-[11px] text-slate-400">
         Comparing 10-Q <span className="font-mono">{delta.tenqAccession}</span> (filed{' '}
         {isoDate(delta.tenqFilingDate)}) against 10-K{' '}
@@ -27,6 +36,16 @@ export function TenqDeltaSection({ delta }: { delta: TenqDelta }) {
         {isoDate(delta.tenkFilingDate)}). Change detection only — does not affect the verdict or
         dimension scores.
       </p>
+
+      {limited && (
+        <div className="mb-3 rounded-md border border-amber-300 bg-amber-50 p-2 text-[12px] text-amber-800">
+          {delta.coverageWarnings.map((w, i) => (
+            <p key={i} className={i > 0 ? 'mt-1' : ''}>
+              ⚠️ <span className="font-semibold">Coverage limitation:</span> {w}
+            </p>
+          ))}
+        </div>
+      )}
 
       {delta.summary.trim().length > 0 && (
         <p className="mb-3 text-[13px] text-slate-700">{delta.summary}</p>

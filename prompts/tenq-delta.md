@@ -14,6 +14,16 @@ Look in the MD&A and Risk Factors sections of both filings for:
 
 Quarterly housekeeping (routine restatement of accounting policies, immaterial wording edits, ordinary seasonal language) is **not** material. Be conservative: it is correct to return few changes, or none, when the quarter genuinely tracks the annual baseline. Do not manufacture changes to fill a quota.
 
+## Unreliable sections
+
+A section may be marked, in place of its text, with a parenthetical notice that it is `UNRELIABLE` (it failed extraction and the text is mis-parsed) or `not available`. When you see such a marker:
+
+- **Do not report any change whose citation would come from that section.** The marked text is not real section content — mining it would produce false changes.
+- Do not try to reconstruct the section from the marker or from other sections. Simply leave that section out of your analysis.
+- Continue normally for the sections that *do* have real text. It is correct and expected to return only risk-factor changes when the MD&A is unreliable, or vice versa.
+
+Never cite or quote from a section marked unreliable or unavailable, on either the 10-Q or the 10-K side.
+
 ## Source separation — the rule you must not break
 
 Every change you report carries **two citations**:
