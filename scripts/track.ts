@@ -40,6 +40,7 @@ import {
   type ReverseDcfReport,
   type Signal,
   type Thesis,
+  type EvaluationRecord,
 } from '@stock-vetter/schema';
 import {
   fetchTickerEvents,
@@ -60,6 +61,7 @@ import {
   loadThesisStatus,
   saveThesisStatus,
   saveSignals,
+  saveEvaluations,
   saveThesisDefinition,
   acquireRunLock,
   releaseRunLock,
@@ -353,6 +355,7 @@ async function main(): Promise<void> {
       }
 
       const signals: Signal[] = [];
+      const evaluations: EvaluationRecord[] = [];
       let noCandidate = 0;
       for (const { event, watchItem } of pairs) {
         const outcome = await evaluatePair({
@@ -364,12 +367,29 @@ async function main(): Promise<void> {
           tracker,
           now,
         });
+        // Eval-log row for EVERY evaluated pair (these `pairs` already passed
+        // watch-item mapping — filtered events never reach here). A neutral
+        // signal is logged as 'neutral'; a directional signal as 'signal'.
+        let evalOutcome: EvaluationRecord['outcome'];
         if (outcome.kind === 'signal') {
+          evalOutcome = outcome.signal.direction === 'neutral' ? 'neutral' : 'signal';
           signals.push(outcome.signal);
           console.log(`  • SIGNAL ${watchItem.id}: ${outcome.signal.direction} mag=${outcome.signal.magnitude.toFixed(2)}`);
         } else {
+          evalOutcome = 'no_candidate';
           noCandidate++;
         }
+        evaluations.push({
+          thesisId: thesis.id,
+          watchItemId: watchItem.id,
+          eventDedupKey: event.dedupKey,
+          ticker: event.ticker,
+          source: event.source,
+          eventDate: event.date,
+          outcome: evalOutcome,
+          hasSignal: evalOutcome === 'signal',
+          evaluatedAt: now,
+        });
       }
       totalSignals += signals.length;
 
@@ -393,10 +413,11 @@ async function main(): Promise<void> {
       if (!flags.dryRun) {
         await writeCursor(thesis.id, newEvents, nextCursor);
         if (usingTurso) {
-          // Persist the individual signals (web-view source) AND the aggregate
-          // status. Signals upsert by (thesis, watch-item, event) so a re-run
-          // doesn't duplicate.
+          // Persist the individual signals (web-view source), the eval log (what
+          // this run evaluated, incl. dismissed cases), AND the aggregate status.
+          // All upsert by (thesis, watch-item, event) so a re-run doesn't dupe.
           await saveSignals(signals, now);
+          await saveEvaluations(evaluations);
           await saveThesisStatus(status);
         }
       }
