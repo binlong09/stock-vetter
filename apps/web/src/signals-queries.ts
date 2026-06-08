@@ -11,10 +11,12 @@ import {
   ThesisStatus,
   Signal,
   ReverseDcfReport,
+  EvaluationRecord,
   type Thesis as ThesisT,
   type ThesisStatus as ThesisStatusT,
   type Signal as SignalT,
   type ReverseDcfReport as ReverseDcfReportT,
+  type EvaluationRecord as EvaluationRecordT,
 } from '@stock-vetter/schema';
 import { db } from './db';
 
@@ -126,4 +128,36 @@ export async function getThesisDetail(thesisId: string): Promise<ThesisDetail | 
   }
 
   return { thesis, status, signalsByWatchItem, reverseDcfByTicker };
+}
+
+/**
+ * Recent eval-log rows for a thesis — what the runs actually evaluated,
+ * including the no_candidate / neutral cases that never became signals.
+ * Newest event first. Read-only.
+ */
+export async function getThesisEvaluations(
+  thesisId: string,
+  limit = 50,
+): Promise<EvaluationRecordT[]> {
+  const res = await db().execute({
+    sql: `SELECT thesis_id, watch_item_id, event_dedup_key, ticker, source,
+                 event_date, outcome, has_signal, evaluated_at
+            FROM evaluations WHERE thesis_id = ?
+            ORDER BY event_date DESC, evaluated_at DESC
+            LIMIT ?`,
+    args: [thesisId, limit],
+  });
+  return res.rows.map((r) =>
+    EvaluationRecord.parse({
+      thesisId: String(r.thesis_id),
+      watchItemId: String(r.watch_item_id),
+      eventDedupKey: String(r.event_dedup_key),
+      ticker: String(r.ticker),
+      source: String(r.source),
+      eventDate: String(r.event_date),
+      outcome: String(r.outcome),
+      hasSignal: Number(r.has_signal) === 1,
+      evaluatedAt: String(r.evaluated_at),
+    }),
+  );
 }
