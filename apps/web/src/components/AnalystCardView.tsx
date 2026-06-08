@@ -32,8 +32,18 @@ const SEV_PILL: Record<'nit' | 'concern' | 'blocker', string> = {
  * Full view of one analyst-video DecisionCard: the analyst's extracted thesis,
  * the pipeline's 5-dimension score of *the video*, and the four critique angles.
  * All from data already in the JSON — bulky parts behind <details>.
+ *
+ * `isTranscript` marks an Alpha Vantage earnings-call card (no YouTube video):
+ * the header "watch on YouTube" link and per-citation YouTube deep-links are
+ * suppressed, since the source is the hosted transcript shown below the card.
  */
-export function AnalystCardView({ card }: { card: DecisionCard }) {
+export function AnalystCardView({
+  card,
+  isTranscript = false,
+}: {
+  card: DecisionCard;
+  isTranscript?: boolean;
+}) {
   const { extraction: e, scored: s, critiques: c, videoId } = card;
   return (
     <div className="space-y-3">
@@ -49,15 +59,23 @@ export function AnalystCardView({ card }: { card: DecisionCard }) {
         </div>
         <p className="mt-0.5 text-[12px] text-slate-400">
           {e.analyst}
-          {e.videoDate ? ` · ${isoDate(e.videoDate)}` : ''} ·{' '}
-          <a
-            href={`https://www.youtube.com/watch?v=${videoId}`}
-            target="_blank"
-            rel="noreferrer"
-            className="hover:underline"
-          >
-            ▷ watch on YouTube
-          </a>
+          {e.videoDate ? ` · ${isoDate(e.videoDate)}` : ''}
+          {isTranscript ? (
+            <> · earnings-call transcript (full text below)</>
+          ) : (
+            <>
+              {' '}
+              ·{' '}
+              <a
+                href={`https://www.youtube.com/watch?v=${videoId}`}
+                target="_blank"
+                rel="noreferrer"
+                className="hover:underline"
+              >
+                ▷ watch on YouTube
+              </a>
+            </>
+          )}
         </p>
         <p className="mt-2 text-[14px] leading-relaxed text-slate-700">{e.thesisOneLiner}</p>
         <p className="mt-1 text-[11px] text-slate-400">
@@ -143,6 +161,7 @@ export function AnalystCardView({ card }: { card: DecisionCard }) {
                       videoId={videoId}
                       startSec={seg.citation.startSec}
                       endSec={seg.citation.endSec}
+                      isTranscript={isTranscript}
                     />
                     {(seg.revenue != null || seg.growthRate != null) && (
                       <span className="text-slate-400">
@@ -174,6 +193,7 @@ export function AnalystCardView({ card }: { card: DecisionCard }) {
                       videoId={videoId}
                       startSec={cm.citation.startSec}
                       endSec={cm.citation.endSec}
+                      isTranscript={isTranscript}
                     />
                     <span className="text-slate-600"> — {cm.analystView}</span>
                   </li>
@@ -201,6 +221,7 @@ export function AnalystCardView({ card }: { card: DecisionCard }) {
                       videoId={videoId}
                       startSec={r.citation.startSec}
                       endSec={r.citation.endSec}
+                      isTranscript={isTranscript}
                     />
                   </li>
                 ))}
@@ -235,6 +256,7 @@ export function AnalystCardView({ card }: { card: DecisionCard }) {
                       videoId={videoId}
                       startSec={a.citation.startSec}
                       endSec={a.citation.endSec}
+                      isTranscript={isTranscript}
                     />
                   </li>
                 ))}

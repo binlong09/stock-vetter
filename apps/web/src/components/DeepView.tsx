@@ -14,6 +14,7 @@ import { TenqDeltaSection } from './TenqDeltaSection';
 import { indexMatchTiers, type ChecklistBundle } from '@/lib/checklist';
 import type { AnalystCardSummaryRow } from '@/queries';
 import { isoDate } from '@/lib/format';
+import { isAvTranscriptId } from '@/lib/transcript-source';
 
 const DIM_LABELS: Record<(typeof PRIMARY_DIMENSION_KEYS)[number], string> = {
   moatDurability: 'Moat durability',
@@ -96,32 +97,48 @@ export function DeepView({
         {analystCards.length > 0 && (
           <DeepSection title="Analyst videos" count={analystCards.length}>
             <ul className="divide-y divide-slate-100">
-              {analystCards.map((c) => (
-                <li key={c.videoId} className="py-2 text-[12px] first:pt-0 last:pb-0">
-                  <Link
-                    href={`/ticker/${ticker}/video/${c.videoId}`}
-                    className="font-medium text-slate-800 hover:underline"
-                  >
-                    {c.title ?? c.channel ?? c.videoId}
-                  </Link>
-                  <span className="text-slate-400">
-                    {c.channel && c.title ? ` · ${c.channel}` : ''}
-                    {c.publishedAt ? ` · ${isoDate(c.publishedAt)}` : ''}
-                    {c.weightedScore != null
-                      ? ` · analyst-pipeline score ${c.weightedScore.toFixed(1)}`
-                      : ''}
-                    {c.verdict ? ` (${c.verdict})` : ''}
-                  </span>
-                  <a
-                    href={`https://www.youtube.com/watch?v=${c.videoId}`}
-                    className="ml-1.5 text-slate-500 hover:underline"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    ▷ watch
-                  </a>
-                </li>
-              ))}
+              {analystCards.map((c) => {
+                // An av:<TICKER>:<quarter> card is a hosted earnings-call
+                // transcript, not a YouTube video — link to the in-app card
+                // page (which shows the transcript) instead of a dead YouTube
+                // URL. Real videos keep the external "watch" link.
+                const isTranscript = isAvTranscriptId(c.videoId);
+                return (
+                  <li key={c.videoId} className="py-2 text-[12px] first:pt-0 last:pb-0">
+                    <Link
+                      href={`/ticker/${ticker}/video/${c.videoId}`}
+                      className="font-medium text-slate-800 hover:underline"
+                    >
+                      {c.title ?? c.channel ?? (isTranscript ? 'Earnings-call transcript' : c.videoId)}
+                    </Link>
+                    <span className="text-slate-400">
+                      {c.channel && c.title ? ` · ${c.channel}` : ''}
+                      {c.publishedAt ? ` · ${isoDate(c.publishedAt)}` : ''}
+                      {c.weightedScore != null
+                        ? ` · analyst-pipeline score ${c.weightedScore.toFixed(1)}`
+                        : ''}
+                      {c.verdict ? ` (${c.verdict})` : ''}
+                    </span>
+                    {isTranscript ? (
+                      <Link
+                        href={`/ticker/${ticker}/video/${c.videoId}`}
+                        className="ml-1.5 text-slate-500 hover:underline"
+                      >
+                        ▷ read transcript
+                      </Link>
+                    ) : (
+                      <a
+                        href={`https://www.youtube.com/watch?v=${c.videoId}`}
+                        className="ml-1.5 text-slate-500 hover:underline"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        ▷ watch
+                      </a>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </DeepSection>
         )}
