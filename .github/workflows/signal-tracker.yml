@@ -18,7 +18,7 @@ on:
   workflow_dispatch:
     inputs:
       since:
-        description: 'SEC lookback start (YYYY-MM-DD). Leave blank for the 1-year default.'
+        description: 'SEC lookback start (YYYY-MM-DD). Blank = 14-day steady-state window (empty-cursor theses auto-widen to a year regardless).'
         required: false
         type: string
       allow_backlog:
