@@ -20,6 +20,7 @@ export type PromptName =
   | 'primary-source-skeptic'
   | 'primary-source-judge'
   | 'meta-card'
+  | 'tenq-delta'
   // Signal Tracker (packages/signals) — Phase 2 evaluator prompts.
   | 'signal-extract'
   | 'signal-critique'

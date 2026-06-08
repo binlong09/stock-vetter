@@ -115,6 +115,42 @@ export function renderMetaCardMarkdown(c: MetaCard): string {
       lines.push('');
     }
   }
+  // Changes since the annual baseline (10-Q delta). ADDITIVE — does not affect
+  // the verdict or any dimension score; provenance (which 10-Q vs which 10-K) is
+  // shown so the comparison's basis is visible.
+  if (c.tenqDelta) {
+    const d = c.tenqDelta;
+    lines.push('## Changes since annual baseline (10-Q)');
+    lines.push('');
+    lines.push(
+      `*Comparing* 10-Q \`${d.tenqAccession}\` (filed ${d.tenqFilingDate}) ` +
+        `*against* 10-K \`${d.tenkAccession}\` (filed ${d.tenkFilingDate}). ` +
+        `*This is change detection only — it does not affect the verdict or dimension scores.*`,
+    );
+    lines.push('');
+    if (d.summary.trim().length > 0) {
+      lines.push(d.summary);
+      lines.push('');
+    }
+    if (d.changes.length === 0) {
+      lines.push('> No material qualitative change detected versus the annual baseline.');
+      lines.push('');
+    } else {
+      for (const ch of d.changes) {
+        const arrow =
+          ch.direction === 'improving' ? '▲ improving' :
+          ch.direction === 'deteriorating' ? '▼ deteriorating' :
+          '◆ neutral-but-notable';
+        lines.push(`### ${ch.area} — ${arrow}`);
+        lines.push('');
+        lines.push(ch.change);
+        lines.push('');
+        lines.push(`- **10-Q** (\`${ch.tenqCitation.section}\`): "${ch.tenqCitation.quote}"`);
+        lines.push(`- **10-K** (\`${ch.tenkCitation.section}\`): "${ch.tenkCitation.quote}"`);
+        lines.push('');
+      }
+    }
+  }
   // Things to verify.
   lines.push('## Things to verify before acting');
   lines.push('');

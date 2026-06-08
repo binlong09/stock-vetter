@@ -58,6 +58,24 @@ function normalizeWhitespace(s: string): string {
   return s.replace(/\s+/g, ' ').trim();
 }
 
+// Classify how well `quote` matches as a substring of `sectionText`, using the
+// same tier cascade the checklist verifier applies. Extracted so other passes
+// (e.g. the 10-Q delta's dual citations) verify quotes identically rather than
+// re-implementing the cascade. `no-match` means the quote isn't in the source —
+// likely fabricated or stitched across paragraphs.
+export function classifyMatch(sectionText: string, quote: string): MatchTier {
+  if (sectionText.includes(quote)) return 'exact';
+  if (normalizeWhitespace(sectionText).includes(normalizeWhitespace(quote))) return 'whitespace-normalized';
+  if (sectionText.toLowerCase().includes(quote.toLowerCase())) return 'case-insensitive';
+  if (
+    normalizePunctuation(sectionText)
+      .toLowerCase()
+      .includes(normalizePunctuation(quote).toLowerCase())
+  )
+    return 'punctuation-normalized';
+  return 'no-match';
+}
+
 function normalizePunctuation(s: string): string {
   // Curly quotes → straight, em/en dashes → ASCII hyphen-equivalents,
   // non-breaking and other unusual whitespace → regular space.
@@ -148,12 +166,7 @@ export async function verifyChecklistCitations(
         });
         continue;
       }
-      let tier: MatchTier;
-      if (loaded.text.includes(c.quote)) tier = 'exact';
-      else if (normalizeWhitespace(loaded.text).includes(normalizeWhitespace(c.quote))) tier = 'whitespace-normalized';
-      else if (loaded.text.toLowerCase().includes(c.quote.toLowerCase())) tier = 'case-insensitive';
-      else if (normalizePunctuation(loaded.text).toLowerCase().includes(normalizePunctuation(c.quote).toLowerCase())) tier = 'punctuation-normalized';
-      else tier = 'no-match';
+      const tier = classifyMatch(loaded.text, c.quote);
       details.push({
         dimension: dim,
         citationIndex: i,
@@ -218,12 +231,7 @@ export async function verifySkepticCitations(
         });
         continue;
       }
-      let tier: MatchTier;
-      if (loaded.text.includes(c.quote)) tier = 'exact';
-      else if (normalizeWhitespace(loaded.text).includes(normalizeWhitespace(c.quote))) tier = 'whitespace-normalized';
-      else if (loaded.text.toLowerCase().includes(c.quote.toLowerCase())) tier = 'case-insensitive';
-      else if (normalizePunctuation(loaded.text).toLowerCase().includes(normalizePunctuation(c.quote).toLowerCase())) tier = 'punctuation-normalized';
-      else tier = 'no-match';
+      const tier = classifyMatch(loaded.text, c.quote);
       details.push({
         dimension: dim,
         citationIndex: i,
