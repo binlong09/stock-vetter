@@ -1,9 +1,10 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getThesisDetail } from '@/signals-queries';
+import { getThesisDetail, getThesisEvaluations } from '@/signals-queries';
 import { ThesisStatusChip } from '@/components/ThesisStatusChip';
 import { ReverseDcfGrid } from '@/components/ReverseDcfGrid';
 import { healthMeta, directionMeta } from '@/lib/thesis-status';
+import { evalSourceLabel, evalSourceUrl, outcomeMeta } from '@/lib/eval-source';
 import { isoDate } from '@/lib/format';
 
 export const revalidate = 300;
@@ -14,7 +15,11 @@ export default async function ThesisDetailPage({
   params: Promise<{ thesisId: string }>;
 }) {
   const { thesisId } = await params;
-  const detail = await getThesisDetail(decodeURIComponent(thesisId));
+  const decoded = decodeURIComponent(thesisId);
+  const [detail, evaluations] = await Promise.all([
+    getThesisDetail(decoded),
+    getThesisEvaluations(decoded),
+  ]);
   if (!detail) notFound();
 
   const { thesis, status, signalsByWatchItem, reverseDcfByTicker } = detail;
@@ -42,7 +47,7 @@ export default async function ThesisDetailPage({
           const wstate = stateByItem.get(wi.id);
           const signals = signalsByWatchItem.get(wi.id) ?? [];
           return (
-            <div key={wi.id} className="rounded-lg border border-slate-200 bg-white">
+            <div key={wi.id} id={wi.id} className="scroll-mt-16 rounded-lg border border-slate-200 bg-white">
               <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-3.5 py-2.5">
                 <div>
                   <div className="text-sm font-medium text-slate-900">{wi.label}</div>
@@ -107,6 +112,60 @@ export default async function ThesisDetailPage({
           </div>
         </div>
       ) : null}
+
+      {/* Recent activity — what the runs actually evaluated, including the
+          considered-and-dismissed (neutral / no-candidate) cases. Answers
+          "which filings did this run look at?". */}
+      <div className="mt-6">
+        <h2 className="text-sm font-semibold text-slate-900">Recent activity</h2>
+        <p className="mt-0.5 text-xs text-slate-400">
+          What the tracker evaluated for this thesis — including events it considered and
+          dismissed.
+        </p>
+        {evaluations.length === 0 ? (
+          <p className="mt-2 text-xs text-slate-400">No evaluations recorded yet.</p>
+        ) : (
+          <ul className="mt-2 divide-y divide-slate-100 rounded-lg border border-slate-200 bg-white">
+            {evaluations.map((e) => {
+              const om = outcomeMeta(e.outcome);
+              const url = evalSourceUrl(e.source, e.eventDedupKey, e.ticker);
+              const label = evalSourceLabel(e.source, e.eventDedupKey, e.ticker);
+              return (
+                <li
+                  key={`${e.watchItemId}:${e.eventDedupKey}`}
+                  className="flex items-center justify-between gap-3 px-3 py-2 text-xs"
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 text-slate-500">
+                      <span className="tabular-nums">{isoDate(e.eventDate)}</span>
+                      <span className="font-medium text-slate-700">{e.ticker}</span>
+                    </div>
+                    <div className="truncate text-slate-600">
+                      {url ? (
+                        <a href={url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                          {label} ↗
+                        </a>
+                      ) : (
+                        label
+                      )}
+                      <span className="text-slate-400"> · {e.watchItemId}</span>
+                    </div>
+                  </div>
+                  {/* A signal outcome links to the signal shown above; neutral /
+                      no-candidate just show the chip (considered, didn't move it). */}
+                  {e.hasSignal ? (
+                    <a href={`#${e.watchItemId}`} className={`shrink-0 rounded-full border px-2 py-0.5 ${om.pill} hover:opacity-80`}>
+                      {om.label}
+                    </a>
+                  ) : (
+                    <span className={`shrink-0 rounded-full border px-2 py-0.5 ${om.pill}`}>{om.label}</span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }

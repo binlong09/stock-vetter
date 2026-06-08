@@ -60,7 +60,9 @@ export {
   saveThesisStatus,
   saveSignals,
   saveThesisDefinition,
+  saveEvaluations,
   loadSignalsForThesis,
+  loadEvaluationsForThesis,
   acquireRunLock,
   releaseRunLock,
 } from './persistence.js';

@@ -689,6 +689,33 @@ export const Signal = z.object({
 });
 export type Signal = z.infer<typeof Signal>;
 
+// ---- Eval log ------------------------------------------------------------
+//
+// One row per (event × watch-item) pair the engine ACTUALLY evaluated (reached
+// extract→critique→judge). Records what was looked at and what the engine
+// concluded — including no_candidate and neutral, the dismissed cases that
+// never become signals and are otherwise invisible. Pairs filtered out by
+// watch-item mapping before any LLM call are NOT logged here.
+
+export const EvaluationOutcomeKind = z.enum(['no_candidate', 'neutral', 'signal']);
+export type EvaluationOutcomeKind = z.infer<typeof EvaluationOutcomeKind>;
+
+export const EvaluationRecord = z.object({
+  thesisId: z.string(),
+  watchItemId: z.string(),
+  // Stable event identity — SEC accession / `av:<ticker>:<quarter>` / FMP
+  // snapshot hash. Same key the signals table uses, so a `signal` outcome links
+  // 1:1 to its signal by (thesisId, watchItemId, eventDedupKey).
+  eventDedupKey: z.string(),
+  ticker: z.string(),
+  source: EventSource,
+  eventDate: z.string(), // YYYY-MM-DD
+  outcome: EvaluationOutcomeKind,
+  hasSignal: z.boolean(),
+  evaluatedAt: z.string(),
+});
+export type EvaluationRecord = z.infer<typeof EvaluationRecord>;
+
 // ---- Phase 2 evaluator: per-step LLM I/O schemas -------------------------
 //
 // The evaluator (packages/signals/src/evaluate.ts) runs extract → critique →
