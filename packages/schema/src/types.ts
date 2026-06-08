@@ -428,6 +428,62 @@ export const CrossSourceFinding = z.object({
 });
 export type CrossSourceFinding = z.infer<typeof CrossSourceFinding>;
 
+// ---- 10-Q delta (change detection vs the annual baseline) ----
+//
+// ADDITIVE, NON-SCORING. The six dimension scores, the meta-card verdict, and
+// the reverse DCF are anchored on the 10-K + DEF 14A and are NOT affected by
+// anything here. This section detects material QUALITATIVE change in the
+// already-fetched 10-Q (MD&A + risk factors) against the corresponding 10-K
+// sections — the one thing value frameworks actually use a thin, unaudited
+// quarterly for: "what changed since the annual baseline?"
+//
+// Source separation is load-bearing: each change carries TWO citations, one to
+// the 10-Q passage and one to the 10-K passage it diverges from, each attributed
+// to its own filing. The two are never merged into a single claim. That is why
+// this avoids the citation-consistency hazard that blocked folding the 10-Q into
+// scoring.
+export const TenqChangeDirection = z.enum(['improving', 'deteriorating', 'neutral-but-notable']);
+export type TenqChangeDirection = z.infer<typeof TenqChangeDirection>;
+
+// One side of a dual citation, attributed to a single filing. `form` records
+// which filing this passage came from so the UI/markdown can label it and so the
+// citation verifier resolves it against the right accession.
+export const TenqCitation = z.object({
+  form: z.enum(['10-Q', '10-K']),
+  section: z.string(),   // 'mda' | 'risk-factors' (the section id within that filing)
+  quote: z.string(),     // verbatim passage from THIS filing only — never merged
+});
+export type TenqCitation = z.infer<typeof TenqCitation>;
+
+export const TenqChange = z.object({
+  // What changed, in plain English. Describes the divergence; does not merge the
+  // two sources' wording into one sentence as if both said it.
+  change: z.string(),
+  // Which thesis-relevant area this touches (e.g. "margins", "demand",
+  // "competition", "regulatory/export controls", "liquidity"). Free text — this
+  // is NOT one of the six scored dimensions and must not be conflated with them.
+  area: z.string(),
+  direction: TenqChangeDirection,
+  // Dual citation: the 10-Q passage and the 10-K passage it diverges from. Each
+  // stays attributed to its own filing.
+  tenqCitation: TenqCitation,   // form must be '10-Q'
+  tenkCitation: TenqCitation,   // form must be '10-K'
+});
+export type TenqChange = z.infer<typeof TenqChange>;
+
+export const TenqDelta = z.object({
+  // Provenance so the comparison's basis is visible on the card.
+  tenqAccession: z.string(),
+  tenqFilingDate: z.string(),
+  tenkAccession: z.string(),
+  tenkFilingDate: z.string(),
+  // 2-4 sentence plain-English overview of how the quarter's narrative differs
+  // from the annual baseline. Empty-ish when nothing material changed.
+  summary: z.string(),
+  changes: z.array(TenqChange),
+});
+export type TenqDelta = z.infer<typeof TenqDelta>;
+
 export const MetaCard = z.object({
   ticker: z.string(),
   generatedAt: z.string(),
@@ -470,6 +526,11 @@ export const MetaCard = z.object({
   // the user. Surfaces the meta-card's "where to focus your own judgment"
   // signal. Optional — empty string when there are no notable disagreements.
   divergenceCommentary: z.string(),
+  // ADDITIVE: change detection of the latest 10-Q vs the 10-K baseline. Does
+  // NOT influence verdict, weightedScore, dimensions, or the reverse DCF — it
+  // is attached after synthesis. Absent when no 10-Q was available or the pass
+  // was skipped (backward-compatible with cards generated before this field).
+  tenqDelta: TenqDelta.optional(),
 });
 export type MetaCard = z.infer<typeof MetaCard>;
 

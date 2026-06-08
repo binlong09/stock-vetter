@@ -10,6 +10,7 @@ import { DimensionDeepDive } from './DimensionDeepDive';
 import { ReverseDcfGrid } from './ReverseDcfGrid';
 import { HistoricalFinancials } from './HistoricalFinancials';
 import { ThingsToVerify } from './ThingsToVerify';
+import { TenqDeltaSection } from './TenqDeltaSection';
 import { indexMatchTiers, type ChecklistBundle } from '@/lib/checklist';
 import type { AnalystCardSummaryRow } from '@/queries';
 import { isoDate } from '@/lib/format';
@@ -124,6 +125,8 @@ export function DeepView({
             </ul>
           </DeepSection>
         )}
+
+        {metaCard.tenqDelta && <TenqDeltaSection delta={metaCard.tenqDelta} />}
 
         {metaCard.thingsToVerify.length > 0 && (
           <DeepSection title="Things to verify yourself" count={metaCard.thingsToVerify.length}>

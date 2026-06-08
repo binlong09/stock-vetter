@@ -40,8 +40,9 @@ import { buildReverseDcf, renderReverseDcfMarkdown } from '@stock-vetter/core';
 import { buildMetaCard } from '../packages/pipeline/src/meta-card.js';
 import { renderMetaCardMarkdown } from '../packages/pipeline/src/meta-card-render.js';
 import { DecisionCard, type FinancialSnapshot, type MetaCard, type PrimarySourceChecklist, type PrimarySourceJudgment, type PrimarySourceSkeptic, type ReverseDcfReport } from '@stock-vetter/schema';
-import { isTursoConfigured, pushTickerFromFixtures, fetchEarningsTranscriptBundle } from '@stock-vetter/pipeline';
+import { isTursoConfigured, pushTickerFromFixtures, fetchEarningsTranscriptBundle, runTenqDelta, type TenqDeltaSourceText } from '@stock-vetter/pipeline';
 import { mostRecentQuarter } from '@stock-vetter/signals';
+import { getSecSection } from '@stock-vetter/core';
 
 const FIXTURES_ROOT = 'fixtures';
 
@@ -209,6 +210,55 @@ async function processProxy(ticker: string): Promise<void> {
   }
 }
 
+// Load the MD&A + risk-factor text for a filing from the SEC section cache
+// (populated when processSec ran fetchAndParseFiling for this accession). Missing
+// sections come back null and the delta pass treats them as unavailable.
+async function loadDeltaSections(accession: string): Promise<TenqDeltaSourceText> {
+  const [mda, riskFactors] = await Promise.all([
+    getSecSection<string>(accession, 'mda'),
+    getSecSection<string>(accession, 'risk-factors'),
+  ]);
+  return { mda, riskFactors };
+}
+
+// ADDITIVE 10-Q-vs-10-K change-detection pass. Runs independently of the scoring
+// path: it never feeds processPrimaryChecklist or processMetaCard. The result is
+// attached to the meta-card AFTER synthesis (see main), so the verdict and all
+// dimension scores are untouched. Returns null when either filing is missing.
+async function processTenqDelta(
+  tenK: FilingMeta,
+  tenQ: FilingMeta,
+  tracker: CostTracker,
+): Promise<Awaited<ReturnType<typeof runTenqDelta>> | null> {
+  console.error(
+    `[ticker] 10-Q delta: comparing 10-Q ${tenQ.accession} (${tenQ.filingDate}) vs 10-K ${tenK.accession} (${tenK.filingDate})...`,
+  );
+  try {
+    const [tenkText, tenqText] = await Promise.all([
+      loadDeltaSections(tenK.accession),
+      loadDeltaSections(tenQ.accession),
+    ]);
+    if (!tenqText.mda && !tenqText.riskFactors) {
+      console.error('[ticker] 10-Q delta skipped: 10-Q has no MD&A or risk-factor text');
+      return null;
+    }
+    const result = await runTenqDelta({ tenkMeta: tenK, tenqMeta: tenQ, tenkText, tenqText, tracker });
+    const v = result.verification;
+    console.error(
+      `[ticker] 10-Q delta: ${result.delta.changes.length} change(s); ` +
+        `citations resolved ${v.resolved}/${v.total} ` +
+        `(10-Q no-match ${v.tenqNoMatch}, 10-K no-match ${v.tenkNoMatch}, truncated ${v.truncatedQuotes})`,
+    );
+    if (v.tenqNoMatch > 0 || v.tenkNoMatch > 0) {
+      console.error('[ticker] 10-Q delta WARNING: some citations did not resolve to source text');
+    }
+    return result;
+  } catch (e) {
+    console.error(`[ticker] 10-Q delta failed: ${(e as Error).message}`);
+    return null;
+  }
+}
+
 async function processFinancialContext(
   ticker: string,
 ): Promise<{ snapshot: FinancialSnapshot | null; dcf: ReverseDcfReport | null }> {
@@ -363,6 +413,9 @@ async function main() {
   const debug = args.includes('--debug');
   const skipLlm = args.includes('--no-llm');
   const forceTriple = args.includes('--always-triple');
+  // The 10-Q delta is additive and on by default; --no-tenq-delta opts out
+  // (e.g. to isolate scoring cost or prove the delta doesn't perturb the card).
+  const skipTenqDelta = args.includes('--no-tenq-delta');
   // --transcript           vet on the most-recent completed quarter's call
   // --transcript=2026Q1    vet on an explicit quarter
   const transcriptArg = args.find((a) => a === '--transcript' || a.startsWith('--transcript='));
@@ -375,7 +428,7 @@ async function main() {
     process.exit(1);
   }
   if (!ticker) {
-    console.error('Usage: pnpm tsx scripts/analyze-ticker.ts <TICKER> [--debug] [--no-llm] [--always-triple] [--transcript[=YYYYQn]]');
+    console.error('Usage: pnpm tsx scripts/analyze-ticker.ts <TICKER> [--debug] [--no-llm] [--always-triple] [--transcript[=YYYYQn]] [--no-tenq-delta]');
     process.exit(1);
   }
   const upper = ticker.toUpperCase();
@@ -396,6 +449,7 @@ async function main() {
   const results = {
     videos: { ran: 0, cached: 0, cost: 0 },
     transcript: null as { ran: boolean; cost: number; quarter: string } | null,
+    tenqDelta: null as Awaited<ReturnType<typeof processTenqDelta>>,
     tenK: null as FilingMeta | null,
     tenQ: null as FilingMeta | null,
     primaryChecklist: null as Awaited<ReturnType<typeof processPrimaryChecklist>>,
@@ -450,6 +504,26 @@ async function main() {
     );
   }
 
+  // ADDITIVE: 10-Q-vs-10-K change detection. Runs AFTER the meta-card is built
+  // and only attaches its result to the optional `tenqDelta` field — it never
+  // feeds the checklist, the meta-card synthesis, or the reverse DCF, so the
+  // verdict and all six dimension scores are identical with or without this
+  // pass. Requires both a 10-K and a 10-Q. The card files are re-written so the
+  // Turso push below carries the delta.
+  if (!skipLlm && !skipTenqDelta && results.metaCard && results.tenK && results.tenQ) {
+    results.tenqDelta = await processTenqDelta(results.tenK, results.tenQ, sharedTracker);
+    if (results.tenqDelta) {
+      results.metaCard.tenqDelta = results.tenqDelta.delta;
+      const mdTarget = join(FIXTURES_ROOT, upper, 'decision-card.md');
+      await writeText(mdTarget, renderMetaCardMarkdown(results.metaCard));
+      const jsonTarget = join(FIXTURES_ROOT, upper, 'decision-card.json');
+      await writeJson(jsonTarget, results.metaCard);
+      // Persist the dual-citation verification alongside, for auditing.
+      const vTarget = join(FIXTURES_ROOT, upper, 'tenq-delta-verification.json');
+      await writeJson(vTarget, results.tenqDelta.verification);
+    }
+  }
+
   // Best-effort push to Turso for the web viewer. Only after the meta-card
   // succeeded (which guarantees the fixture files are on disk). A failure here
   // never fails the run — "still works locally" is the degraded mode.
@@ -472,6 +546,10 @@ async function main() {
   }
   console.error(`  10-K: ${results.tenK ? `${results.tenK.sections.length}/${results.tenK.sections.length + results.tenK.missing.length} sections (${results.tenK.missing.length} missing)` : 'failed'}`);
   console.error(`  10-Q: ${results.tenQ ? `${results.tenQ.sections.length} sections` : 'failed'}`);
+  if (results.tenqDelta) {
+    const v = results.tenqDelta.verification;
+    console.error(`  10-Q delta: ${results.tenqDelta.delta.changes.length} change(s), citations resolved ${v.resolved}/${v.total}`);
+  }
   if (results.metaCard) {
     console.error(`  decision: ${results.metaCard.verdict} (${results.metaCard.weightedScore.toFixed(1)} / 10)`);
   }

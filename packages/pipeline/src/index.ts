@@ -3,6 +3,13 @@ export type { PipelineOptions, PipelineStage } from './orchestrate.js';
 export { renderMarkdown } from './render.js';
 export { fetchEarningsTranscriptBundle } from './transcript.js';
 export {
+  runTenqDelta,
+  type TenqDeltaResult,
+  type TenqDeltaSourceText,
+  type TenqDeltaVerification,
+} from './tenq-delta.js';
+export { classifyMatch } from './citation-verifier.js';
+export {
   MissingCaptionsError,
   UnknownTickerError,
   LLMValidationError,
