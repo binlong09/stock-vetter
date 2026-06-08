@@ -40,7 +40,8 @@ import { buildReverseDcf, renderReverseDcfMarkdown } from '@stock-vetter/core';
 import { buildMetaCard } from '../packages/pipeline/src/meta-card.js';
 import { renderMetaCardMarkdown } from '../packages/pipeline/src/meta-card-render.js';
 import { DecisionCard, type FinancialSnapshot, type MetaCard, type PrimarySourceChecklist, type PrimarySourceJudgment, type PrimarySourceSkeptic, type ReverseDcfReport } from '@stock-vetter/schema';
-import { isTursoConfigured, pushTickerFromFixtures } from '@stock-vetter/pipeline';
+import { isTursoConfigured, pushTickerFromFixtures, fetchEarningsTranscriptBundle } from '@stock-vetter/pipeline';
+import { mostRecentQuarter } from '@stock-vetter/signals';
 
 const FIXTURES_ROOT = 'fixtures';
 
@@ -115,6 +116,51 @@ async function processVideos(
     ran++;
   }
   return { ran, cached, cost: totalVideoCost };
+}
+
+// Vet the ticker on its Alpha Vantage earnings-call transcript. The bundle is
+// fed through the same runPipeline path as analyst videos, so its decision card
+// lands in fixtures/<TICKER>/videos/ (videoId `av:<TICKER>:<quarter>`) and flows
+// into loadAnalystCards → meta-card → the Turso push, exactly like a video.
+//
+// quarter defaults to the most-recent COMPLETED calendar quarter (the same
+// derivation the signals cron uses to key the av:<ticker>:<quarter> cache, so a
+// cache hit is most likely there); pass an explicit quarter to override.
+// Returns null when AV has no transcript for that (ticker, quarter) — the run
+// then proceeds without a transcript card, never failing.
+async function processTranscript(
+  ticker: string,
+  quarter: string,
+): Promise<{ ran: boolean; cost: number; quarter: string }> {
+  const videoId = `av:${ticker.toUpperCase()}:${quarter}`;
+  const existing = await getVideoCard<unknown>(videoId);
+  if (existing) {
+    const target = join(FIXTURES_ROOT, ticker.toUpperCase(), 'videos', `${videoId}.json`);
+    await writeJson(target, existing);
+    console.error(`[ticker] transcript ${quarter}: cached`);
+    return { ran: false, cost: 0, quarter };
+  }
+  console.error(`[ticker] transcript ${quarter}: fetching Alpha Vantage bundle...`);
+  const bundle = await fetchEarningsTranscriptBundle(ticker, quarter);
+  if (!bundle) {
+    console.error(`[ticker] transcript ${quarter}: AV has no transcript — skipping`);
+    return { ran: false, cost: 0, quarter };
+  }
+  console.error(`[ticker] transcript ${quarter}: running pipeline (this is slow)`);
+  let lastCost = 0;
+  const card = await runPipeline(`av:${ticker}:${quarter}`, {
+    bundle,
+    onProgress: (stage, costSoFar) => {
+      lastCost = costSoFar;
+      process.stderr.write(`[pipeline:${videoId}] ${stage} ($${costSoFar.toFixed(3)})\n`);
+    },
+    onCostWarning: (cost) => process.stderr.write(`[pipeline:${videoId}] WARN cost ${cost.toFixed(3)}\n`),
+    onCostAbort: (cost) => process.stderr.write(`[pipeline:${videoId}] ABORT cost ${cost.toFixed(3)}\n`),
+  });
+  await putVideoCard(videoId, card);
+  const target = join(FIXTURES_ROOT, ticker.toUpperCase(), 'videos', `${videoId}.json`);
+  await writeJson(target, card);
+  return { ran: true, cost: lastCost, quarter };
 }
 
 async function processSec(ticker: string, form: '10-K' | '10-Q'): Promise<FilingMeta | null> {
@@ -317,8 +363,19 @@ async function main() {
   const debug = args.includes('--debug');
   const skipLlm = args.includes('--no-llm');
   const forceTriple = args.includes('--always-triple');
+  // --transcript           vet on the most-recent completed quarter's call
+  // --transcript=2026Q1    vet on an explicit quarter
+  const transcriptArg = args.find((a) => a === '--transcript' || a.startsWith('--transcript='));
+  const transcriptRequested = transcriptArg !== undefined;
+  const transcriptQuarterOverride = transcriptArg?.includes('=')
+    ? transcriptArg.split('=')[1]
+    : undefined;
+  if (transcriptQuarterOverride !== undefined && !/^\d{4}Q[1-4]$/.test(transcriptQuarterOverride)) {
+    console.error(`Invalid --transcript quarter "${transcriptQuarterOverride}" (expected e.g. 2026Q1)`);
+    process.exit(1);
+  }
   if (!ticker) {
-    console.error('Usage: pnpm tsx scripts/analyze-ticker.ts <TICKER> [--debug] [--no-llm] [--always-triple]');
+    console.error('Usage: pnpm tsx scripts/analyze-ticker.ts <TICKER> [--debug] [--no-llm] [--always-triple] [--transcript[=YYYYQn]]');
     process.exit(1);
   }
   const upper = ticker.toUpperCase();
@@ -338,6 +395,7 @@ async function main() {
   // failure of the others — partial output is more useful than no output.
   const results = {
     videos: { ran: 0, cached: 0, cost: 0 },
+    transcript: null as { ran: boolean; cost: number; quarter: string } | null,
     tenK: null as FilingMeta | null,
     tenQ: null as FilingMeta | null,
     primaryChecklist: null as Awaited<ReturnType<typeof processPrimaryChecklist>>,
@@ -348,6 +406,13 @@ async function main() {
 
   if (videoUrls.length && !skipLlm) {
     results.videos = await processVideos(upper, videoUrls, debug);
+  }
+  // Earnings-call transcript vet. Its decision card lands alongside the video
+  // cards so loadAnalystCards (in the meta-card stage) picks it up. Quarter
+  // defaults to the most-recent completed one; --transcript=YYYYQn overrides.
+  if (transcriptRequested && !skipLlm) {
+    const quarter = transcriptQuarterOverride ?? mostRecentQuarter(new Date().toISOString().slice(0, 10));
+    results.transcript = await processTranscript(upper, quarter);
   }
   results.tenK = await processSec(upper, '10-K');
   results.tenQ = await processSec(upper, '10-Q');
@@ -373,7 +438,7 @@ async function main() {
     // *before* meta-card synthesis so we can pass it in as the value to
     // record on the card; the meta-card call then adds its own cost on top
     // and the renderer shows the sum it received plus the synthesis call.
-    const preMetaCardCost = results.videos.cost + sharedTracker.total;
+    const preMetaCardCost = results.videos.cost + (results.transcript?.cost ?? 0) + sharedTracker.total;
     results.metaCard = await processMetaCard(
       upper,
       results.primaryChecklist.pass1,
@@ -397,10 +462,14 @@ async function main() {
     }
   }
 
-  const totalCost = results.videos.cost + sharedTracker.total;
+  const totalCost = results.videos.cost + (results.transcript?.cost ?? 0) + sharedTracker.total;
   console.error('');
   console.error(`[ticker] ${upper}: done`);
   console.error(`  videos: ${results.videos.ran} fresh, ${results.videos.cached} cached  (cost $${results.videos.cost.toFixed(3)})`);
+  if (results.transcript) {
+    const t = results.transcript;
+    console.error(`  transcript: ${t.quarter} ${t.ran ? `vetted (cost $${t.cost.toFixed(3)})` : 'cached/unavailable'}`);
+  }
   console.error(`  10-K: ${results.tenK ? `${results.tenK.sections.length}/${results.tenK.sections.length + results.tenK.missing.length} sections (${results.tenK.missing.length} missing)` : 'failed'}`);
   console.error(`  10-Q: ${results.tenQ ? `${results.tenQ.sections.length} sections` : 'failed'}`);
   if (results.metaCard) {
