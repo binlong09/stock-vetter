@@ -190,3 +190,41 @@ export async function getAnalystCard(
   if (!row) return null;
   return DecisionCard.parse(JSON.parse(String(row.card_json)));
 }
+
+/** One speaker turn from a hosted earnings-call transcript (raw_turns_json). */
+export interface TranscriptTurnRow {
+  speaker: string;
+  title: string;
+  content: string;
+  segment: 'prepared' | 'qa';
+}
+
+/**
+ * The normalized earnings-call transcript we host in Turso, keyed by
+ * (ticker, quarter). Powers the in-app transcript view for Alpha Vantage cards
+ * (videoId `av:<TICKER>:<quarter>`), whose "source" is this hosted text rather
+ * than a YouTube video. Null when no transcript was cached for that quarter.
+ */
+export async function getNormalizedTranscript(
+  ticker: string,
+  quarter: string,
+): Promise<{ normalizedText: string; turns: TranscriptTurnRow[]; normalizedAt: string } | null> {
+  const res = await db().execute({
+    sql: `SELECT normalized_text, raw_turns_json, normalized_at
+            FROM normalized_transcripts WHERE ticker = ? AND quarter = ?`,
+    args: [ticker.toUpperCase(), quarter],
+  });
+  const row = res.rows[0];
+  if (!row) return null;
+  let turns: TranscriptTurnRow[] = [];
+  try {
+    turns = JSON.parse(String(row.raw_turns_json)) as TranscriptTurnRow[];
+  } catch {
+    // Malformed turns JSON — fall back to the flat normalized_text below.
+  }
+  return {
+    normalizedText: String(row.normalized_text),
+    turns,
+    normalizedAt: String(row.normalized_at),
+  };
+}
