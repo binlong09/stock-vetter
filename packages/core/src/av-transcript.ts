@@ -22,6 +22,9 @@
 // ~60% of the text — so a Q&A-only pass is the cost lever.
 
 import { z } from 'zod';
+import { getTursoClient, migrate } from './turso.js';
+import { loadPrompt } from './prompts.js';
+import { llmCall, type CostTracker } from './llm.js';
 
 const AV_BASE = 'https://www.alphavantage.co/query';
 
@@ -136,13 +139,162 @@ export async function fetchEarningsTranscript(
 
 // Render turns to plain text for the normalize pass / extractor, tagged by turn
 // so a downstream citation can point at a specific turn ("[turn 27 — Colette
-// Kress, CFO]"). `segment` filters to Q&A-only when measuring the cheaper pass.
-export function transcriptToText(
-  t: EarningsTranscript,
-  opts: { segment?: 'all' | 'qa' } = {},
-): string {
-  const turns = opts.segment === 'qa' ? t.turns.filter((x) => x.segment === 'qa') : t.turns;
-  return turns
+// Kress, CFO]"). FULL transcript is the unit: the spike showed a Q&A-only pass
+// saves only 23% but drops the prepared-remarks gross-margin guidance, flipping
+// a correct `weakens` to a misleading `neutral`. (The per-turn `segment` field
+// is still kept on the turns for context, just not used to truncate here.)
+export function transcriptToText(t: EarningsTranscript): string {
+  return t.turns
     .map((x) => `[turn ${x.index} — ${x.speaker}, ${x.title}]\n${x.content}`)
     .join('\n\n');
+}
+
+// Soft fetch: returns null when AV has no transcript for (symbol, quarter) or
+// the endpoint reports it's unavailable — for the stock-vetter fallback path,
+// which must keep working when AV has nothing.
+export async function fetchEarningsTranscriptOrNull(
+  symbol: string,
+  quarter: string,
+): Promise<EarningsTranscript | null> {
+  try {
+    return await fetchEarningsTranscript(symbol, quarter);
+  } catch {
+    return null;
+  }
+}
+
+// ---- normalized-transcript cache -----------------------------------------
+//
+// Normalizing the auto-transcription proper-noun mangling is the dominant cost
+// (~3-4× the engine). Both consumers read the same transcript and the cron
+// re-checks each quarter, so we cache the cleaned text in Turso keyed by
+// (ticker, quarter) and only pay normalize on a miss.
+
+export type NormalizedTranscript = {
+  ticker: string;
+  quarter: string;
+  normalizedText: string;
+  turns: TranscriptTurn[]; // segmented turns (for per-turn citations)
+  fromCache: boolean;
+};
+
+const CachedRow = z.object({
+  normalized_text: z.string(),
+  raw_turns_json: z.string(),
+});
+
+async function readCachedTranscript(
+  ticker: string,
+  quarter: string,
+): Promise<{ normalizedText: string; turns: TranscriptTurn[] } | null> {
+  const client = getTursoClient();
+  if (!client) return null;
+  await migrate();
+  const res = await client.execute({
+    sql: `SELECT normalized_text, raw_turns_json FROM normalized_transcripts
+          WHERE ticker = ? AND quarter = ?`,
+    args: [ticker.toUpperCase(), quarter],
+  });
+  const row = res.rows[0];
+  if (!row) return null;
+  const parsed = CachedRow.parse({
+    normalized_text: String(row.normalized_text),
+    raw_turns_json: String(row.raw_turns_json),
+  });
+  return {
+    normalizedText: parsed.normalized_text,
+    turns: JSON.parse(parsed.raw_turns_json) as TranscriptTurn[],
+  };
+}
+
+async function writeCachedTranscript(
+  ticker: string,
+  quarter: string,
+  normalizedText: string,
+  turns: TranscriptTurn[],
+  now: string,
+): Promise<void> {
+  const client = getTursoClient();
+  if (!client) return;
+  await migrate();
+  await client.execute({
+    sql: `INSERT INTO normalized_transcripts (ticker, quarter, normalized_text, raw_turns_json, normalized_at)
+          VALUES (?, ?, ?, ?, ?)
+          ON CONFLICT(ticker, quarter) DO UPDATE SET
+            normalized_text=excluded.normalized_text,
+            raw_turns_json=excluded.raw_turns_json,
+            normalized_at=excluded.normalized_at`,
+    args: [ticker.toUpperCase(), quarter, normalizedText, JSON.stringify(turns), now],
+  });
+}
+
+// Run the existing `normalize` prompt over raw transcript text to fix the
+// auto-transcription proper-noun mangling (DeepSeq→DeepSeek, GV200→GB200, …).
+// The prompt is YouTube-framed but the task (fix garbled proper nouns, don't
+// rewrite) transfers directly.
+async function normalizeTranscriptText(
+  raw: string,
+  symbol: string,
+  quarter: string,
+  tracker: CostTracker,
+): Promise<string> {
+  const system = await loadPrompt('normalize');
+  const userMessage = [
+    `TITLE: ${symbol} ${quarter} earnings call transcript`,
+    `CHANNEL: Alpha Vantage (auto-transcribed)`,
+    `DESCRIPTION: ${symbol} earnings call. Proper nouns are mangled by auto-transcription; correct company/product/finance terms (e.g. Blackwell, Hopper, GB200, Grace, NVLink, FP4, Nemotron, DeepSeek, CUDA).`,
+    `TAGS: ${symbol}, earnings, transcript`,
+    '',
+    'TRANSCRIPT:',
+    raw,
+  ].join('\n');
+  const res = await llmCall({
+    stage: 'av-normalize',
+    systemPrompt: system,
+    userMessage,
+    maxTokens: 16384,
+    tracker,
+  });
+  return res.text;
+}
+
+// Cache-checked normalize: returns the cleaned transcript, reading from the
+// Turso cache when present (no normalize cost) and only normalizing on a miss.
+// `now` is passed in (core can't call Date.now in a way that breaks resume —
+// callers stamp it). Returns null when AV has no transcript for (symbol,
+// quarter), so consumers can fall back.
+export async function getNormalizedTranscript(
+  symbol: string,
+  quarter: string,
+  tracker: CostTracker,
+  now: string,
+): Promise<NormalizedTranscript | null> {
+  const upper = symbol.toUpperCase();
+
+  // 1. Cache hit → no fetch, no normalize cost.
+  const cached = await readCachedTranscript(upper, quarter);
+  if (cached) {
+    return {
+      ticker: upper,
+      quarter,
+      normalizedText: cached.normalizedText,
+      turns: cached.turns,
+      fromCache: true,
+    };
+  }
+
+  // 2. Miss → fetch from AV (null if AV has nothing).
+  const transcript = await fetchEarningsTranscriptOrNull(upper, quarter);
+  if (!transcript) return null;
+
+  // 3. Normalize (the one expensive step) and persist for next time.
+  const normalizedText = await normalizeTranscriptText(
+    transcriptToText(transcript),
+    upper,
+    quarter,
+    tracker,
+  );
+  await writeCachedTranscript(upper, quarter, normalizedText, transcript.turns, now);
+
+  return { ticker: upper, quarter, normalizedText, turns: transcript.turns, fromCache: false };
 }

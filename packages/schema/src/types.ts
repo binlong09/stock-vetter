@@ -576,6 +576,7 @@ export const EventSource = z.enum([
   'sec-10k',
   'fmp-estimates',
   'fmp-revisions',
+  'av-transcript',
   'manual',
 ]);
 export type EventSource = z.infer<typeof EventSource>;

@@ -83,10 +83,13 @@ export { isTursoConfigured, getTursoClient, migrate } from './turso.js';
 // Generic Resend email sender (cron digests; magic-link email stays in web).
 export { isMailerConfigured, sendEmail, type SendEmailInput } from './mailer.js';
 
-// Alpha Vantage earnings-call transcript adapter (SPIKE — not wired to a feed).
+// Alpha Vantage earnings-call transcript adapter + normalized-transcript cache.
 export {
   fetchEarningsTranscript,
+  fetchEarningsTranscriptOrNull,
   transcriptToText,
+  getNormalizedTranscript,
   type EarningsTranscript,
   type TranscriptTurn,
+  type NormalizedTranscript,
 } from './av-transcript.js';

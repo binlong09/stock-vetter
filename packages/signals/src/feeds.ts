@@ -614,9 +614,64 @@ function logSourceIssue(source: string, ticker: string, err: unknown): void {
   }
 }
 
+// ---- 5. Alpha Vantage earnings-call transcript ---------------------------
+//
+// A transcript becomes ONE Event per (ticker, quarter), with a stable dedupKey
+// `av:<ticker>:<quarter>` so the daily cron doesn't re-fire the same transcript
+// (transcripts land ~quarterly). Ingestion does NOT pay the expensive normalize
+// cost — the event carries the quarter in its payload, and the normalized text
+// is loaded lazily at evaluation time (cache-checked) by the evaluator. We only
+// emit the event if AV actually has a transcript for that quarter.
+
+// Most-recent COMPLETED calendar quarter as of `asOfDate` (YYYY-MM-DD). A call
+// for calendar Qn is usually held a few weeks into Qn+1, so "most recent
+// completed quarter" is the one whose transcript is likely available.
+export function mostRecentQuarter(asOfDate: string): string {
+  const [y, m] = asOfDate.split('-').map(Number) as [number, number];
+  // Quarter of the as-of month, then step back one (the just-completed quarter).
+  const q = Math.floor((m - 1) / 3) + 1; // 1..4
+  let year = y;
+  let quarter = q - 1;
+  if (quarter < 1) {
+    quarter = 4;
+    year -= 1;
+  }
+  return `${year}Q${quarter}`;
+}
+
+// Lightweight transcript Event. Content (the normalized text) is NOT embedded
+// here — only the quarter, so ingestion/diff is cheap; the evaluator loads the
+// normalized text lazily (cache-checked) via the av-transcript source handling.
+export function toTranscriptEvent(ticker: string, quarter: string): Event {
+  const upper = ticker.toUpperCase();
+  return {
+    dedupKey: `av:${upper}:${quarter}`,
+    source: 'av-transcript',
+    ticker: upper,
+    date: quarterEndDate(quarter),
+    title: `${upper} ${quarter} earnings-call transcript`,
+    url: null,
+    payload: { quarter },
+    dataQuality:
+      `source=Alpha Vantage EARNINGS_CALL_TRANSCRIPT (${quarter}); ` +
+      `text normalized for auto-transcription mangling; ` +
+      `AV sentiment: low-confidence, unused in scoring`,
+  };
+}
+
+// Approximate calendar-quarter end date (for the Event's `date` / high-water
+// mark). Good enough for ordering; not used for fetching.
+function quarterEndDate(quarter: string): string {
+  const m = /^(\d{4})Q([1-4])$/.exec(quarter);
+  if (!m) return `${quarter}-01-01`;
+  const year = m[1]!;
+  const endByQ: Record<string, string> = { '1': '03-31', '2': '06-30', '3': '09-30', '4': '12-31' };
+  return `${year}-${endByQ[m[2]!]}`;
+}
+
 export async function fetchTickerEvents(
   ticker: string,
-  opts: { sinceDate?: string } = {},
+  opts: { sinceDate?: string; asOfDate?: string } = {},
 ): Promise<Event[]> {
   const events: Event[] = [];
 
@@ -647,6 +702,18 @@ export async function fetchTickerEvents(
     }
   } catch (err) {
     logSourceIssue('revisions', ticker, err);
+  }
+
+  // Alpha Vantage earnings-call transcript — one event for the most-recent
+  // completed quarter. We do NOT call AV here (saves API quota and avoids the
+  // normalize cost at ingestion); the event is emitted unconditionally and the
+  // evaluator loads/normalizes the transcript lazily (cache-checked). The
+  // stable dedupKey `av:<ticker>:<quarter>` means a daily cron re-emits the
+  // same event every day, but diff/cursor surfaces it only ONCE — so it's
+  // evaluated a single time per quarter. If AV has no transcript for that
+  // quarter, the evaluator returns no-candidate.
+  if (opts.asOfDate) {
+    events.push(toTranscriptEvent(ticker, mostRecentQuarter(opts.asOfDate)));
   }
 
   return events.sort((a, b) => b.date.localeCompare(a.date));

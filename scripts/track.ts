@@ -173,11 +173,15 @@ async function gatherThesisEvents(
   thesis: Thesis,
   manual: Event[],
   since: string,
+  asOfDate: string,
 ): Promise<Event[]> {
   const events: Event[] = [];
   if (thesis.watchItems.some((w) => w.feed === 'auto')) {
     const tickers = [...new Set(thesis.tickers.map((t) => t.toUpperCase()))];
-    const perTicker = await Promise.all(tickers.map((t) => fetchTickerEvents(t, { sinceDate: since })));
+    // asOfDate enables the av-transcript event (most-recent completed quarter).
+    const perTicker = await Promise.all(
+      tickers.map((t) => fetchTickerEvents(t, { sinceDate: since, asOfDate })),
+    );
     events.push(...perTicker.flat());
   }
   events.push(...manual.filter((ev) => manualMatches(ev, thesis)));
@@ -268,7 +272,7 @@ async function main(): Promise<void> {
       }
 
       const cursor = await readCursor(thesis.id, flags.reset);
-      const fetched = await gatherThesisEvents(thesis, manual, flags.since);
+      const fetched = await gatherThesisEvents(thesis, manual, flags.since, now.slice(0, 10));
       const { newEvents, nextCursor } = diffEvents(cursor, fetched);
       totalNew += newEvents.length;
       console.log(`  ${fetched.length} candidate event(s); ${cursor.seenKeys.length} seen; ${newEvents.length} NEW.`);
@@ -325,6 +329,7 @@ async function main(): Promise<void> {
           allEvents: fetched,
           reverseDcfByTicker: dcfByTicker,
           tracker,
+          now,
         });
         if (outcome.kind === 'signal') {
           signals.push(outcome.signal);

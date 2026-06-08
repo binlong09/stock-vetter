@@ -1,6 +1,7 @@
 export { runPipeline } from './orchestrate.js';
 export type { PipelineOptions, PipelineStage } from './orchestrate.js';
 export { renderMarkdown } from './render.js';
+export { fetchEarningsTranscriptBundle } from './transcript.js';
 export {
   MissingCaptionsError,
   UnknownTickerError,

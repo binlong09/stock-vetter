@@ -37,6 +37,7 @@ import {
   fetchFinancialSnapshot,
   buildReverseDcf,
   renderReverseDcfMarkdown,
+  getNormalizedTranscript,
   type CostTracker,
   type CacheableSegment,
 } from '@stock-vetter/core';
@@ -176,9 +177,17 @@ async function loadSecContent(event: Event): Promise<string> {
 }
 
 // What the extractor sees as "the event's content". For SEC events we fetch the
-// primary doc + exhibits (bounded); for FMP/manual events the payload already
-// IS the structured fact, so we serialize it.
-async function loadEventContent(event: Event): Promise<string> {
+// primary doc + exhibits (bounded); for an av-transcript event we lazily load
+// the normalized transcript (cache-checked — normalize cost is paid only on a
+// miss); for FMP/manual events the payload IS the structured fact.
+//
+// Returns null content (a no-candidate signal) when an av-transcript has no
+// transcript available for that quarter.
+async function loadEventContent(
+  event: Event,
+  tracker: CostTracker,
+  now: string,
+): Promise<string | null> {
   if (event.source === 'sec-8k' || event.source === 'sec-10q' || event.source === 'sec-10k') {
     try {
       return await loadSecContent(event);
@@ -186,10 +195,15 @@ async function loadEventContent(event: Event): Promise<string> {
       return `(SEC document fetch error: ${err instanceof Error ? err.message : String(err)})`;
     }
   }
-  // A manual event may carry a long free-text body (e.g. an earnings-call
-  // transcript) under payload.transcriptText — return it as RAW text so the
-  // extractor sees clean prose, not a JSON-escaped blob. Otherwise the payload
-  // IS the structured fact, so serialize it.
+  if (event.source === 'av-transcript') {
+    const quarter = typeof event.payload.quarter === 'string' ? event.payload.quarter : null;
+    if (!quarter) return null;
+    const norm = await getNormalizedTranscript(event.ticker, quarter, tracker, now);
+    if (!norm) return null; // AV has no transcript for this quarter → no candidate
+    return `${event.title}\n\n${norm.normalizedText}`;
+  }
+  // A manual event may carry a long free-text body (e.g. a transcript) under
+  // payload.transcriptText — return it as RAW text, not a JSON-escaped blob.
   if (typeof event.payload.transcriptText === 'string') {
     return `${event.title}\n\n${event.payload.transcriptText}`;
   }
@@ -489,10 +503,26 @@ export async function evaluatePair(opts: {
   allEvents: Event[];
   reverseDcfByTicker: Map<string, ReverseDcfReport | null>;
   tracker: CostTracker;
+  // Timestamp for any cache write (e.g. the normalized-transcript cache). Core
+  // can't call Date.now safely, so callers pass it. Defaults to a fixed epoch
+  // only as a guard — real callers (track.ts) pass the run's `now`.
+  now?: string;
 }): Promise<EvaluationOutcome> {
   const { thesis, watchItem, event } = opts;
+  const now = opts.now ?? '1970-01-01T00:00:00.000Z';
 
-  const content = await loadEventContent(event);
+  const content = await loadEventContent(event, opts.tracker, now);
+  // Null content (e.g. an av-transcript with no transcript for that quarter) ⇒
+  // nothing to evaluate, costing zero further LLM calls.
+  if (content === null) {
+    return {
+      kind: 'no-candidate',
+      thesisId: thesis.id,
+      watchItemId: watchItem.id,
+      eventDedupKey: event.dedupKey,
+      reason: 'no transcript available for this ticker/quarter',
+    };
+  }
   const extract = await runExtract({ thesis, watchItem, event, content, tracker: opts.tracker });
 
   if (!extract.candidate) {

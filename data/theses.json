@@ -9,8 +9,8 @@
       "watchItems": [
         {
           "id": "nvda-gross-margin-guide",
-          "label": "Forward gross-margin guidance direction (8-K Ex-99.1 / 10-Q MD&A)",
-          "sources": ["sec-8k", "sec-10q", "sec-10k"],
+          "label": "Forward gross-margin guidance direction (8-K Ex-99.1 / 10-Q MD&A / earnings call)",
+          "sources": ["sec-8k", "sec-10q", "sec-10k", "av-transcript"],
           "feed": "auto",
           "tripwire": "Guided or reported non-GAAP gross margin falls below 72%, or guidance language flags sustained pricing pressure.",
           "tripwireDirection": "weakens"
@@ -65,8 +65,8 @@
       "watchItems": [
         {
           "id": "googl-tpu-disclosure",
-          "label": "TPU external-revenue disclosure in filings (8-K / 10-Q / 10-K MD&A)",
-          "sources": ["sec-8k", "sec-10q", "sec-10k"],
+          "label": "TPU external-revenue disclosure in filings or on the earnings call",
+          "sources": ["sec-8k", "sec-10q", "sec-10k", "av-transcript"],
           "feed": "auto",
           "tripwire": "Google first discloses or quantifies external/third-party TPU revenue in a filing.",
           "tripwireDirection": "strengthens"
