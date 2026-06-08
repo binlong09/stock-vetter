@@ -155,9 +155,19 @@ export function DeepView({
               </li>
             )}
             <li className="text-[11px] text-slate-400">
-              Primary sources for this card: the latest 10-K, the latest DEF 14A proxy (when one
-              exists), SEC companyfacts, and the current price. Not 10-Qs, 8-Ks, earnings calls, or
-              news.
+              The scored dimensions draw only on the latest 10-K, the latest DEF 14A proxy (when one
+              exists), SEC companyfacts, and the current price — not 10-Qs, 8-Ks, or news.
+              {metaCard.inputs.analystVideoCount > 0 ? (
+                <>
+                  {' '}
+                  Analyst content ({metaCard.inputs.analystVideoCount} source
+                  {metaCard.inputs.analystVideoCount === 1 ? '' : 's'}, which may include an
+                  earnings-call transcript) is compared against these filings but does not change the
+                  scores.
+                </>
+              ) : (
+                ' Earnings calls are not used.'
+              )}
             </li>
           </ul>
         </DeepSection>
