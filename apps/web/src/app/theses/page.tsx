@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { listTheses } from '@/signals-queries';
 import { ThesisStatusChip } from '@/components/ThesisStatusChip';
+import { RunNowButton } from '@/components/RunNowButton';
 import { HEALTH_ORDER } from '@/lib/thesis-status';
 import { isoDate } from '@/lib/format';
 
@@ -13,12 +14,20 @@ export default async function ThesesPage() {
   const sorted = [...rows].sort(
     (a, b) => HEALTH_ORDER.indexOf(a.health as never) - HEALTH_ORDER.indexOf(b.health as never),
   );
+  // Baseline for the run-now poll: the latest status update we currently show.
+  const baselineUpdatedAt = rows.reduce<string | null>(
+    (max, r) => (r.updatedAt && (!max || r.updatedAt > max) ? r.updatedAt : max),
+    null,
+  );
 
   return (
     <div>
-      <div className="flex items-baseline justify-between">
+      <div className="flex items-baseline justify-between gap-3">
         <h1 className="text-base font-semibold text-slate-900">Theses</h1>
-        <span className="text-xs text-slate-400">{rows.length} watched</span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-slate-400">{rows.length} watched</span>
+          <RunNowButton baselineUpdatedAt={baselineUpdatedAt} />
+        </div>
       </div>
       <p className="mt-1 text-xs text-slate-400">
         Signal tracker — a noise filter, not a feed. Status reflects the last scheduled run.

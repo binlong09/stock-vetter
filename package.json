@@ -16,6 +16,7 @@
     "signals-spike": "tsx scripts/signals-spike.ts",
     "track": "tsx scripts/track.ts",
     "evaluate-signals": "tsx scripts/evaluate-signals.ts",
+    "test-coldstart-widen": "tsx scripts/test-coldstart-widen.ts",
     "eval": "tsx scripts/eval.ts"
   },
   "devDependencies": {

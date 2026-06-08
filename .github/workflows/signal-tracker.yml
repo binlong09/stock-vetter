@@ -18,7 +18,7 @@ on:
   workflow_dispatch:
     inputs:
       since:
-        description: 'SEC lookback start (YYYY-MM-DD). Leave blank for the 1-year default.'
+        description: 'SEC lookback start (YYYY-MM-DD). Blank = 14-day steady-state window (empty-cursor theses auto-widen to a year regardless).'
         required: false
         type: string
       allow_backlog:
@@ -68,13 +68,15 @@ jobs:
           SIGNAL_DIGEST_TO: ${{ secrets.SIGNAL_DIGEST_TO }}
           SIGNAL_TRACKER_BASE_URL: ${{ secrets.SIGNAL_TRACKER_BASE_URL }}
         run: |
-          # Default to a NARROW 10-day window so a cold-started thesis/ticker
-          # (empty cursor) self-seeds with only a few pairs instead of tripping
-          # the cold-start guard on the full 1-year backlog every run. A daily
-          # cron sees ~10 days the first time, then steady-state deltas. Override
-          # with the workflow_dispatch `since` input for an explicit backfill.
+          # Steady-state window: 14 days. This is the safety margin against a
+          # missed cron run (a skipped day still gets re-examined); dedup makes
+          # the overlap free. Cold starts (empty-cursor theses) are NOT seeded on
+          # this narrow window — track.ts auto-widens an empty cursor to a full
+          # year so a filing older than 14 days isn't permanently missed (gated
+          # by the cost guard / --allow-backlog). Override the window with the
+          # workflow_dispatch `since` input.
           SINCE="${{ inputs.since }}"
-          if [ -z "$SINCE" ]; then SINCE="$(date -u -d '10 days ago' +%Y-%m-%d)"; fi
+          if [ -z "$SINCE" ]; then SINCE="$(date -u -d '14 days ago' +%Y-%m-%d)"; fi
           ARGS="--holder cron --since $SINCE"
           if [ "${{ inputs.allow_backlog }}" = "true" ]; then ARGS="$ARGS --allow-backlog"; fi
           echo "Running: pnpm track $ARGS"
