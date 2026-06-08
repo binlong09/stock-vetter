@@ -120,7 +120,9 @@ export function renderMetaCardMarkdown(c: MetaCard): string {
   // shown so the comparison's basis is visible.
   if (c.tenqDelta) {
     const d = c.tenqDelta;
-    lines.push('## Changes since annual baseline (10-Q)');
+    // Headline encodes scope (e.g. "10 risk-factor changes; MD&A not assessed")
+    // so the count itself is honest, not a bare number over a footnote.
+    lines.push(`## Changes since annual baseline (10-Q) — ${d.headline}`);
     lines.push('');
     lines.push(
       `*Comparing* 10-Q \`${d.tenqAccession}\` (filed ${d.tenqFilingDate}) ` +
@@ -128,6 +130,14 @@ export function renderMetaCardMarkdown(c: MetaCard): string {
         `*This is change detection only — it does not affect the verdict or dimension scores.*`,
     );
     lines.push('');
+    // Coverage stamp: visible banner above the change list when a depended-on
+    // section failed extraction, so the limitation isn't hidden behind the count.
+    if (d.coverageWarnings.length > 0) {
+      for (const w of d.coverageWarnings) {
+        lines.push(`> ⚠️ **Coverage limitation:** ${w}`);
+      }
+      lines.push('');
+    }
     if (d.summary.trim().length > 0) {
       lines.push(d.summary);
       lines.push('');

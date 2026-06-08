@@ -7,6 +7,7 @@ export {
   type TenqDeltaResult,
   type TenqDeltaSourceText,
   type TenqDeltaVerification,
+  type SectionConfidence,
 } from './tenq-delta.js';
 export { classifyMatch } from './citation-verifier.js';
 export {
