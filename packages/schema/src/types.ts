@@ -486,15 +486,27 @@ export const TenqDelta = z.object({
   // assessed" when a depended-on section failed extraction. The card shows this
   // verbatim so a reader scanning only the count sees the honest scope without
   // reading a footnote. Computed from section confidence, never the model.
-  headline: z.string(),
+  //
+  // BACKWARD COMPAT: cards persisted by the first 10-Q-delta release (316ab88)
+  // predate this field. Rather than 500 on those rows, fall back to a plain
+  // count derived from `changes` — the same full-coverage wording the producer
+  // emits when no section failed extraction.
+  headline: z.string().optional(),
   // Data-quality stamp: one entry per depended-on section (MD&A, risk factors)
   // that failed extraction or was missing, so the limitation is visible on the
   // card rather than hidden behind a confident change count. Empty when both
   // compared sections parsed cleanly. Same spirit as the SEC dataQuality note
   // and the transcript-normalization stamp. NOTE: this flags an extraction
   // failure; it does not fix the parser.
-  coverageWarnings: z.array(z.string()),
-});
+  //
+  // BACKWARD COMPAT: defaults to [] for pre-9dd2052 rows — an empty stamp reads
+  // as "no known coverage gaps", which is the honest reading for a card that
+  // never computed the stamp.
+  coverageWarnings: z.array(z.string()).default([]),
+}).transform((d) => ({
+  ...d,
+  headline: d.headline ?? `${d.changes.length} change${d.changes.length === 1 ? '' : 's'}`,
+}));
 export type TenqDelta = z.infer<typeof TenqDelta>;
 
 export const MetaCard = z.object({
