@@ -87,6 +87,10 @@ type Flags = {
   since: string;
   holder: string;
   allowBacklog: boolean;
+  // When true, do NOT auto-widen the window for an empty-cursor (cold-start)
+  // thesis — use --since as given. Steady-state runs are unaffected (they have a
+  // populated cursor). Exists as an escape hatch and to test the widen logic.
+  forceNarrow: boolean;
   digestTo: string | null;
   thesisIds: string[];
 };
@@ -102,6 +106,19 @@ const COLD_START_PAIR_LIMIT = 8;
 // conservative ceiling, not a lowball.
 const EST_COST_PER_PAIR = 0.06;
 
+// Days to look back for an EMPTY-CURSOR (never-analyzed) thesis. A cold start
+// must backfill WIDE, not seed narrow: the steady-state daily window (14 days)
+// would permanently miss any filing older than the window — the cursor would
+// advance past it and nothing ever looks back that far. So an empty cursor
+// auto-widens to a year, still gated by the cold-start pair guard above.
+const COLD_START_LOOKBACK_DAYS = 365;
+
+function daysAgoISO(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  return d.toISOString().slice(0, 10);
+}
+
 function parseArgs(argv: string[]): Flags {
   const oneYearAgo = (() => {
     const d = new Date();
@@ -115,6 +132,7 @@ function parseArgs(argv: string[]): Flags {
     since: oneYearAgo,
     holder: `manual:${hostname()}`,
     allowBacklog: false,
+    forceNarrow: false,
     digestTo: process.env.SIGNAL_DIGEST_TO ?? null,
     thesisIds: [],
   };
@@ -124,6 +142,7 @@ function parseArgs(argv: string[]): Flags {
     else if (a === '--dry-run') flags.dryRun = true;
     else if (a === '--reset') flags.reset = true;
     else if (a === '--allow-backlog') flags.allowBacklog = true;
+    else if (a === '--no-widen') flags.forceNarrow = true;
     else if (a === '--digest-to') {
       const v = argv[++i];
       if (!v) throw new Error('--digest-to requires an email address');
@@ -272,7 +291,21 @@ async function main(): Promise<void> {
       }
 
       const cursor = await readCursor(thesis.id, flags.reset);
-      const fetched = await gatherThesisEvents(thesis, manual, flags.since, now.slice(0, 10));
+
+      // Auto-widen on empty cursor (cold start). A never-analyzed thesis must
+      // backfill WIDE — using the narrow steady-state window would permanently
+      // miss filings older than it (the cursor advances past them). Widen to a
+      // year so the cold-start guard below decides whether the backlog cost is
+      // acceptable. --no-widen disables this (escape hatch / test). Steady-state
+      // theses (populated cursor) always use flags.since.
+      const emptyCursor = cursor.seenKeys.length === 0;
+      const widen = emptyCursor && !flags.forceNarrow;
+      const effectiveSince = widen ? daysAgoISO(COLD_START_LOOKBACK_DAYS) : flags.since;
+      if (widen && effectiveSince !== flags.since) {
+        console.log(`  (cold start: empty cursor → widening lookback to ${effectiveSince}, not ${flags.since})`);
+      }
+
+      const fetched = await gatherThesisEvents(thesis, manual, effectiveSince, now.slice(0, 10));
       const { newEvents, nextCursor } = diffEvents(cursor, fetched);
       totalNew += newEvents.length;
       console.log(`  ${fetched.length} candidate event(s); ${cursor.seenKeys.length} seen; ${newEvents.length} NEW.`);
@@ -303,11 +336,11 @@ async function main(): Promise<void> {
       if (isColdStart && pairs.length > COLD_START_PAIR_LIMIT && !flags.allowBacklog) {
         const est = (pairs.length * EST_COST_PER_PAIR).toFixed(2);
         console.log(
-          `  ⛔ COLD START: empty cursor, ${pairs.length} pairs (~$${est}) exceeds the ` +
-            `${COLD_START_PAIR_LIMIT}-pair backlog limit.\n` +
-            `     This is a backlog run, not a steady-state delta. Re-run with a narrower\n` +
-            `     --since window to shrink it, or --allow-backlog to evaluate the full\n` +
-            `     backlog deliberately. Skipping this thesis; cursor NOT advanced.`,
+          `  ⛔ COLD START: empty cursor widened to a 1-year backfill, ${pairs.length} pairs ` +
+            `(~$${est}) exceeds the ${COLD_START_PAIR_LIMIT}-pair limit.\n` +
+            `     A cold start backfills wide on purpose (so a >14-day-old filing isn't\n` +
+            `     missed). Re-run with --allow-backlog to evaluate the full backlog\n` +
+            `     deliberately. Skipping this thesis; cursor NOT advanced.`,
         );
         continue;
       }
