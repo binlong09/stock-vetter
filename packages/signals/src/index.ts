@@ -13,6 +13,8 @@ export {
   toEstimatesEvent,
   toRevisionEvent,
   toManualEvent,
+  toTranscriptEvent,
+  mostRecentQuarter,
   fetchTickerEvents,
   type EarningsTranscript,
   type ConsensusEstimate,
