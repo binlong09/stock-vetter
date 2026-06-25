@@ -197,6 +197,16 @@ function scoreChunk(chunk: string, terms: string[]): number {
   return score;
 }
 
+// Rank all chunk indices most-relevant-first by query-term score. Used as the
+// triage fallback (model error / empty result) so the ceiling cap still picks
+// the most relevant chunks rather than the document head.
+function lexicalRank(chunks: string[], dimension: PrimaryDimensionKey): number[] {
+  const terms = DIMENSION_QUERY_TERMS[dimension];
+  return chunks
+    .map((_, i) => i)
+    .sort((a, b) => scoreChunk(chunks[b]!, terms) - scoreChunk(chunks[a]!, terms) || a - b);
+}
+
 
 // Water-fill the budget across sources by size: small sources take what they
 // need; the surplus redistributes to larger ones. Guarantees no routed section
@@ -342,12 +352,13 @@ async function triageSection(
 ): Promise<number[]> {
   const system =
     `You are selecting the parts of an SEC filing section that a value investor needs to score ONE specific ` +
-    `dimension. The section is split into numbered chunks. Return ONLY the chunk numbers that materially bear ` +
-    `on: ${DIMENSION_CRITERIA[dimension]}. A chunk qualifies if it contains the specific figures, tables, notes, ` +
-    `disclosures, or discussion relevant to this dimension. Exclude boilerplate, signatures, safe-harbor/` +
-    `forward-looking disclaimers, and chunks about unrelated topics. Aim for the genuinely relevant subset — ` +
-    `usually a minority of the section — but never drop a chunk that carries decision-relevant detail. ` +
-    `Output JSON only: {"relevant":[chunk numbers]}.`;
+    `dimension. The section is split into numbered chunks. Return the chunk numbers that materially bear on: ` +
+    `${DIMENSION_CRITERIA[dimension]} — ORDERED FROM MOST to LEAST relevant (put the single most decision-` +
+    `relevant chunk first). A chunk qualifies if it contains the specific figures, tables, notes, disclosures, ` +
+    `or discussion relevant to this dimension. Exclude boilerplate, signatures, safe-harbor/forward-looking ` +
+    `disclaimers, voting and meeting logistics, plan/administrative legalese, auditor ratification, and chunks ` +
+    `about unrelated topics. Rank the genuinely material chunks; do not pad the list with marginal content. ` +
+    `Output JSON only: {"relevant":[chunk numbers, most relevant first]}.`;
   const promptHash = createHash('sha1').update(system).digest('hex').slice(0, 12);
   const inputHash = hashInputs({
     sectionId,
@@ -370,14 +381,16 @@ async function triageSection(
       tracker,
     );
     const result = TriageSchema.parse(raw);
-    indices = [...new Set(result.relevant.filter((i) => i >= 0 && i < chunks.length))].sort((a, b) => a - b);
-    // Degenerate result (model returned nothing usable): keep everything rather
-    // than silently dropping the section.
-    if (indices.length === 0) indices = chunks.map((_, i) => i);
+    // Preserve the model's order — it IS the relevance ranking. Dedupe keeping
+    // first occurrence (highest rank).
+    indices = [...new Set(result.relevant.filter((i) => i >= 0 && i < chunks.length))];
+    // Degenerate (model returned nothing usable): rank everything lexically so
+    // the caller's cap still picks the most relevant, not the head.
+    if (indices.length === 0) indices = lexicalRank(chunks, dimension);
   } catch {
-    // Triage failed (API/parse error) — fall back to keeping all chunks; the
-    // caller's ceiling cap still bounds the size.
-    indices = chunks.map((_, i) => i);
+    // Triage failed (API/parse error) — fall back to a lexical ranking of all
+    // chunks; the caller's ceiling cap takes the top of it.
+    indices = lexicalRank(chunks, dimension);
   }
   await putLlmOutput(`triage-${dimension}`, inputHash, promptHash, indices);
   return indices;
@@ -428,7 +441,6 @@ async function loadDimensionContext(
   // dimension. A source that already fits within half the ceiling is kept whole
   // (not worth a triage call); only the genuinely large ones are triaged.
   const triageModel = opts.triageModel ?? TRIAGE_MODEL;
-  const queryTerms = DIMENSION_QUERY_TERMS[dimension];
   const selected: { id: string; chunks: string[]; kept: number[]; selectedLen: number; original: number }[] = [];
   for (const { id, text } of sources) {
     const chunks = chunkText(text, TRIAGE_CHUNK_SIZE);
@@ -442,7 +454,7 @@ async function loadDimensionContext(
 
   // If the combined relevant content still exceeds the ceiling, water-fill the
   // ceiling across sources by their relevant size and keep each source's
-  // highest-lexical-score chunks up to its allocation.
+  // top-ranked chunks up to its allocation.
   const combined = selected.reduce((n, s) => n + s.selectedLen, 0);
   const allocations =
     combined <= PER_DIMENSION_CEILING
@@ -457,12 +469,12 @@ async function loadDimensionContext(
     if (alloc <= 0) continue;
     let keepIdx = s.kept;
     if (s.selectedLen > alloc) {
-      const ranked = [...s.kept].sort(
-        (a, b) => scoreChunk(s.chunks[b]!, queryTerms) - scoreChunk(s.chunks[a]!, queryTerms) || a - b,
-      );
+      // s.kept is already in relevance order (the triage model's ranking, or a
+      // lexical ranking on fallback). Take the top of it that fits the budget,
+      // then re-sort into document order for readable assembly.
       const take: number[] = [];
       let usedChars = 0;
-      for (const ci of ranked) {
+      for (const ci of s.kept) {
         if (usedChars + s.chunks[ci]!.length > alloc) continue;
         take.push(ci);
         usedChars += s.chunks[ci]!.length;
