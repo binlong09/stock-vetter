@@ -9,9 +9,12 @@ const DEFAULT_MODEL = 'claude-sonnet-4-6';
 // cache-read is 0.10× input. Both assume the 5-minute TTL cache.
 type Pricing = { input: number; output: number; cacheWrite: number; cacheRead: number };
 const PRICING: Record<string, Pricing> = {
+  'claude-opus-4-8': { input: 5.0, output: 25.0, cacheWrite: 6.25, cacheRead: 0.50 },
   'claude-sonnet-4-6': { input: 3.0, output: 15.0, cacheWrite: 3.75, cacheRead: 0.30 },
   'claude-haiku-4-5-20251001': { input: 1.0, output: 5.0, cacheWrite: 1.25, cacheRead: 0.10 },
 };
+// 1-hour cache writes are billed at 2x base input (vs 1.25x for the 5-minute
+// `cacheWrite` rate above), so they're priced separately from the breakdown.
 
 function pricingFor(model: string): Pricing {
   // Fall back to Sonnet pricing for unknown models (defensive — prevents
@@ -55,14 +58,16 @@ function priceCall(
   model: string,
   inputTokens: number,
   outputTokens: number,
-  cacheWriteTokens = 0,
+  cacheWriteTokens = 0,   // 5-minute cache writes (1.25x input)
   cacheReadTokens = 0,
+  cacheWrite1hTokens = 0, // 1-hour cache writes (2x input)
 ): number {
   const p = pricingFor(model);
   return (
     (inputTokens / 1_000_000) * p.input +
     (outputTokens / 1_000_000) * p.output +
     (cacheWriteTokens / 1_000_000) * p.cacheWrite +
+    (cacheWrite1hTokens / 1_000_000) * (p.input * 2) +
     (cacheReadTokens / 1_000_000) * p.cacheRead
   );
 }
@@ -145,18 +150,27 @@ async function callWithRetry(
 // Anthropic supports up to 4 cache breakpoints per request; the prefix up to
 // each breakpoint is cached separately. Order matters — caches build
 // incrementally from the start.
-export type CacheableSegment = { text: string; cache?: boolean };
+//
+// `ttl` selects the cache lifetime: '5m' (default) or '1h'. The 1-hour TTL
+// costs 2x base input to *write* (vs 1.25x for 5m) but survives long enough
+// for a later pass to read it. We use it on the shared dimension-context block
+// so Pass 2/3 (which run minutes after Pass 1 wrote it) still hit the cache.
+export type CacheableSegment = { text: string; cache?: boolean; ttl?: '5m' | '1h' };
+
+type CacheControl = { type: 'ephemeral'; ttl?: '5m' | '1h' };
 
 // Build a Sonnet-friendly content array for the system prompt or a user
 // message from a string OR an array of segments with optional cache markers.
 function buildContentBlocks(
   input: string | CacheableSegment[],
-): Array<{ type: 'text'; text: string; cache_control?: { type: 'ephemeral' } }> {
+): Array<{ type: 'text'; text: string; cache_control?: CacheControl }> {
   if (typeof input === 'string') return [{ type: 'text', text: input }];
   return input.map((s) => ({
     type: 'text' as const,
     text: s.text,
-    ...(s.cache ? { cache_control: { type: 'ephemeral' as const } } : {}),
+    ...(s.cache
+      ? { cache_control: { type: 'ephemeral' as const, ...(s.ttl ? { ttl: s.ttl } : {}) } }
+      : {}),
   }));
 }
 
@@ -188,9 +202,22 @@ export async function llmCall(opts: {
   const outputTokens = resp.usage.output_tokens;
   // The Anthropic SDK exposes cache fields when prompt caching is in use.
   // They're absent on calls without cache_control blocks, so default to 0.
-  const cacheWriteTokens = (resp.usage as { cache_creation_input_tokens?: number }).cache_creation_input_tokens ?? 0;
-  const cacheReadTokens = (resp.usage as { cache_read_input_tokens?: number }).cache_read_input_tokens ?? 0;
-  const cost = priceCall(model, inputTokens, outputTokens, cacheWriteTokens, cacheReadTokens);
+  // The `cache_creation` breakdown splits writes by TTL (5m billed at 1.25x,
+  // 1h at 2x). Older responses only carry the aggregate, so fall back to
+  // treating the whole aggregate as 5m.
+  const u = resp.usage as {
+    cache_creation_input_tokens?: number;
+    cache_read_input_tokens?: number;
+    cache_creation?: { ephemeral_5m_input_tokens?: number; ephemeral_1h_input_tokens?: number };
+  };
+  const aggregateWrite = u.cache_creation_input_tokens ?? 0;
+  const cacheWrite1hTokens = u.cache_creation?.ephemeral_1h_input_tokens ?? 0;
+  const cacheWrite5mTokens = u.cache_creation
+    ? (u.cache_creation.ephemeral_5m_input_tokens ?? 0)
+    : aggregateWrite;
+  const cacheWriteTokens = cacheWrite5mTokens + cacheWrite1hTokens; // for display
+  const cacheReadTokens = u.cache_read_input_tokens ?? 0;
+  const cost = priceCall(model, inputTokens, outputTokens, cacheWrite5mTokens, cacheReadTokens, cacheWrite1hTokens);
   opts.tracker.total += cost;
   opts.tracker.byCall.push({ stage: opts.stage, inputTokens, outputTokens, cacheWriteTokens, cacheReadTokens, cost });
   opts.tracker.onAfterCall?.(opts.tracker.total);

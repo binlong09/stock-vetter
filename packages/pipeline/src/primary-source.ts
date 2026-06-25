@@ -198,6 +198,25 @@ export type PrimarySourceRunOptions = {
   onProgress?: (stage: string, costSoFar: number) => void;
 };
 
+// Build the dimension's primary-source context block. Pass 1, 2, and 3 each
+// send this as the leading (cached) `system` block, IDENTICALLY, so all three
+// passes share one cached copy of the ~18k-token context instead of every
+// pass re-sending it at full input rate. The bytes must match exactly across
+// passes for the cross-pass prompt cache to hit — keep this the single source
+// of truth and never interpolate pass-specific text into it.
+function buildSharedContextBlock(
+  dimension: PrimaryDimensionKey,
+  context: string,
+  financialContext: string,
+  includeFinancial: boolean,
+): string {
+  return (
+    `Primary-source sections for the **${dimension}** dimension ` +
+    `(do not invent content from sections not provided):\n\n${context}` +
+    (includeFinancial ? `\n\n--- Financial context ---\n${financialContext}` : '')
+  );
+}
+
 // Pass 1 only. Returns the parsed PrimarySourceChecklist. Each dimension is
 // scored in its own LLM call so that (a) the model sees only the
 // dimension-routed sections (avoiding the moat-laundering risk), and
@@ -270,39 +289,32 @@ export async function runPrimarySourcePass1(
     });
     const cached = await getLlmOutput<SingleSampleOutput>(`ps1-${key}`, inputHash, promptText);
     if (cached) return cached;
-    // Split the user message into:
-    //   - sharedPrefix: identical across the 3 samples of this dimension
-    //     (sources, ticker info, dimension name). Marked cacheable so
-    //     samples 2 and 3 hit cache for ~90% of input tokens.
-    //   - sampleTail: the per-sample marker. Uncached.
-    // The sample marker is what creates the variance we want — samples 1/2/3
-    // produce different LLM outputs even with identical-but-cached context.
-    const sharedPrefix =
+    // System layout (shared across Pass 1/2/3 so the context caches once):
+    //   block 1: the dimension context (cached, 5m TTL) — reused by Pass 2/3.
+    //   block 2: the pass persona/rubric prompt (cached, default TTL).
+    // The user message carries only the small, pass-specific framing + the
+    // per-sample marker (the marker is what creates the variance we want —
+    // samples 1/2/3 produce different outputs over identical cached context).
+    const contextBlock = buildSharedContextBlock(key, context, financialContext, includeFinancial);
+    const userMessage =
       `Score the following dimension only: **${key}**\n\n` +
       `Ticker: ${ticker.toUpperCase()}\n` +
       `Filing: 10-K accession ${meta.accession} (${meta.filingDate})\n` +
       (proxy ? `Proxy: DEF 14A accession ${proxy.accession} (${proxy.filingDate})\n` : '') +
-      (includeFinancial ? `\n${financialContext}` : '') +
-      `\nPrimary-source sections (do not invent content from sections not provided):\n\n${context}`;
-    const sampleTail =
       (totalSamples > 1
-        ? `\n\nThis is independent sample ${sampleIndex + 1} of ${totalSamples}.\n\n`
-        : `\n\n`) +
+        ? `\nThis is independent sample ${sampleIndex + 1} of ${totalSamples}.\n\n`
+        : `\n`) +
       `Return JSON for ONLY this dimension, in the shape:\n` +
       `{ "score": <1-10 number or "insufficient">, "rationale": "...", "citations": [{"section": "...", "quote": "...", "whyItMatters": "..."}], "counterEvidence": "..." }\n` +
       `(Or for insufficient: { "score": "insufficient", "reason": "..." })\n` +
       `Output JSON only.`;
     const result = await llmCallJson({
       stage: `primary-source-${key}-s${sampleIndex}`,
-      // System prompt is identical across all 18 calls; cache it.
-      systemPrompt: [{ text: promptText, cache: true }],
-      // User message: cache the shared prefix (sources etc.), append the
-      // uncached sample-specific tail. Two cache breakpoints total per call
-      // (system + user-prefix), well under the 4-block limit.
-      userMessage: [
-        { text: sharedPrefix, cache: true },
-        { text: sampleTail },
+      systemPrompt: [
+        { text: contextBlock, cache: true },
+        { text: promptText, cache: true },
       ],
+      userMessage,
       schema: SingleDimensionSchema,
       maxTokens: 4096,
       tracker,
@@ -493,25 +505,29 @@ export async function runPrimarySourcePass2(
       rebuttalResults[key] = cached;
       continue;
     }
+    // The primary-source sections (+ financial context) are sent as the shared
+    // cached system block — identical to Pass 1/3 so it reads from cache rather
+    // than re-paying full input. The user message carries only pass-specific bits.
+    const contextBlock = buildSharedContextBlock(key, context, financialContext, includeFinancial);
     const userMessage =
       `Audit the following dimension only: **${key}**\n\n` +
       `Ticker: ${ticker.toUpperCase()}\n` +
       `Filing: 10-K accession ${meta.accession} (${meta.filingDate})\n` +
       (proxy ? `Proxy: DEF 14A accession ${proxy.accession} (${proxy.filingDate})\n` : '') +
-      (includeFinancial ? `\n${financialContext}` : '') +
+      `\nThe primary-source sections for this dimension are in the system context above.\n` +
       `\n--- Pass 1 score ---\n${pass1ScoreOnly}\n` +
       `\n--- Pass 1 counter-evidence (concerns already considered; do not re-raise these) ---\n` +
       (pass1CounterEvidence || '(none provided)') +
-      `\n\n--- Primary-source sections ---\n\n${context}\n\n` +
-      `Return JSON for ONLY this dimension, in the shape:\n` +
+      `\n\nReturn JSON for ONLY this dimension, in the shape:\n` +
       `{ "rebuttal": "...", "citations": [{"section": "...", "quote": "...", "whyItMatters": "..."}], "recommendedAdjustment": <number from -3.0 to +1.5; default 0> }\n` +
       `Remember: 0 is the expected default. Only deviate if you have specific primary-source evidence Pass 1's counter-evidence section did not address.\n` +
       `Output JSON only.`;
     const result = await llmCallJson({
       stage: `primary-source-skeptic-${key}`,
-      // Skeptic system prompt is the same across all 6 dimension calls.
-      // Cache it so the second-through-sixth calls hit cache for the rubric.
-      systemPrompt: [{ text: promptText, cache: true }],
+      systemPrompt: [
+        { text: contextBlock, cache: true },
+        { text: promptText, cache: true },
+      ],
       userMessage,
       schema: SkepticDimensionSchema,
       maxTokens: 3072,
@@ -610,21 +626,26 @@ export async function runPrimarySourcePass3(
         .map((c, i) => `  [${i}] (${c.section}) "${c.quote}" — ${c.whyItMatters}`)
         .join('\n') +
       `\nPass 2 recommended adjustment: ${pass2Dim.recommendedAdjustment}`;
+    // Same shared cached system block as Pass 1/2; the judge verifies citations
+    // against those sections (now in the system context above) and the separate
+    // deterministic citation-verifier double-checks every quote post-hoc.
+    const contextBlock = buildSharedContextBlock(key, context, financialContext, includeFinancial);
     const userMessage =
       `Judge the following dimension only: **${key}**\n\n` +
       `Ticker: ${ticker.toUpperCase()}\n` +
       `Filing: 10-K accession ${meta.accession} (${meta.filingDate})\n` +
-      (includeFinancial ? `\n${financialContext}` : '') +
+      `\nThe primary-source sections for this dimension are in the system context above; verify either side's citations against them.\n` +
       `\n--- Pass 1 (original) ---\n${pass1Render}\n` +
       `\n--- Pass 2 (skeptic) ---\n${pass2Render}\n` +
-      `\n--- Primary-source sections (verify either side's citations against these) ---\n\n${context}\n\n` +
-      `Return JSON for ONLY this dimension:\n` +
+      `\nReturn JSON for ONLY this dimension:\n` +
       `{ "finalScore": <1-10>, "decision": "agreed-with-pass1"|"agreed-with-pass2"|"split"|"no-change", "justification": "..." }\n` +
       `Output JSON only.`;
     const result = await llmCallJson({
       stage: `primary-source-judge-${key}`,
-      // Judge system prompt is the same across all 6 dimension calls; cache it.
-      systemPrompt: [{ text: promptText, cache: true }],
+      systemPrompt: [
+        { text: contextBlock, cache: true },
+        { text: promptText, cache: true },
+      ],
       userMessage,
       schema: JudgeDimensionSchema,
       maxTokens: 1024,
