@@ -238,7 +238,7 @@ function allocateBudget(sizes: number[], total: number): number[] {
 // oversized routed content is triaged down. The ceiling is the rate-limit
 // guardrail (≈ 37K tokens/dimension); content-relevance decides how much of it
 // gets used, up to this cap.
-const PER_DIMENSION_CEILING = Number(process.env.PER_DIMENSION_CEILING ?? 150_000);
+const PER_DIMENSION_CEILING = Number(process.env.PER_DIMENSION_CEILING ?? 100_000);
 
 // The triage pre-pass runs on a cheap hosted model via an OpenAI-compatible
 // API (DeepSeek by default) — NOT the Anthropic scoring path. Triage is
