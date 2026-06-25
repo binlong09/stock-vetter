@@ -169,7 +169,10 @@ export async function llmCall(opts: {
   // Per-call model override. Defaults to Sonnet 4.6.
   model?: string;
 }): Promise<LLMCallResult> {
-  const model = opts.model ?? DEFAULT_MODEL;
+  // Model precedence: explicit per-call opts.model wins; otherwise ANTHROPIC_MODEL
+  // lets a run pick the model (e.g. Sonnet vs Opus for the prompt-cache A/B)
+  // without code changes. Falls back to DEFAULT_MODEL (Sonnet).
+  const model = opts.model ?? process.env.ANTHROPIC_MODEL ?? DEFAULT_MODEL;
   const systemBlocks = buildContentBlocks(opts.systemPrompt);
   const userBlocks = buildContentBlocks(opts.userMessage);
   const resp = await callWithRetry(

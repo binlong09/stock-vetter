@@ -27,6 +27,8 @@ When the evidence you want to cite is *in a table* (a number, a row, a multi-yea
 
 Do not paraphrase. Do not stitch together phrases from different paragraphs. Do not insert ellipses to skip over intervening text — quote one continuous run.
 
+**Copy, do not recall.** A quote is a copy operation, not a paraphrase from memory. Locate the passage in the section text you were given, then transcribe it character-for-character — the same words in the same order, with the source's exact punctuation, capitalization, numbers, and spacing. Before you finalize each citation, re-scan the section text and confirm the run of words you wrote appears there contiguously and identically. If you cannot find your quote verbatim in the provided text, it is wrong: shorten it to a span you *can* locate exactly, or replace it with a different passage you can copy exactly. A citation that cannot be `grep`'d against the source is worse than no citation — never approximate, reconstruct, or "tidy up" a quote.
+
 If the primary sources don't contain enough information to score a dimension responsibly, return `"score": "insufficient"` with `"reason"` explaining what's missing.
 
 ---

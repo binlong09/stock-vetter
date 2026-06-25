@@ -42,7 +42,10 @@ import { renderMetaCardMarkdown } from '../packages/pipeline/src/meta-card-rende
 import { DecisionCard, type FinancialSnapshot, type MetaCard, type PrimarySourceChecklist, type PrimarySourceJudgment, type PrimarySourceSkeptic, type ReverseDcfReport } from '@stock-vetter/schema';
 import { isTursoConfigured, pushTickerFromFixtures } from '@stock-vetter/pipeline';
 
-const FIXTURES_ROOT = 'fixtures';
+// Defaults to 'fixtures' (production). Override with FIXTURES_ROOT to run an
+// isolated experiment (e.g. a different model, or the prompt-cache A/B) without
+// overwriting the canonical fixtures or touching the live web viewer.
+const FIXTURES_ROOT = process.env.FIXTURES_ROOT ?? 'fixtures';
 
 type TickerConfig = {
   videos?: string[];
@@ -418,7 +421,7 @@ async function main() {
       console.error(`    ${stage.padEnd(25)} ${s.calls} calls  in=${s.inputTokens}t out=${s.outputTokens}t  $${s.cost.toFixed(3)}${cacheNote}`);
     }
   }
-  console.error(`  artifacts: fixtures/${upper}/decision-card.md`);
+  console.error(`  artifacts: ${join(FIXTURES_ROOT, upper, 'decision-card.md')}`);
 }
 
 main().catch((e) => {
