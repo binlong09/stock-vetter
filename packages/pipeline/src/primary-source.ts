@@ -240,10 +240,73 @@ function allocateBudget(sizes: number[], total: number): number[] {
 // gets used, up to this cap.
 const PER_DIMENSION_CEILING = Number(process.env.PER_DIMENSION_CEILING ?? 150_000);
 
-// The cheap model used for the triage pre-pass. Always a small model regardless
-// of the scoring model (ANTHROPIC_MODEL) — triage is selection, not judgment.
-const TRIAGE_MODEL = process.env.TRIAGE_MODEL ?? 'claude-haiku-4-5-20251001';
+// The triage pre-pass runs on a cheap hosted model via an OpenAI-compatible
+// API (DeepSeek by default) — NOT the Anthropic scoring path. Triage is
+// selection, not judgment, and is input-heavy, so a cheap fast model wins.
+// Config falls back to the REMOTE_* vars already used for DeepSeek.
+const TRIAGE_MODEL = process.env.TRIAGE_MODEL ?? 'deepseek-v4-flash';
+const TRIAGE_BASE_URL = (
+  process.env.TRIAGE_BASE_URL ?? process.env.REMOTE_BASE_URL ?? 'https://api.deepseek.com/v1'
+).replace(/\/$/, '');
+const TRIAGE_API_KEY =
+  process.env.TRIAGE_API_KEY ?? process.env.REMOTE_API_KEY ?? process.env.DEEPSEEK_API_KEY ?? '';
 const TRIAGE_CHUNK_SIZE = 4_000;
+
+// DeepSeek-v4-flash pricing (USD per 1M tokens), env-overridable. Triage is a
+// small line item; these only affect the displayed cost number.
+const TRIAGE_PRICE_IN = Number(process.env.TRIAGE_PRICE_IN ?? 0.28);
+const TRIAGE_PRICE_CACHE = Number(process.env.TRIAGE_PRICE_CACHE ?? 0.028);
+const TRIAGE_PRICE_OUT = Number(process.env.TRIAGE_PRICE_OUT ?? 0.42);
+
+// Minimal OpenAI-compatible JSON call for the triage stage. Tracks DeepSeek
+// cost on the shared tracker (the Anthropic priceCall path doesn't know
+// DeepSeek rates, so we compute them here from the cache hit/miss split).
+async function callTriageJson(
+  stage: string,
+  system: string,
+  user: string,
+  model: string,
+  tracker: CostTracker | undefined,
+): Promise<unknown> {
+  if (!TRIAGE_API_KEY) throw new Error('triage: no API key (set TRIAGE_API_KEY or REMOTE_API_KEY)');
+  const resp = await fetch(`${TRIAGE_BASE_URL}/chat/completions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${TRIAGE_API_KEY}` },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: user },
+      ],
+      max_tokens: 1024,
+      temperature: 0,
+      response_format: { type: 'json_object' },
+    }),
+  });
+  if (!resp.ok) throw new Error(`triage ${resp.status}: ${(await resp.text()).slice(0, 200)}`);
+  const data = (await resp.json()) as {
+    choices?: { message?: { content?: string } }[];
+    usage?: {
+      prompt_cache_hit_tokens?: number;
+      prompt_cache_miss_tokens?: number;
+      prompt_tokens?: number;
+      completion_tokens?: number;
+    };
+  };
+  const u = data.usage ?? {};
+  const cacheRead = u.prompt_cache_hit_tokens ?? 0;
+  const input = u.prompt_cache_miss_tokens ?? Math.max(0, (u.prompt_tokens ?? 0) - cacheRead);
+  const output = u.completion_tokens ?? 0;
+  const cost =
+    (input / 1e6) * TRIAGE_PRICE_IN + (cacheRead / 1e6) * TRIAGE_PRICE_CACHE + (output / 1e6) * TRIAGE_PRICE_OUT;
+  if (tracker) {
+    tracker.total += cost;
+    tracker.byCall.push({ stage, inputTokens: input, outputTokens: output, cacheWriteTokens: 0, cacheReadTokens: cacheRead, cost });
+    tracker.onAfterCall?.(tracker.total);
+  }
+  const content = data.choices?.[0]?.message?.content ?? '{}';
+  return JSON.parse(content);
+}
 
 // One-line description of what content each dimension needs, for the triage
 // prompt. Keep aligned with the rubric and DIMENSION_QUERY_TERMS.
@@ -278,12 +341,13 @@ async function triageSection(
   triageModel: string,
 ): Promise<number[]> {
   const system =
-    `You select the parts of an SEC filing section a value investor needs to score ONE dimension. ` +
-    `You are given the section split into numbered chunks. Return the chunk numbers whose content is ` +
-    `relevant to: ${DIMENSION_CRITERIA[dimension]}. Include any chunk with the specific figures, ` +
-    `tables, notes, disclosures, or risk language that bear on this dimension. Exclude pure boilerplate, ` +
-    `signatures, and unrelated content. Be inclusive of anything plausibly relevant — keeping a borderline ` +
-    `chunk is better than dropping decision-relevant detail. Output JSON only.`;
+    `You are selecting the parts of an SEC filing section that a value investor needs to score ONE specific ` +
+    `dimension. The section is split into numbered chunks. Return ONLY the chunk numbers that materially bear ` +
+    `on: ${DIMENSION_CRITERIA[dimension]}. A chunk qualifies if it contains the specific figures, tables, notes, ` +
+    `disclosures, or discussion relevant to this dimension. Exclude boilerplate, signatures, safe-harbor/` +
+    `forward-looking disclaimers, and chunks about unrelated topics. Aim for the genuinely relevant subset — ` +
+    `usually a minority of the section — but never drop a chunk that carries decision-relevant detail. ` +
+    `Output JSON only: {"relevant":[chunk numbers]}.`;
   const promptHash = createHash('sha1').update(system).digest('hex').slice(0, 12);
   const inputHash = hashInputs({
     sectionId,
@@ -298,16 +362,14 @@ async function triageSection(
   const numbered = chunks.map((c, i) => `[chunk ${i}]\n${c}`).join('\n\n');
   let indices: number[];
   try {
-    const tracker2 = tracker ?? newCostTracker();
-    const result = await llmCallJson({
-      stage: `triage-${dimension}-${sectionId}`,
-      systemPrompt: system,
-      userMessage: `Section: ${sectionId} (${chunks.length} chunks)\n\n${numbered}\n\nReturn JSON: {"relevant": [chunk numbers]}`,
-      schema: TriageSchema,
-      maxTokens: 1024,
-      tracker: tracker2,
-      model: triageModel,
-    });
+    const raw = await callTriageJson(
+      `triage-${dimension}-${sectionId}`,
+      system,
+      `Section: ${sectionId} (${chunks.length} chunks)\n\n${numbered}\n\nReturn JSON: {"relevant": [chunk numbers]}`,
+      triageModel,
+      tracker,
+    );
+    const result = TriageSchema.parse(raw);
     indices = [...new Set(result.relevant.filter((i) => i >= 0 && i < chunks.length))].sort((a, b) => a - b);
     // Degenerate result (model returned nothing usable): keep everything rather
     // than silently dropping the section.
