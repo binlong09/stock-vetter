@@ -132,6 +132,154 @@ const PER_DIMENSION_BUDGET = 80_000;
 
 type SectionLoader = (id: string) => Promise<string | null>;
 
+// Lexical relevance selection. A routed section can be far larger than the
+// per-dimension budget (e.g. a 281K-char financial-statements section), and
+// the value-investing detail a dimension needs (debt-maturity schedules,
+// segment notes, comp tables) often lives deep in the document where naive
+// head-truncation drops it. Instead we chunk the section and keep the chunks
+// most relevant to the dimension, by query-term frequency.
+//
+// Per-dimension query terms — substrings matched case-insensitively (so
+// multi-word phrases like "free cash flow" work). Tuned to the rubric concerns.
+const DIMENSION_QUERY_TERMS: Record<PrimaryDimensionKey, string[]> = {
+  moatDurability: [
+    'compet', 'market share', 'barrier', 'switching cost', 'proprietary', 'patent',
+    'intellectual property', 'brand', 'scale', 'network effect', 'pricing power',
+    'differentiat', 'ecosystem', 'customer concentration', 'substitute', 'moat',
+  ],
+  ownerEarningsQuality: [
+    'cash flow', 'operating activities', 'free cash flow', 'net income', 'depreciation',
+    'amortization', 'stock-based compensation', 'share-based', 'working capital',
+    'capital expenditure', 'capex', 'accrual', 'non-recurring', 'one-time', 'impairment',
+    'deferred revenue',
+  ],
+  capitalAllocation: [
+    'repurchase', 'buyback', 'dividend', 'acquisition', 'capital expenditure',
+    'investment', 'return on invested', 'return on equity', 'allocation', 'share count',
+    'retained earnings', 'goodwill', 'divestiture', 'reinvest',
+  ],
+  debtSustainability: [
+    'debt', 'long-term debt', 'maturit', 'interest expense', 'covenant', 'credit facility',
+    'revolving', 'senior notes', 'principal', 'repayment', 'leverage', 'liquidity',
+    'borrowing', 'indenture', 'default', 'current portion',
+  ],
+  insiderAlignment: [
+    'ownership', 'beneficial', 'compensation', 'incentive', 'stock ownership',
+    'related party', 'related-party', 'board', 'independence', 'insider', 'equity award',
+    'vesting', 'executive', 'director', 'say-on-pay', 'parachute',
+  ],
+  cyclicalityAwareness: [
+    'cyclical', 'cycle', 'seasonal', 'demand', 'downturn', 'recession', 'volatil',
+    'commodity', 'inventory', 'backlog', 'capacity', 'fluctuat', 'macroeconomic',
+    'end market',
+  ],
+};
+
+const CHUNK_SIZE = 3_000;
+
+// Split text into ~CHUNK_SIZE chunks on paragraph boundaries; hard-split any
+// single paragraph that exceeds 1.5× the target.
+function chunkText(text: string, size: number): string[] {
+  const chunks: string[] = [];
+  let cur = '';
+  for (const para of text.split(/\n\n+/)) {
+    if (cur && cur.length + para.length + 2 > size) {
+      chunks.push(cur);
+      cur = '';
+    }
+    cur = cur ? `${cur}\n\n${para}` : para;
+    while (cur.length > size * 1.5) {
+      chunks.push(cur.slice(0, size));
+      cur = cur.slice(size);
+    }
+  }
+  if (cur) chunks.push(cur);
+  return chunks;
+}
+
+// Relevance score: for each query term, count occurrences and add 1 + ln(count)
+// (diminishing returns), so a chunk rich in many distinct terms ranks highest.
+function scoreChunk(chunk: string, terms: string[]): number {
+  const lc = chunk.toLowerCase();
+  let score = 0;
+  for (const term of terms) {
+    let count = 0;
+    let pos = lc.indexOf(term);
+    while (pos !== -1) {
+      count++;
+      pos = lc.indexOf(term, pos + term.length);
+    }
+    if (count > 0) score += 1 + Math.log(count);
+  }
+  return score;
+}
+
+// Keep the highest-relevance chunks that fit the budget. Always keeps the
+// opening chunk (section header / statement intro), then fills by score, then
+// reassembles in document order with elision markers. Deterministic, so the
+// three passes build identical context and the prompt cache still hits.
+function selectRelevantContent(text: string, terms: string[], budget: number): string {
+  const chunks = chunkText(text, CHUNK_SIZE);
+  if (chunks.length === 0) return '';
+  const keep = new Set<number>([0]);
+  let used = Math.min(chunks[0]!.length, budget);
+  const scored = chunks
+    .map((c, i) => ({ i, score: scoreChunk(c, terms), len: c.length }))
+    .slice(1)
+    .sort((a, b) => b.score - a.score || a.i - b.i);
+  for (const s of scored) {
+    if (s.score <= 0) continue;
+    if (used + s.len > budget) continue;
+    keep.add(s.i);
+    used += s.len;
+  }
+  const ordered = [...keep].sort((a, b) => a - b);
+  const out: string[] = [];
+  let prev = -1;
+  for (const i of ordered) {
+    if (prev >= 0 && i > prev + 1) out.push('\n\n[… lower-relevance content omitted …]\n\n');
+    out.push(chunks[i]!);
+    prev = i;
+  }
+  if (prev >= 0 && prev < chunks.length - 1) out.push('\n\n[… lower-relevance content omitted …]');
+  return out.join('');
+}
+
+// Water-fill the budget across sources by size: small sources take what they
+// need; the surplus redistributes to larger ones. Guarantees no routed section
+// is starved to zero (the old greedy first-come loop could drop a whole
+// section).
+function allocateBudget(sizes: number[], total: number): number[] {
+  const alloc = new Array<number>(sizes.length).fill(0);
+  const done = new Array<boolean>(sizes.length).fill(false);
+  let remaining = total;
+  let active = sizes.length;
+  while (active > 0 && remaining > 0) {
+    const share = Math.floor(remaining / active);
+    if (share <= 0) break;
+    let progressed = false;
+    for (let i = 0; i < sizes.length; i++) {
+      if (done[i]) continue;
+      if (sizes[i]! <= share) {
+        remaining -= sizes[i]!;
+        alloc[i] = sizes[i]!;
+        done[i] = true;
+        active--;
+        progressed = true;
+      }
+    }
+    if (!progressed) {
+      for (let i = 0; i < sizes.length; i++) {
+        if (done[i]) continue;
+        alloc[i]! += share;
+        remaining -= share;
+      }
+      break;
+    }
+  }
+  return alloc;
+}
+
 async function loadDimensionContext(
   filingMeta: FilingMeta,
   getSection: SectionLoader,
@@ -151,43 +299,38 @@ async function loadDimensionContext(
     }
   }
 
-  const parts: string[] = [];
-  const used: string[] = [];
-  let totalChars = 0;
+  // Gather each routed source's full text first, so the per-dimension budget
+  // can be allocated across them by size (no section starved to zero), then
+  // each allocation is filled with the most *relevant* content rather than the
+  // head. The proxy is treated like any other source — relevance selection
+  // surfaces the ownership/comp/related-party content that the old fixed 30%
+  // window only approximated.
+  const sources: { id: string; text: string }[] = [];
   for (const id of expanded) {
     if (id === 'proxy') {
-      if (!proxyText) continue;
-      // Proxy statements are typically 300K-500K chars and dominated by
-      // boilerplate. The insider-alignment-relevant content (Beneficial
-      // Ownership tables, Compensation Discussion and Analysis, Related-
-      // Party Transactions) starts ~30-40% into the document on most
-      // filers. As a v1 heuristic, take a window from 30% in for ~60K
-      // chars, which usually catches the ownership table and the start of
-      // the comp discussion. Future improvement: section-aware proxy
-      // parser. The 60K cap also keeps us under the per-dimension budget
-      // when proxy is the only routed source (insider-alignment).
-      const startOffset = Math.floor(proxyText.length * 0.3);
-      const slice = proxyText.slice(startOffset, startOffset + 60_000);
-      const remaining = PER_DIMENSION_BUDGET - totalChars;
-      const take = slice.slice(0, Math.max(0, remaining));
-      if (take.length) {
-        parts.push(`### proxy (DEF 14A, ${take.length.toLocaleString()} chars window starting at offset ${startOffset.toLocaleString()} of ${proxyText.length.toLocaleString()})\n\n${take}`);
-        totalChars += take.length;
-        used.push('proxy');
-      }
+      if (proxyText) sources.push({ id: 'proxy', text: proxyText });
       continue;
     }
     const body = await getSection(id);
-    if (!body) continue;
-    const remaining = PER_DIMENSION_BUDGET - totalChars;
-    if (remaining <= 0) break;
-    const take = body.slice(0, remaining);
-    parts.push(
-      `### ${id} (${take.length.toLocaleString()} chars` +
-        (take.length < body.length ? ` of ${body.length.toLocaleString()}, truncated` : '') +
-        `)\n\n${take}`,
-    );
-    totalChars += take.length;
+    if (body) sources.push({ id, text: body });
+  }
+  if (sources.length === 0) return { context: '', sourcesUsed: [] };
+
+  const queryTerms = DIMENSION_QUERY_TERMS[dimension];
+  const allocations = allocateBudget(sources.map((s) => s.text.length), PER_DIMENSION_BUDGET);
+
+  const parts: string[] = [];
+  const used: string[] = [];
+  for (let i = 0; i < sources.length; i++) {
+    const { id, text } = sources[i]!;
+    const alloc = allocations[i]!;
+    if (alloc <= 0) continue;
+    const selected = text.length <= alloc ? text : selectRelevantContent(text, queryTerms, alloc);
+    const note =
+      selected.length < text.length
+        ? `${selected.length.toLocaleString()} of ${text.length.toLocaleString()} chars, relevance-selected`
+        : `${text.length.toLocaleString()} chars`;
+    parts.push(`### ${id} (${note})\n\n${selected}`);
     used.push(id);
   }
   return { context: parts.join('\n\n---\n\n'), sourcesUsed: used };
