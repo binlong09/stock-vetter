@@ -115,21 +115,6 @@ const DIMENSION_SECTIONS: Record<PrimaryDimensionKey, string[]> = {
   cyclicalityAwareness: ['risk-factors', 'mda'],
 };
 
-// Crude character budget per dimension. Anthropic's per-org input-tokens-
-// per-minute rate limit is the binding constraint, not Sonnet 4.6's context
-// window. At ~4 chars/token, 80K chars ≈ 20K tokens — comfortably under the
-// 30K/min limit per call, and lets all six dimension calls fit in roughly
-// the same minute.
-//
-// 80K chars is enough for: full Business section on most filers, the most
-// pertinent third of a long Risk Factors section, full MD&A on most filers.
-// For very large bundled filings (JPM's MD&A+Item 8 chunk is 994K) we'll
-// truncate aggressively — the LLM gets the head of the section, which
-// contains the auditor's report and the major statements; the deep notes
-// are sacrificed for v1. Future improvement: section-aware chunking that
-// picks the most relevant sub-sections per dimension.
-const PER_DIMENSION_BUDGET = 80_000;
-
 type SectionLoader = (id: string) => Promise<string | null>;
 
 // Lexical relevance selection. A routed section can be far larger than the
@@ -175,9 +160,7 @@ const DIMENSION_QUERY_TERMS: Record<PrimaryDimensionKey, string[]> = {
   ],
 };
 
-const CHUNK_SIZE = 3_000;
-
-// Split text into ~CHUNK_SIZE chunks on paragraph boundaries; hard-split any
+// Split text into ~`size`-char chunks on paragraph boundaries; hard-split any
 // single paragraph that exceeds 1.5× the target.
 function chunkText(text: string, size: number): string[] {
   const chunks: string[] = [];
@@ -214,36 +197,6 @@ function scoreChunk(chunk: string, terms: string[]): number {
   return score;
 }
 
-// Keep the highest-relevance chunks that fit the budget. Always keeps the
-// opening chunk (section header / statement intro), then fills by score, then
-// reassembles in document order with elision markers. Deterministic, so the
-// three passes build identical context and the prompt cache still hits.
-function selectRelevantContent(text: string, terms: string[], budget: number): string {
-  const chunks = chunkText(text, CHUNK_SIZE);
-  if (chunks.length === 0) return '';
-  const keep = new Set<number>([0]);
-  let used = Math.min(chunks[0]!.length, budget);
-  const scored = chunks
-    .map((c, i) => ({ i, score: scoreChunk(c, terms), len: c.length }))
-    .slice(1)
-    .sort((a, b) => b.score - a.score || a.i - b.i);
-  for (const s of scored) {
-    if (s.score <= 0) continue;
-    if (used + s.len > budget) continue;
-    keep.add(s.i);
-    used += s.len;
-  }
-  const ordered = [...keep].sort((a, b) => a - b);
-  const out: string[] = [];
-  let prev = -1;
-  for (const i of ordered) {
-    if (prev >= 0 && i > prev + 1) out.push('\n\n[… lower-relevance content omitted …]\n\n');
-    out.push(chunks[i]!);
-    prev = i;
-  }
-  if (prev >= 0 && prev < chunks.length - 1) out.push('\n\n[… lower-relevance content omitted …]');
-  return out.join('');
-}
 
 // Water-fill the budget across sources by size: small sources take what they
 // need; the surplus redistributes to larger ones. Guarantees no routed section
@@ -280,11 +233,100 @@ function allocateBudget(sizes: number[], total: number): number[] {
   return alloc;
 }
 
+// Hard ceiling on total context chars per dimension. Unlike the old fixed 80K
+// budget, sections that fit under the ceiling are included WHOLE — only
+// oversized routed content is triaged down. The ceiling is the rate-limit
+// guardrail (≈ 37K tokens/dimension); content-relevance decides how much of it
+// gets used, up to this cap.
+const PER_DIMENSION_CEILING = Number(process.env.PER_DIMENSION_CEILING ?? 150_000);
+
+// The cheap model used for the triage pre-pass. Always a small model regardless
+// of the scoring model (ANTHROPIC_MODEL) — triage is selection, not judgment.
+const TRIAGE_MODEL = process.env.TRIAGE_MODEL ?? 'claude-haiku-4-5-20251001';
+const TRIAGE_CHUNK_SIZE = 4_000;
+
+// One-line description of what content each dimension needs, for the triage
+// prompt. Keep aligned with the rubric and DIMENSION_QUERY_TERMS.
+const DIMENSION_CRITERIA: Record<PrimaryDimensionKey, string> = {
+  moatDurability:
+    'competitive advantages and threats: market position/share, switching costs, patents/IP, brand, scale, network effects, pricing power, competitive threats, customer concentration',
+  ownerEarningsQuality:
+    'quality of earnings vs cash: operating and free cash flow, net-income reconciliation, depreciation/amortization, stock-based compensation, working-capital swings, non-recurring/one-time items, accruals, impairments',
+  capitalAllocation:
+    'how capital is deployed: buybacks/repurchases, dividends, acquisitions, capex, investments, returns on capital, goodwill, divestitures',
+  debtSustainability:
+    'debt and liquidity: total and long-term debt, maturity schedules, interest expense and coverage, covenants, credit facilities, leverage ratios, liquidity and refinancing risk',
+  insiderAlignment:
+    'management/board alignment: beneficial ownership, executive compensation structure and incentives, related-party transactions, board independence, insider holdings and trading restrictions',
+  cyclicalityAwareness:
+    'cyclicality and through-cycle resilience: cyclical/seasonal demand, end-market exposure, inventory and backlog, capacity, commodity exposure, downturn sensitivity, demand volatility',
+};
+
+const TriageSchema = z.object({ relevant: z.array(z.number().int().nonnegative()) });
+
+// LLM triage: split an oversized section into numbered chunks, ask a cheap
+// model which chunks bear on this dimension, and return those chunk indices.
+// We keep the ORIGINAL chunk text (the model only chooses indices), so quotes
+// stay verbatim and grep-able. The result is cached keyed by content, so it
+// runs ONCE per (section, dimension) and is reused across Pass 1/2/3 — keeping
+// the downstream context byte-identical so the cross-pass prompt cache holds.
+async function triageSection(
+  sectionId: string,
+  chunks: string[],
+  dimension: PrimaryDimensionKey,
+  tracker: CostTracker | undefined,
+  triageModel: string,
+): Promise<number[]> {
+  const system =
+    `You select the parts of an SEC filing section a value investor needs to score ONE dimension. ` +
+    `You are given the section split into numbered chunks. Return the chunk numbers whose content is ` +
+    `relevant to: ${DIMENSION_CRITERIA[dimension]}. Include any chunk with the specific figures, ` +
+    `tables, notes, disclosures, or risk language that bear on this dimension. Exclude pure boilerplate, ` +
+    `signatures, and unrelated content. Be inclusive of anything plausibly relevant — keeping a borderline ` +
+    `chunk is better than dropping decision-relevant detail. Output JSON only.`;
+  const promptHash = createHash('sha1').update(system).digest('hex').slice(0, 12);
+  const inputHash = hashInputs({
+    sectionId,
+    dimension,
+    chunkCount: chunks.length,
+    chunkSizes: chunks.map((c) => c.length),
+    model: triageModel,
+  });
+  const cached = await getLlmOutput<number[]>(`triage-${dimension}`, inputHash, promptHash);
+  if (cached) return cached;
+
+  const numbered = chunks.map((c, i) => `[chunk ${i}]\n${c}`).join('\n\n');
+  let indices: number[];
+  try {
+    const tracker2 = tracker ?? newCostTracker();
+    const result = await llmCallJson({
+      stage: `triage-${dimension}-${sectionId}`,
+      systemPrompt: system,
+      userMessage: `Section: ${sectionId} (${chunks.length} chunks)\n\n${numbered}\n\nReturn JSON: {"relevant": [chunk numbers]}`,
+      schema: TriageSchema,
+      maxTokens: 1024,
+      tracker: tracker2,
+      model: triageModel,
+    });
+    indices = [...new Set(result.relevant.filter((i) => i >= 0 && i < chunks.length))].sort((a, b) => a - b);
+    // Degenerate result (model returned nothing usable): keep everything rather
+    // than silently dropping the section.
+    if (indices.length === 0) indices = chunks.map((_, i) => i);
+  } catch {
+    // Triage failed (API/parse error) — fall back to keeping all chunks; the
+    // caller's ceiling cap still bounds the size.
+    indices = chunks.map((_, i) => i);
+  }
+  await putLlmOutput(`triage-${dimension}`, inputHash, promptHash, indices);
+  return indices;
+}
+
 async function loadDimensionContext(
   filingMeta: FilingMeta,
   getSection: SectionLoader,
   proxyText: string | null,
   dimension: PrimaryDimensionKey,
+  opts: { tracker?: CostTracker; triageModel?: string } = {},
 ): Promise<{ context: string; sourcesUsed: string[] }> {
   const requested = DIMENSION_SECTIONS[dimension];
   // Resolve bundled expansions: if a requested section is bundled into
@@ -299,12 +341,7 @@ async function loadDimensionContext(
     }
   }
 
-  // Gather each routed source's full text first, so the per-dimension budget
-  // can be allocated across them by size (no section starved to zero), then
-  // each allocation is filled with the most *relevant* content rather than the
-  // head. The proxy is treated like any other source — relevance selection
-  // surfaces the ownership/comp/related-party content that the old fixed 30%
-  // window only approximated.
+  // Gather each routed source's full text.
   const sources: { id: string; text: string }[] = [];
   for (const id of expanded) {
     if (id === 'proxy') {
@@ -316,22 +353,76 @@ async function loadDimensionContext(
   }
   if (sources.length === 0) return { context: '', sourcesUsed: [] };
 
+  // Fits whole under the ceiling — include everything, no triage call. This is
+  // the common case (most filers, and any dimension whose routed sections are
+  // modest), so it costs nothing extra.
+  const totalSize = sources.reduce((n, s) => n + s.text.length, 0);
+  if (totalSize <= PER_DIMENSION_CEILING) {
+    const parts = sources.map((s) => `### ${s.id} (${s.text.length.toLocaleString()} chars)\n\n${s.text}`);
+    return { context: parts.join('\n\n---\n\n'), sourcesUsed: sources.map((s) => s.id) };
+  }
+
+  // Oversized: triage each large source down to the chunks that bear on this
+  // dimension. A source that already fits within half the ceiling is kept whole
+  // (not worth a triage call); only the genuinely large ones are triaged.
+  const triageModel = opts.triageModel ?? TRIAGE_MODEL;
   const queryTerms = DIMENSION_QUERY_TERMS[dimension];
-  const allocations = allocateBudget(sources.map((s) => s.text.length), PER_DIMENSION_BUDGET);
+  const selected: { id: string; chunks: string[]; kept: number[]; selectedLen: number; original: number }[] = [];
+  for (const { id, text } of sources) {
+    const chunks = chunkText(text, TRIAGE_CHUNK_SIZE);
+    const keepWhole = text.length <= Math.floor(PER_DIMENSION_CEILING / 2);
+    const kept = keepWhole
+      ? chunks.map((_, i) => i)
+      : await triageSection(id, chunks, dimension, opts.tracker, triageModel);
+    const selectedLen = kept.reduce((n, i) => n + chunks[i]!.length, 0);
+    selected.push({ id, chunks, kept, selectedLen, original: text.length });
+  }
+
+  // If the combined relevant content still exceeds the ceiling, water-fill the
+  // ceiling across sources by their relevant size and keep each source's
+  // highest-lexical-score chunks up to its allocation.
+  const combined = selected.reduce((n, s) => n + s.selectedLen, 0);
+  const allocations =
+    combined <= PER_DIMENSION_CEILING
+      ? selected.map((s) => s.selectedLen)
+      : allocateBudget(selected.map((s) => s.selectedLen), PER_DIMENSION_CEILING);
 
   const parts: string[] = [];
   const used: string[] = [];
-  for (let i = 0; i < sources.length; i++) {
-    const { id, text } = sources[i]!;
+  for (let i = 0; i < selected.length; i++) {
+    const s = selected[i]!;
     const alloc = allocations[i]!;
     if (alloc <= 0) continue;
-    const selected = text.length <= alloc ? text : selectRelevantContent(text, queryTerms, alloc);
+    let keepIdx = s.kept;
+    if (s.selectedLen > alloc) {
+      const ranked = [...s.kept].sort(
+        (a, b) => scoreChunk(s.chunks[b]!, queryTerms) - scoreChunk(s.chunks[a]!, queryTerms) || a - b,
+      );
+      const take: number[] = [];
+      let usedChars = 0;
+      for (const ci of ranked) {
+        if (usedChars + s.chunks[ci]!.length > alloc) continue;
+        take.push(ci);
+        usedChars += s.chunks[ci]!.length;
+      }
+      keepIdx = take.sort((a, b) => a - b);
+    }
+    // Reassemble kept chunks in document order, marking elided gaps.
+    const out: string[] = [];
+    let prev = -1;
+    for (const ci of keepIdx) {
+      if (prev >= 0 && ci > prev + 1) out.push('\n\n[… non-relevant content omitted …]\n\n');
+      out.push(s.chunks[ci]!);
+      prev = ci;
+    }
+    if (prev >= 0 && prev < s.chunks.length - 1) out.push('\n\n[… non-relevant content omitted …]');
+    const selText = out.join('');
     const note =
-      selected.length < text.length
-        ? `${selected.length.toLocaleString()} of ${text.length.toLocaleString()} chars, relevance-selected`
-        : `${text.length.toLocaleString()} chars`;
-    parts.push(`### ${id} (${note})\n\n${selected}`);
-    used.push(id);
+      selText.length < s.original
+        ? `${selText.length.toLocaleString()} of ${s.original.toLocaleString()} chars, triage-selected`
+        : `${s.original.toLocaleString()} chars`;
+    parts.push(`### ${s.id} (${note})\n\n${selText}`);
+    used.push(s.id);
   }
   return { context: parts.join('\n\n---\n\n'), sourcesUsed: used };
 }
@@ -481,7 +572,7 @@ export async function runPrimarySourcePass1(
   const varianceUpdates: Record<string, DimensionVariance> = {};
   for (const key of PRIMARY_DIMENSION_KEYS) {
     options.onProgress?.(`primary-source:${key}`, tracker.total);
-    const { context, sourcesUsed } = await loadDimensionContext(meta, getSection, proxyText, key);
+    const { context, sourcesUsed } = await loadDimensionContext(meta, getSection, proxyText, key, { tracker });
     if (!context.length) {
       dimensionResults[key] = { score: 'insufficient', reason: `No primary-source content available for ${key} (sections: ${DIMENSION_SECTIONS[key].join(', ')})` };
       continue;
@@ -612,7 +703,7 @@ export async function runPrimarySourcePass2(
   const rebuttalResults: Record<string, unknown> = {};
   for (const key of PRIMARY_DIMENSION_KEYS) {
     options.onProgress?.(`primary-source-skeptic:${key}`, tracker.total);
-    const { context, sourcesUsed } = await loadDimensionContext(meta, getSection, proxyText, key);
+    const { context, sourcesUsed } = await loadDimensionContext(meta, getSection, proxyText, key, { tracker });
     if (!context.length) {
       rebuttalResults[key] = {
         rebuttal: 'No primary-source content available to evaluate.',
@@ -723,7 +814,7 @@ export async function runPrimarySourcePass3(
   const judgments: Record<string, unknown> = {};
   for (const key of PRIMARY_DIMENSION_KEYS) {
     options.onProgress?.(`primary-source-judge:${key}`, tracker.total);
-    const { context, sourcesUsed } = await loadDimensionContext(meta, getSection, proxyText, key);
+    const { context, sourcesUsed } = await loadDimensionContext(meta, getSection, proxyText, key, { tracker });
     if (!context.length) {
       judgments[key] = {
         finalScore: 5.5,
