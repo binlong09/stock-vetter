@@ -45,6 +45,7 @@ export function renderPrimaryChecklistMarkdown(
         `${verification.whitespaceNormalized} whitespace-normalized, ` +
         `${verification.caseInsensitive} case-only, ` +
         `${verification.punctuationNormalized} punctuation-normalized, ` +
+        `${verification.tableNormalized} table-normalized, ` +
         `${verification.noMatch} **no-match**`,
     );
     if (verification.noMatch > 0) {
@@ -123,6 +124,7 @@ export function renderPrimaryChecklistMarkdown(
         tier === 'whitespace-normalized' ? ' *(whitespace-normalized match)*' :
         tier === 'case-insensitive' ? ' *(case-only match)*' :
         tier === 'punctuation-normalized' ? ' *(punctuation-normalized match)*' :
+        tier === 'table-normalized' ? ' *(table-normalized match)*' :
         tier === 'no-match' ? ' **⚠️ NO-MATCH**' : '';
       lines.push(`- **\`${cit.section}\`**${tierBadge} — "${cit.quote}"`);
       lines.push(`  *Why it matters:* ${cit.whyItMatters}`);

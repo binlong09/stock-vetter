@@ -30,6 +30,7 @@ export type MatchTier =
   | 'whitespace-normalized'
   | 'case-insensitive'
   | 'punctuation-normalized'
+  | 'table-normalized'
   | 'no-match';
 
 export type CitationVerification = {
@@ -50,6 +51,7 @@ export type VerificationResult = {
   whitespaceNormalized: number;
   caseInsensitive: number;
   punctuationNormalized: number;
+  tableNormalized: number;
   noMatch: number;
   details: CitationVerification[];
 };
@@ -68,6 +70,21 @@ function normalizePunctuation(s: string): string {
     .replace(/ /g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+// `table-normalized` handles the most common remaining no-match: a quote pulled
+// from a TABLE. The SEC parser flattens HTML tables into a run where cells
+// concatenate with inconsistent spacing and currency symbols
+// ("...Debt2026 $1,822 2027 4,817..."), while the model transcribes it tidily
+// ("...Debt 2026 $1,822 2027 4,817..."). Whitespace-normalization can't bridge
+// "Debt2026" vs "Debt 2026" because the source has no space to collapse. So we
+// strip ALL whitespace, currency symbols, and table scaffolding (pipes/bullets)
+// on both sides — on top of punctuation normalization — so a faithfully copied
+// table row still matches. It's a distinct, lower tier (so it stays visible in
+// the stats and never inflates "exact"); the aggressive normalization is safe
+// because citation quotes are long, specific spans, not short tokens.
+function normalizeTable(s: string): string {
+  return normalizePunctuation(s).toLowerCase().replace(/[|•$\s]/g, '');
 }
 
 async function loadSectionText(
@@ -153,6 +170,7 @@ export async function verifyChecklistCitations(
       else if (normalizeWhitespace(loaded.text).includes(normalizeWhitespace(c.quote))) tier = 'whitespace-normalized';
       else if (loaded.text.toLowerCase().includes(c.quote.toLowerCase())) tier = 'case-insensitive';
       else if (normalizePunctuation(loaded.text).toLowerCase().includes(normalizePunctuation(c.quote).toLowerCase())) tier = 'punctuation-normalized';
+      else if (normalizeTable(loaded.text).includes(normalizeTable(c.quote))) tier = 'table-normalized';
       else tier = 'no-match';
       details.push({
         dimension: dim,
@@ -171,8 +189,9 @@ export async function verifyChecklistCitations(
   const whitespaceNormalized = details.filter((d) => d.matchTier === 'whitespace-normalized').length;
   const caseInsensitive = details.filter((d) => d.matchTier === 'case-insensitive').length;
   const punctuationNormalized = details.filter((d) => d.matchTier === 'punctuation-normalized').length;
+  const tableNormalized = details.filter((d) => d.matchTier === 'table-normalized').length;
   const noMatch = details.filter((d) => d.matchTier === 'no-match').length;
-  return { total, exact, whitespaceNormalized, caseInsensitive, punctuationNormalized, noMatch, details };
+  return { total, exact, whitespaceNormalized, caseInsensitive, punctuationNormalized, tableNormalized, noMatch, details };
 }
 
 // Verify Pass 2 (skeptic) citations the same way. Skeptic citations may
@@ -223,6 +242,7 @@ export async function verifySkepticCitations(
       else if (normalizeWhitespace(loaded.text).includes(normalizeWhitespace(c.quote))) tier = 'whitespace-normalized';
       else if (loaded.text.toLowerCase().includes(c.quote.toLowerCase())) tier = 'case-insensitive';
       else if (normalizePunctuation(loaded.text).toLowerCase().includes(normalizePunctuation(c.quote).toLowerCase())) tier = 'punctuation-normalized';
+      else if (normalizeTable(loaded.text).includes(normalizeTable(c.quote))) tier = 'table-normalized';
       else tier = 'no-match';
       details.push({
         dimension: dim,
@@ -241,6 +261,7 @@ export async function verifySkepticCitations(
   const whitespaceNormalized = details.filter((d) => d.matchTier === 'whitespace-normalized').length;
   const caseInsensitive = details.filter((d) => d.matchTier === 'case-insensitive').length;
   const punctuationNormalized = details.filter((d) => d.matchTier === 'punctuation-normalized').length;
+  const tableNormalized = details.filter((d) => d.matchTier === 'table-normalized').length;
   const noMatch = details.filter((d) => d.matchTier === 'no-match').length;
-  return { total, exact, whitespaceNormalized, caseInsensitive, punctuationNormalized, noMatch, details };
+  return { total, exact, whitespaceNormalized, caseInsensitive, punctuationNormalized, tableNormalized, noMatch, details };
 }

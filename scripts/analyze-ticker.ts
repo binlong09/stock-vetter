@@ -289,12 +289,12 @@ async function processPrimaryChecklist(
     console.error(
       `[primary-source] Pass 1 citations: ${pass1Verification.exact}/${pass1Verification.total} exact, ` +
         `${pass1Verification.whitespaceNormalized} ws-norm, ${pass1Verification.caseInsensitive} case-only, ` +
-        `${pass1Verification.punctuationNormalized} punct-norm, ${pass1Verification.noMatch} no-match`,
+        `${pass1Verification.punctuationNormalized} punct-norm, ${pass1Verification.tableNormalized} table-norm, ${pass1Verification.noMatch} no-match`,
     );
     console.error(
       `[primary-source] Pass 2 citations: ${pass2Verification.exact}/${pass2Verification.total} exact, ` +
         `${pass2Verification.whitespaceNormalized} ws-norm, ${pass2Verification.caseInsensitive} case-only, ` +
-        `${pass2Verification.punctuationNormalized} punct-norm, ${pass2Verification.noMatch} no-match`,
+        `${pass2Verification.punctuationNormalized} punct-norm, ${pass2Verification.tableNormalized} table-norm, ${pass2Verification.noMatch} no-match`,
     );
     if (pass1Verification.noMatch > 0) {
       console.error(`[primary-source] WARNING: ${pass1Verification.noMatch} Pass 1 citations could not be located`);
