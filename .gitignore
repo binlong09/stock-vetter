@@ -10,3 +10,6 @@ build/
 .cache/
 /tmp/
 .claude/
+
+# Local model-comparison / caching experiment scratch (not production data)
+experiments/
