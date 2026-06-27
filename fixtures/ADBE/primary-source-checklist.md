@@ -1,7 +1,9 @@
 # ADBE — Primary-Source Value Checklist
 
 *Source:* 10-K accession `0000796343-26-000003` + DEF 14A (where used)
-*Citation verification:* 18/23 exact, 0 whitespace-normalized, 0 case-only, 5 punctuation-normalized, 0 **no-match**
+*Citation verification:* 20/24 exact, 0 whitespace-normalized, 0 case-only, 2 punctuation-normalized, 0 table-normalized, 2 **no-match**
+
+> ⚠️ 2 citation(s) could not be located in the cited source. See annotations below.
 
 Each dimension is scored 1–10 from primary sources only (no analyst opinions). Citations point to specific 10-K or proxy passages so you can verify the reasoning yourself — and learn what to look for in primary documents.
 
@@ -9,212 +11,220 @@ Each dimension is scored 1–10 from primary sources only (no analyst opinions).
 
 | Dimension | Pass 1 | Skeptic Δ | Final | Decision |
 |---|---|---|---|---|
-| Moat durability | 7.0 | 0 | 7.0 | no-change |
-| Owner earnings quality | 8.5 | 0 | 8.5 | no-change |
-| Capital allocation | 5.5 | 0 | 5.5 | no-change |
+| Moat durability | 6.5 | 0 | 6.5 | no-change |
+| Owner earnings quality | 6.5 | 0 | 6.5 | no-change |
+| Capital allocation | 4.0 | -0.5 | 3.5 | split |
 | Debt sustainability | 7.5 | 0 | 7.5 | no-change |
-| Insider alignment | 5.5 | +0.5 | 6.0 | split |
+| Insider alignment | 5.5 | 0 | 5.5 | no-change |
 | Cyclicality awareness | 7.5 | 0 | 7.5 | no-change |
 
 ## Moat durability
 
-**Score:** 7.0 / 10   _samples: [7.0, 7.0, 7.0], range 0.0_ *(tight: low uncertainty)*
+**Score:** 6.5 / 10   _samples: [6.5, 6.5, 6.5], range 0.0_ *(tight: low uncertainty)*
 
-Adobe possesses a genuinely multi-dimensional moat: decades of brand equity embedded in industry-standard creative tools (Photoshop, Illustrator, Premiere Pro), deep workflow switching costs from an integrated Creative Cloud and Experience Platform ecosystem, and a proprietary commercially-safe AI model (Firefly) trained on licensed data — a meaningful differentiator as enterprise customers demand IP indemnification. The subscription model creates recurring lock-in reinforced by integrations across the content supply chain. However, Risk Factors explicitly acknowledge 'intensely competitive markets,' 'limited barriers to entry,' and the specific threat that AI-native competitors could develop solutions 'more rapidly or successfully,' which constrains the score from the highest tier.
+Adobe possesses a genuine multi-dimensional moat rooted in deep workflow integration, a dominant PDF/document standard it effectively created, and a creative-professional ecosystem with high switching costs. The Business section describes an 'integrated ecosystem' spanning creativity, productivity, and marketing that locks in professional users through cloud storage, cross-product workflows, and accumulated assets. However, Risk Factors reveal meaningful erosion vectors: generative and agentic AI enables skill-level democratization that could reduce reliance on Adobe's historically complex tools, new AI-native competitors are explicitly named as threats, and the company acknowledges rivals may develop AI solutions 'more rapidly or successfully.' The moat is real and durable in the near term but faces a genuine secular challenge from AI-driven disruption that prevents a higher score.
 
 ### Citations
 
-- **`business`** *(punctuation-normalized match)* — "Adobe Photoshop is the world's most advanced digital imaging and design app, with powerful editing and effects tools to transform photos."
-  *Why it matters:* Industry-standard status for flagship tools creates deep professional switching costs — users invest years of skill-building in Adobe's interfaces, making migration to alternatives costly and disruptive.
-- **`business`** *(punctuation-normalized match)* — "Every asset generated with Firefly includes Content Credentials, a digital "nutrition label", to indicate that generative AI was used, bringing more trust and transparency to digital content."
-  *Why it matters:* The commercially-safe Firefly model with IP indemnification is a structural differentiator versus open-source or less-governed AI competitors, creating enterprise trust and a switching cost layer around AI-generated content workflows.
-- **`risk-factors`** — "New industry standards, evolving distribution and sales models, limited barriers to entry, short product life cycles, customer price sensitivity, global economic conditions and the frequent entry of new solutions or competitors may increase downward pressure on pricing and gross margins"
-  *Why it matters:* Management is legally required to disclose that barriers to entry are limited and pricing pressure is real — this directly moderates the moat narrative presented in the Business section.
-- **`risk-factors`** — "Our competitors or other third parties may develop AI solutions more rapidly or successfully, including but not limited to different data training strategies or proprietary access to data and, as a result, other AI solutions may achieve greater and faster adoption."
-  *Why it matters:* The Risk Factors explicitly identify AI-native competition as a credible erosion vector for what is currently Adobe's most important competitive differentiator, indicating the moat is contested rather than fortress-grade.
+- **`business`** — "integrated ecosystems and connected workflows across creativity, productivity, and marketing to stand out and grow their brands."
+  *Why it matters:* Management's own framing emphasizes multi-product integration as the core competitive differentiator, signaling that switching costs arise from workflow lock-in across an entire ecosystem rather than any single application.
+- **`risk-factors`** — "we face increasing competition from companies offering generative and agentic AI solutions, including but not limited to prompt-based and multi-modal creation and editing, document productivity and understanding, ad distribution and creation, and purpose-built AI agents."
+  *Why it matters:* This specific enumeration of AI-native competitive threats in Risk Factors — a legally required disclosure — directly contradicts any claim that Adobe's creative-professional moat is impregnable, identifying the precise vectors through which incumbency could erode.
+- **`risk-factors`** **⚠️ NO-MATCH** — "Our competitors may develop AI solutions more rapidly or successfully, including but not limited to different data training strategies or proprietary access to data and, as a result, other AI solutions may achieve greater and faster adoption."
+  *Why it matters:* Management explicitly concedes it cannot guarantee AI leadership, acknowledging that a core pillar of its future moat could be captured by competitors with superior training data or development velocity.
+- **`business`** — "Adobe Acrobat is our comprehensive PDF solution with a full set of tools to convert, edit, share and sign PDFs across various surfaces and platforms."
+  *Why it matters:* PDF is an Adobe-originated standard with decades of entrenched enterprise usage, representing a structural switching-cost moat that is less susceptible to AI disruption than the creative-tools segment.
 
 ### Pass 1 counter-evidence considered
 
-The Risk Factors section is unusually candid about competitive intensity, stating the market has 'limited barriers to entry' and that AI competitors may outpace Adobe's model development. The Business section also acknowledges Adobe competes against 'social media platforms that offer built-in media editing capabilities' and 'AI-first creativity and productivity tools' — suggesting the consumer and prosumer segments face genuine low-cost substitutes that could erode the lower end of Creative Cloud pricing power over time.
+Risk Factors explicitly state that AI lowers barriers to entry and enables skill-level parity for novice users, directly threatening the complexity-based switching costs that underpin Creative Cloud's moat. Additionally, the company acknowledges 'limited barriers to entry' and 'frequent entry of new solutions or competitors' as industry characteristics, and notes that generative AI may make protecting innovations with patents more difficult — weakening the IP layer of the moat. The failed Figma acquisition also removed a potential defensive move against design-tool challengers.
 
 ### Pass 2 — Skeptic
 
 *Adjustment: no change recommended*
 
-Pass 1 already identified the core competitive threats: 'limited barriers to entry,' AI-first competitors, and social media platforms offering built-in editing. Reading the primary sources independently, I find no material concern that Pass 1 failed to address. The Risk Factors section's language about AI competitors, rapidly evolving markets, and limited barriers to entry is fully captured in Pass 1's counter-evidence. The Business section's descriptions of Adobe's integrated end-to-end platform, commercially safe Firefly models with IP indemnification, proprietary data assets, four-decade brand leadership, and deep workflow integration across creative and marketing professionals all support a durable moat score in the 7 range. The filing does not contain any new structural concerns — such as undisclosed competitive losses, customer concentration issues, or governance anomalies — that would materially alter the moat assessment beyond what Pass 1 already weighed. A score of 7 is well-calibrated given Adobe's genuine competitive strengths alongside the honestly disclosed AI competitive risks.
+Pass 1 already captures the core AI-driven competitive threat and the weakening IP layer. Reviewing the primary sources for anything Pass 1 did not address, I note two items worth examining: (1) the business section describes a deepening ecosystem integration across Creative Cloud, Acrobat, Express, Firefly, and now Acrobat Studio with agentic AI — this cross-product lock-in is a structural moat reinforcement Pass 1's score appears to already credit at 6.5. (2) The risk factors note that 'other companies have in the past, and may in the future prevent, limit or interfere with our ability to use third-party models in our solutions,' which is a supply-side moat risk Pass 1 did not explicitly call out — but it is relatively minor and affects execution rather than the structural moat itself. Neither item constitutes material new evidence that would move the needle beyond Pass 1's already-balanced 6.5. The ecosystem depth (Acrobat Studio integrating PDF tools, Express, and agentic AI; Creative Cloud Pro bundling Firefly; the PDF/document standard entrenchment) provides genuine switching-cost durability that partially offsets the AI democratization risk Pass 1 identified. The 6.5 score appears well-calibrated: it acknowledges real competitive threats while crediting meaningful but eroding network and ecosystem advantages.
 
 ### Pass 3 — Judge
 
-**Final score: 7.0 / 10** *(decision: no-change)*
+**Final score: 6.5 / 10** *(decision: no-change)*
 
-Pass 2 explicitly agreed with Pass 1's score of 7 and recommended zero adjustment, finding no material concerns that Pass 1 failed to address. Pass 2's rebuttal confirms that the primary sources support both the moat strengths (integrated platform, Firefly IP indemnification, four-decade brand leadership, workflow switching costs) and the competitive risks (limited barriers to entry, AI-native competition) that Pass 1 already weighed. No new evidence surfaced to alter the assessment.
+Pass 2 found no material new evidence beyond what Pass 1 already incorporated. The one incremental point raised — third-party model supply-side risk — is acknowledged as minor and execution-level rather than structural. Pass 1's 6.5 appropriately balances the genuine ecosystem and PDF-standard moat against credible AI-native competitive threats explicitly enumerated in the Risk Factors.
 
 ## Owner earnings quality
 
-**Score:** 8.5 / 10   _samples: [8.5, 8.0, 8.5], range 0.5_ *(tight: low uncertainty)*
+**Score:** 6.5 / 10   _samples: [6.5, 6.5, 6.5], range 0.0_ *(tight: low uncertainty)*
 
-Adobe's reported earnings translate to cash with high fidelity: operating cash flow of $10.03B versus net income of $7.13B in fiscal 2025, a ~1.41× ratio that reflects the favorable working capital dynamics of a subscription-first SaaS model (deferred revenue grew $771M year-over-year, functioning as an interest-free float). Capex is minimal ($179M against $236M D&A), confirming a capital-light model. The main earnings quality caveat is stock-based compensation of $1.94B in fiscal 2025, which represents ~27% of operating cash flow and is a real economic cost to owners; however, it is fully disclosed and not obscured by buybacks executed at depressed prices.
+Adobe's FCF ($10.03B operating cash flow) meaningfully exceeds net income ($7.13B) in fiscal 2025, a strong signal of earnings quality, driven by large deferred revenue build (+$771M) and non-cash add-backs. However, stock-based compensation of $1.942B represents ~19% of operating cash flow and ~27% of net income — a persistent, material dilution source that must be subtracted for a true owner earnings view. Capex is modest ($179M) relative to operating cash, preserving FCF, but SBC-funded buybacks partially offset that capital return. The subscription model generates negative working capital dynamics (deferred revenue $7.03B) that structurally boost reported cash conversion.
 
 ### Citations
 
 - **`financial-statements`** — "Net cash provided by operating activities10,031 8,056 7,302"
-  *Why it matters:* Operating cash flow of $10.03B in fiscal 2025 compares to net income of $7.13B, a ~1.41× conversion ratio that demonstrates cash earnings comfortably exceed accrual earnings over multiple years.
+  *Why it matters:* Operating cash flow of $10.03B comfortably exceeds net income of $7.13B across all three years shown, confirming that reported earnings are conservatively stated relative to actual cash generation.
 - **`financial-statements`** — "Stock-based compensation1,942 1,833 1,718"
-  *Why it matters:* SBC of $1.94B is a recurring, real dilution cost representing ~27% of operating cash flow; while cleanly disclosed, it meaningfully widens the gap between GAAP cash flow and true owner earnings.
-- **`financial-statements`** — "Deferred revenue primarily consists of billings or payments received in advance of revenue recognition from subscription services"
-  *Why it matters:* The $7.03B deferred revenue balance (growing $771M in fiscal 2025) is a liability that Adobe collects cash before recognizing as revenue, structurally pulling cash conversion above 1× and acting as a working-capital tailwind.
-- **`financial-statements`** — "Purchases of property and equipment(179)(183)(360)"
-  *Why it matters:* Capex of $179M in fiscal 2025 against D&A of $236M on property and equipment confirms a capital-light model where maintenance investment is modest relative to cash generation.
+  *Why it matters:* SBC has grown from $1.72B to $1.94B over three years and is a real economic cost to owners; at ~19% of operating cash flow, it materially reduces true owner earnings relative to the headline FCF figure.
+- **`financial-statements`** — "Deferred revenue771 309 536"
+  *Why it matters:* The $771M deferred revenue increase in fiscal 2025 structurally boosts operating cash flow above net income, reflecting Adobe's subscription model where cash is collected before revenue is recognized — a durable, quality characteristic.
+- **`mda`** — "Cash flows from operations of $10.03 billion during fiscal 2025 increased by $1.98 billion, or 25%, compared to fiscal 2024."
+  *Why it matters:* Management confirms the strong and accelerating cash conversion, validating that operating cash flow growth outpaces net income growth, though fiscal 2024 was depressed by the $1B Figma termination fee payment.
 
 ### Pass 1 counter-evidence considered
 
-SBC of $1.94B is the most significant quality concern: on a true owner-earnings basis (net income minus SBC economic cost), owner earnings are closer to ~$5.2B rather than the $7.1B GAAP figure, and SBC has grown consistently ($1.72B → $1.83B → $1.94B) alongside revenue. Additionally, deferred tax asset build-up ($512M deferred tax benefit in fiscal 2025) inflates reported net income relative to cash taxes paid ($2.22B cash taxes vs. $1.60B GAAP provision), though this reflects R&D capitalization for tax purposes and is a timing rather than a quality issue.
+The fiscal 2024 operating cash flow of $8.06B was adversely impacted by the $1B Figma termination fee payment, making the 25% year-over-year growth in fiscal 2025 partially a recovery effect rather than pure organic improvement. Additionally, SBC of $1.94B is effectively masked by $11.28B in buybacks — owners are paying to offset dilution rather than receiving true capital returns, reducing effective FCF yield for holders who count dilution cost.
 
 ### Pass 2 — Skeptic
 
 *Adjustment: no change recommended*
 
-Pass 1 already addressed the two primary quality concerns: SBC magnitude (~$1.94B, growing trend) and the deferred tax asset build-up ($512M deferred benefit vs. $2.22B cash taxes). Reviewing the primary sources independently, I find no material concerns that Pass 1 missed. The cash flow statement shows operating cash flow of $10.03B against net income of $7.13B, with the gap largely explained by SBC ($1.94B) and D&A ($818M) offset by working capital changes — a clean reconciliation. Revenue recognition is straightforward subscription ratable recognition with minimal aggressive judgment calls. Deferred revenue grew $771M (operating inflow), reflecting real advance customer payments rather than aggressive accruals. Unbilled receivables are only $74M on $2.34B trade receivables — negligible. The deferred tax asset of $2.186B is predominantly capitalized R&D expenses ($2.065B gross DTA) under IRC Section 174, which is a legitimate timing difference driven by tax law change, not earnings management. The $90M SBC line in the tax rate reconciliation (an addback, meaning SBC-related tax benefits were lower than expected this year) is a minor nuance. No off-balance-sheet items, no material contingent liabilities affecting earnings quality, no unusual accrual reversals. The 8.5 score is well-calibrated given the high FCF conversion, clean subscription revenue model, and the SBC concern already embedded in Pass 1's analysis.
+Pass 1 already identified the two primary concerns for this dimension: the Figma fee distortion of the FCF growth rate, and the SBC/buyback treadmill. Reviewing the primary sources independently, I looked for additional concerns not yet addressed: (1) deferred revenue conversion quality, (2) working capital manipulation, (3) capitalized cost accounting, and (4) tax-related cash distortions. On deferred revenue: the $771M increase in deferred revenue is a genuine operating cash inflow confirmed by $6.14B of prior-year deferred revenue recognized in fiscal 2025, demonstrating high conversion quality. On capitalized contract acquisition costs: $721M is capitalized and amortized over 5 years, which is a reasonable and disclosed policy with no impairment charges, not a red flag. On deferred taxes: the $512M deferred tax benefit inflates operating cash flow relative to economic taxes paid, but this is a structural feature of Adobe's R&D capitalization regime (the $2.065B deferred tax asset from capitalized expenses is disclosed), not aggressive accounting. On the current provision vs. deferred split: current tax paid of $2.118B vs. total provision of $1.604B actually shows cash taxes exceed book taxes in fiscal 2025, which is mildly favorable for owner earnings quality. Net cash from operations of $10.03B versus net income of $7.13B yields a cash conversion ratio above 1.4x, which is high quality. No new material concerns found that Pass 1 did not already address.
 
 ### Pass 3 — Judge
 
-**Final score: 8.5 / 10** *(decision: no-change)*
+**Final score: 6.5 / 10** *(decision: no-change)*
 
-Pass 2 recommended zero adjustment and independently confirmed Pass 1's findings: OCF of $10.03B versus net income of $7.13B reflects clean subscription-model cash conversion, deferred revenue growth of $771M represents real advance payments, unbilled receivables of $74M are negligible relative to total receivables, and the $2.065B capitalized R&D deferred tax asset is a legitimate IRC Section 174 timing difference rather than earnings management. Pass 2 found no material concerns beyond what Pass 1 had already embedded in its analysis, particularly the SBC burden of $1.94B (~27% of OCF) which Pass 1 explicitly noted as the primary earnings quality caveat. The 8.5 score appropriately reflects high FCF conversion quality tempered by the real but fully disclosed SBC cost.
+Pass 2 conducted an independent review of deferred revenue conversion quality, capitalized contract acquisition costs, deferred tax distortions, and current vs. deferred tax splits, and found no material concerns beyond what Pass 1 already identified and weighted. Pass 2's analysis actually corroborates Pass 1's positive findings on cash conversion quality (1.4x ratio, high deferred revenue conversion) while confirming the SBC treadmill remains the primary offset. With Pass 2 recommending zero adjustment and its citations supporting rather than undermining Pass 1's scoring, the original 6.5 stands.
 
 ## Capital allocation
 
-**Score:** 5.5 / 10   _samples: [5.5, 5.5, 5.5], range 0.0_ *(tight: low uncertainty)*
+**Score:** 4.0 / 10   _samples: [4.0, 4.0, 4.5], range 0.5_ *(tight: low uncertainty)*
 
-Adobe has deployed massive capital toward buybacks — $11.28B in fiscal 2025 alone, on top of $9.5B in fiscal 2024 and $4.4B in fiscal 2023 — demonstrating a consistent and accelerating return-of-capital program. However, this buyback surge has occurred while the stock trades at a trailing P/E of ~14x against a 10-year median of ~45x, which superficially suggests buybacks at trough valuations — a positive signal. Yet the scale of repurchases was financed in part by issuing $2B of new senior notes in January 2025, effectively levering up to fund buybacks, which reduces the quality of the capital allocation decision. The failed Figma acquisition ($1B termination fee in fiscal 2024) reflects a major capital allocation misstep, even if the cash was ultimately recovered. The pending Semrush acquisition at ~$1.9B is modest in scale relative to Adobe's FCF and does not raise serious concern on its own.
+Adobe's capital allocation in fiscal 2025 is dominated by massive share repurchases totaling $11.28 billion at what appear to be peak-cycle valuations — the stock was trading at multiples far above historical medians, yet the company accelerated buybacks. The $1 billion Figma termination fee in fiscal 2024 represents a costly failed acquisition. The pending $1.9 billion Semrush acquisition adds further M&A risk. While the subscription model generates strong and growing free cash flow ($10 billion in fiscal 2025), the timing and scale of buybacks at elevated valuations, combined with a large debt issuance to partially fund them, raises discipline concerns.
 
 ### Citations
 
 - **`mda`** — "During fiscal 2025, we entered into stock repurchase arrangements with large financial institutions and made payments totaling $11.28 billion to repurchase shares."
-  *Why it matters:* This documents the scale of buybacks in a single fiscal year — exceeding Adobe's full-year net income of $7.13B, funded partly by debt issuance — raising questions about whether the pace is disciplined or simply maximalist.
+  *Why it matters:* Adobe spent $11.28 billion on buybacks in a single fiscal year while the stock traded at trailing P/E of ~11x (now), but was executing repurchases at much higher multiples — the financial context shows trailing FCF yield of only ~11.8% implying prior repurchases occurred at much richer valuations.
 - **`mda`** — "During fiscal 2024, we incurred a $1 billion termination fee which resulted from termination of the Figma transaction."
-  *Why it matters:* A $1B termination fee on a failed acquisition is a direct destruction of shareholder capital and represents a material capital allocation error in the recent past, even if the underlying business rationale was debated externally.
-- **`mda`** — "In January 2025, we issued $800 million of senior notes due January 17, 2028, $700 million of senior notes due January 17, 2030 and $500 million of senior notes due January 17, 2035."
-  *Why it matters:* Adobe added $2B of long-term debt in the same fiscal year it repurchased $11.28B of stock, indicating it is effectively borrowing to fund buybacks — a mixed signal on capital allocation discipline.
+  *Why it matters:* The $1 billion termination fee represents a pure capital destruction event — cash paid with zero asset acquired — signaling that M&A discipline has been imperfect, as the company pursued an expensive deal that regulators blocked.
 - **`mda`** — "On November 18, 2025, we entered into a definitive agreement to acquire Semrush Holdings, Inc., a publicly held brand visibility platform company, for approximately $1.9 billion of cash consideration."
-  *Why it matters:* The Semrush deal is modest relative to Adobe's $10B+ annual FCF, but its strategic fit and valuation are not disclosed in this filing, leaving acquisition discipline partially unverifiable from these sources.
+  *Why it matters:* A follow-on acquisition announced shortly after the failed Figma deal shows continued M&A activity; the $1.9 billion price requires scrutiny of multiples paid relative to Semrush's earnings power.
+- **`financial-statements`** — "Proceeds from issuance of debt1,997 1,997 — Repayment of debt(1,500)— (500)"
+  *Why it matters:* Adobe issued $2 billion in new debt in both fiscal 2025 and 2024 (partially to fund buybacks), while only repaying $1.5 billion in 2025, meaning the company levered up to accelerate repurchases — a hallmark of peak-cycle buyback behavior.
 
 ### Pass 1 counter-evidence considered
 
-The current buyback authorization of $25B through March 2028 is occurring at a trailing P/E of ~14x versus a 10-year median of ~45x, which, if taken at face value, implies buybacks are concentrated at historically cheap valuations — a hallmark of disciplined allocation. Capex remains very modest ($179M in fiscal 2025 against $10B+ operating cash flow), confirming the capital-light model does not require heavy reinvestment and that buybacks are not crowding out productive investment.
+The $25 billion buyback authorization and sustained FCF growth ($10 billion in fiscal 2025, up 25% year-over-year) demonstrate operational cash generation strength. No dividends are paid, keeping capital flexible. The March 2024 board authorization through 2028 provides a multi-year framework, and remaining capacity of $5.9 billion post-September 2025 arrangement suggests some pacing discipline. The reverse DCF implying -6.5% FCF CAGR at current prices does suggest the market now prices Adobe cheaply, meaning recent buybacks at lower prices may prove well-timed.
 
 ### Pass 2 — Skeptic
 
-*Adjustment: no change recommended*
+*Adjustment: recommends -0.5 (downgrade)*
 
-Pass 1's counter-evidence already addresses the core tension in capital allocation: buybacks are occurring at historically cheap valuations relative to the 10-year median P/E, and capex is modest relative to cash generation. I reviewed the primary sources for additional evidence not addressed by Pass 1. Two items are worth examining but neither rises to the level requiring adjustment. First, the scale of buybacks ($11.28B in fiscal 2025) relative to net income ($7.13B) means Adobe is returning more cash than it earns, funded partly by new debt issuance ($2B in senior notes issued January 2025 while carrying $6.15B total senior notes outstanding). This leverage-funded repurchase dynamic was not explicitly called out in Pass 1's counter-evidence. However, given the company's near-zero net debt position ($0.2B net cash per the financial context), strong FCF ($10B+ operating cash flow), and absence of financial covenants on the senior notes, this is not a material concern. Second, the pending $1.9B Semrush acquisition adds M&A deployment to consider, but at roughly 2% of market cap with cash financing, it is not a meaningful capital allocation red flag. The $11.28B in buybacks at prices well above historical lows is the central capital allocation question, and the 14x trailing P/E vs. 45x median does support the 'buying cheap' framing Pass 1 used. No material evidence was found that Pass 1 failed to address.
+Pass 1 scored capital allocation at 4/10, citing the $25B buyback authorization and strong FCF generation as positives, while implicitly weighing concerns about repurchase timing and valuation. I examined the primary sources for any material evidence not already addressed.
+
+The key unaddressed element is the sheer scale and acceleration of buybacks relative to earnings and total shareholder value: Adobe paid $11.28 billion in repurchases in fiscal 2025 — exceeding net income of $7.13 billion and approaching the full year's operating cash flow of $10.03 billion. This required issuing $2.0 billion in new senior notes in January 2025 to partially fund the program. The company is effectively leveraging up to buy back stock, which is a meaningful capital allocation signal. Pass 1's counter-evidence noted the $10B FCF and the reverse DCF suggesting cheap pricing, but did not address the fact that buybacks materially exceeded net income and were partially debt-financed.
+
+Additionally, the pending $1.9 billion Semrush acquisition announced November 18, 2025, funded from cash on hand, adds another significant capital commitment layered on top of the aggressive buyback program and new debt issuance. The combination of debt issuance + aggressive buybacks exceeding earnings + a near-term $1.9B acquisition creates a more complex capital allocation picture than a 4/10 might reflect — but also arguably demonstrates confidence and disciplined use of leverage given the strong subscription cash flows.
+
+However, on balance, the debt-financed buyback dynamic is a genuine concern not explicitly addressed in Pass 1's counter-evidence, though it is a modest rather than severe issue given the underlying FCF strength. A small downward adjustment is warranted.
+
+- **`financial-statements`** — "Repurchases of common stock(11,281)(9,500)(4,400)"
+  *Why it matters:* Buybacks of $11.28B in fiscal 2025 materially exceeded net income of $7.13B and operating cash flow of $10.03B, a ratio Pass 1 did not explicitly flag.
+- **`financial-statements`** — "Proceeds from issuance of debt1,997 1,997 —"
+  *Why it matters:* Adobe issued ~$2B in new debt in fiscal 2025, which partially funded the buyback program — making the repurchases partially debt-financed, a structural concern Pass 1 did not address.
+- **`mda`** — "On November 18, 2025, we entered into a definitive agreement to acquire Semrush Holdings, Inc., a publicly held brand visibility platform company, for approximately $1.9 billion of cash consideration."
+  *Why it matters:* A $1.9B acquisition layered on top of $11.3B in buybacks and $2B in new debt issuance within the same fiscal cycle creates meaningful capital allocation complexity not addressed in Pass 1's counter-evidence.
 
 ### Pass 3 — Judge
 
-**Final score: 5.5 / 10** *(decision: no-change)*
+**Final score: 3.5 / 10** *(decision: split)*
 
-Pass 2 found no material evidence that Pass 1 missed. Pass 2 explicitly confirmed the leverage-funded repurchase dynamic was already captured in Pass 1's citations (the $2B senior notes issuance alongside $11.28B buybacks), and agreed that the near-zero net debt position and $10B+ operating cash flow mitigate this concern. Pass 2 also concurred that the Semrush acquisition is not a meaningful capital allocation red flag. The $1B Figma termination fee, the debt-funded buyback structure, and the historically cheap valuation context for repurchases were all properly weighed in Pass 1's 5.5 score, and Pass 2 recommended zero adjustment.
+Pass 2 surfaces a genuinely under-weighted point: buybacks of $11.28B materially exceeded both net income ($7.13B) and operating cash flow ($10.03B), with the gap partially filled by $2B in new debt issuance — a structural concern Pass 1 acknowledged only implicitly in noting 'levered up to accelerate repurchases' without quantifying the income/FCF exceedance. However, Pass 2's recommended adjustment of -0.5 is modest and the underlying concern is real but not catastrophic given the subscription-model FCF durability. A partial adjustment of -0.5 is warranted, bringing the score from 4 to 3.5, reflecting that debt-financed buybacks exceeding earnings is a genuine discipline concern but not a severe one given the $10B operating cash flow base.
 
 ## Debt sustainability
 
-**Score:** 7.5 / 10   _samples: [8.0, 7.5, 7.5], range 0.5_ *(tight: low uncertainty)*
+**Score:** 7.5 / 10   _samples: [7.5, 7.5, 7.5], range 0.0_ *(tight: low uncertainty)*
 
-Adobe carries approximately $6.2B in long-term debt and no current debt as of fiscal year-end 2025, against operating income of $8.7B and operating cash flow of $10.0B — implying interest coverage well above 30× and net debt/EBITDA below 1×. The company also holds $6.6B in cash and short-term investments, making it effectively near-net-cash on a gross basis. The debt maturity profile is not fully detailed in the provided sections, but the company issued $2.0B of new senior notes in fiscal 2025 while repaying $1.5B, suggesting active, well-managed refinancing. The primary risk is that aggressive buybacks ($11.4B in fiscal 2025 alone) have been substantially funded by operating cash flow rather than debt, but the scale of buybacks relative to cash generation warrants monitoring.
+Adobe carries $6.15 billion in senior notes against fiscal 2025 operating cash flow of $10.03 billion and operating income of $8.71 billion, yielding interest coverage well above 30×. Net debt is modest (~$1.5B when netting cash and investments against debt), and the maturity schedule is well-laddered with no single year presenting a wall — the next major maturity is $850M in 2027. Notes contain no financial covenants, and Adobe maintains a fully undrawn $1.5B revolving credit facility plus a $3B commercial paper program as backup liquidity. The pending ~$1.9B Semrush acquisition uses cash on hand, manageable given $10B+ annual OCF.
 
 ### Citations
 
-- **`financial-statements`** — "The fair value of our senior notes was $6.18 billion as of November 28, 2025, excluding the associated interest rate swaps, based on observable market prices in less active markets and categorized as Level 2."
-  *Why it matters:* Confirms the total debt load is approximately $6.2B at fair value; cross-referencing with $8.7B operating income yields interest coverage comfortably above 30× based on $263M interest expense, placing debt sustainability in strong territory.
-- **`financial-statements`** — "Cash paid for interest$246 $143 $106"
-  *Why it matters:* Cash interest paid was $246M in fiscal 2025 against $10.0B operating cash flow, an interest coverage ratio of roughly 40×, demonstrating that debt service poses virtually no stress on Adobe's cash generation.
-- **`financial-statements`** — "Proceeds from issuance of debt1,997 1,997 — Repayment of debt(1,500)— (500)"
-  *Why it matters:* Adobe issued $2.0B in new debt and repaid $1.5B in fiscal 2025, indicating proactive debt management and refinancing activity rather than a balance sheet under pressure.
-- **`financial-statements`** — "Total cash, cash equivalents and short-term investments$6,595 $— $— $6,595"
-  *Why it matters:* Against gross debt of ~$6.2B, Adobe's $6.6B cash and liquid investment position means the company is essentially net-cash, providing a strong liquidity buffer that further reduces solvency risk.
+- **`financial-statements`** — "Our senior notes rank equally with our other unsecured and unsubordinated indebtedness, and do not contain financial covenants."
+  *Why it matters:* Absence of financial covenants eliminates covenant-breach risk during cyclical downturns, a critical credit-quality indicator.
+- **`mda`** — "As of November 28, 2025, there were no outstanding borrowings under the Revolving Credit Agreement and the entire $1.5 billion credit line remains available for borrowing."
+  *Why it matters:* A fully undrawn $1.5B revolver provides substantial liquidity buffer beyond the $5.4B cash and $1.16B short-term investments already on hand.
+- **`mda`** — "our maximum commitment for interest payments was $1.03 billion for the remaining duration of our outstanding senior notes and interest rate swaps."
+  *Why it matters:* Total remaining interest commitment of only $1.03B against $10B+ annual OCF confirms extremely comfortable debt service capacity over the life of all notes.
+- **`financial-statements`** — "Net cash provided by operating activities10,031 8,056 7,302"
+  *Why it matters:* Three consecutive years of $7-10B operating cash flow relative to $263M annual interest expense implies coverage exceeding 30×, far above distress thresholds.
 
 ### Pass 1 counter-evidence considered
 
-The balance sheet has shifted materially: long-term debt rose from $4.1B to $6.2B year-over-year, and the company spent $11.4B on buybacks in fiscal 2025 — funded partly by new debt issuance. If free cash flow were to compress significantly (e.g., from AI-driven disruption to Creative Cloud pricing), the combination of rising gross debt and aggressive capital returns could stress the balance sheet faster than the current coverage ratios suggest. The interest rate swaps converting fixed to floating (SOFR OIS-based) on $2.7B notional also introduce variable rate exposure that would increase interest costs in a rising rate environment.
+Total debt increased from $5.65B to $6.15B at par as Adobe issued $2B in new notes in January 2025, and interest expense rose 56% year-over-year to $263M. Additionally, the company spent $11.28B on buybacks in fiscal 2025, leaving net cash slightly negative at approximately -$1.5B. The pending Semrush acquisition of ~$1.9B will further reduce the cash cushion, though these concerns are minor given the scale of operating cash generation.
 
 ### Pass 2 — Skeptic
 
 *Adjustment: no change recommended*
 
-Pass 1 already addressed the key concerns: rising gross debt ($4.1B to $6.2B), aggressive buyback funding via new debt, and the $2.7B notional interest rate swaps converting fixed to floating. I reviewed the primary sources for any additional material not covered. The financial statements confirm operating cash flow of $10.03B in fiscal 2025, interest expense of $263M (coverage ~33x), and no current debt maturities (the $1.5B current portion was repaid in fiscal 2025). The fair value of senior notes is $6.18B vs. $6.21B carrying value, indicating no material discount/distress. Deferred revenue of $7.03B and remaining performance obligations of $22.52B provide strong forward cash flow visibility. No covenant disclosures, no going-concern language, and no off-balance-sheet debt structures are present. The score of 7.5 appropriately reflects a company with strong cash generation and coverage but elevated gross debt and floating-rate exposure — all of which Pass 1 explicitly considered. No new primary-source evidence warrants adjustment.
+Pass 1's counter-evidence already addresses the key concerns: rising debt levels, increased interest expense, negative net cash, and the pending Semrush acquisition reducing cash further. Reviewing the primary sources independently confirms the score is well-calibrated. The debt structure is all fixed-rate senior unsecured notes (partially swapped to floating via interest rate swaps) with no financial covenants, staggered maturities through 2035, and a $1.5B revolving credit facility fully undrawn. Operating cash flow of $10.03B covers total debt of $6.15B in roughly 7.5 months. Interest coverage (operating income $8.71B / interest expense $263M) is approximately 33x. The maximum remaining interest commitment of $1.03B over the life of the notes is disclosed explicitly. No covenant breach risk exists given the notes explicitly contain no financial covenants. The commercial paper program ($3B capacity) is undrawn. All material debt sustainability concerns — rising leverage, net cash turning slightly negative, Semrush cash outlay — were already addressed in Pass 1's counter-evidence. No new evidence from the primary sources warrants an adjustment.
 
 ### Pass 3 — Judge
 
 **Final score: 7.5 / 10** *(decision: no-change)*
 
-Pass 2 provided no new primary-source citations and explicitly concluded that Pass 1's score was appropriate. The primary sources confirm: interest coverage ~33-40x, $6.6B cash vs $6.2B gross debt (near-net-cash), no current debt maturities, $10B+ operating cash flow, and no covenant or going-concern issues. Pass 1 already acknowledged the key risks (gross debt up from $4.1B to $6.2B, aggressive buybacks, $2.7B floating-rate swap exposure), making 7.5 a fair reflection of strong but not exceptional debt sustainability.
+Pass 2 fully confirmed Pass 1's analysis and explicitly recommended no adjustment, finding no new evidence from primary sources beyond what Pass 1 already addressed. The debt sustainability picture is strong: 33x interest coverage, no financial covenants, staggered maturities through 2035, undrawn $1.5B revolver, and $10B+ annual OCF dwarfing the $6.15B debt load. The modest concerns about rising interest expense, slightly negative net cash, and the pending Semrush acquisition were already properly weighted by Pass 1.
 
 ## Insider alignment
 
 **Score:** 5.5 / 10   _samples: [5.5, 5.5, 5.5], range 0.0_ *(tight: low uncertainty)*
 
-Adobe exhibits professional-management-level alignment rather than founder-level ownership. Compensation is heavily weighted toward long-term, performance-based equity (70% of CEO equity in PSPs with 3-year vesting, relative TSR and Net New Sales metrics) and stock ownership guidelines are above-market (20x base salary for CEO). However, the proxy does not disclose a beneficial ownership table in the provided window, preventing verification of actual share ownership levels. The CEO's 2023 PSP Relative TSR payout was only 45% of target (28th percentile rank), demonstrating that the performance linkage has real teeth — but also that the TSR alignment has been imperfect for shareholders in recent years.
+Adobe is run by professional management rather than a founder-owner, with CEO Narayen holding approximately 438,975 shares (less than 0.2% of shares outstanding), limiting skin-in-the-game relative to best-in-class alignment. Compensation is meaningfully performance-linked through multi-year PSPs and RSUs with 4-year vesting, but the Committee's 80% say-on-pay approval (meaning 20% dissent) and an active stockholder proposal challenging golden parachute terms suggest some misalignment concerns. Stock ownership requirements are above-market (20x base salary for CEO), and insider trading/hedging prohibitions are robust, but institutional ownership dwarfs insider ownership.
 
 ### Citations
 
-- **`proxy`** — "our executive officers are subject to the Net Share Retention Requirement until they satisfy (and continue to satisfy) the minimum share ownership value requirements listed in the table below."
-  *Why it matters:* Above-market ownership guidelines requiring the CEO to hold stock worth 20x base salary ($30M) structurally align long-term CEO interests with shareholders.
-- **`proxy`** *(punctuation-normalized match)* — "Messrs. Narayen, Chakravarthy and Wadhwani continued to receive 70% of their total target value of equity awards in PSPs and Mr. Durn continued to receive 50% of his total target value of equity awards in PSPs to maintain our compensation philosophy's focus on pay for performance"
-  *Why it matters:* The majority of executive compensation is in multi-year, performance-contingent equity, directly tying wealth creation to company outcomes over a 3-year horizon.
-- **`proxy`** — "our percentile rank among the 96 companies against whom relative TSR performance was compared as of December 31, 2025 was at the 28th percentile. Based on this result, the Relative TSR Goal payout for calendar years 2023 to 2025 was 45% of target shares."
-  *Why it matters:* The PSP design demonstrably reduced payouts when shareholder returns lagged peers, confirming that performance linkage is functional, not cosmetic.
+- **`proxy`** — "Shantanu Narayen438,975 (7)*"
+  *Why it matters:* The CEO's beneficial ownership of ~439K shares on ~408M shares outstanding is less than 0.2%, indicating limited founder-level economic alignment with ordinary shareholders.
+- **`proxy`** — "the minimum share ownership for a non-employee director is calculated as follows: shares required to equal a value of ten times the annual Board service cash retainer"
+  *Why it matters:* Adobe's above-market ownership guidelines (10x retainer for directors, 20x base salary for CEO) demonstrate a structural commitment to alignment, even if absolute ownership levels remain modest.
+- **`proxy`** — "We have clawback policies for performance-based incentive compensation and time-based equity compensation of our executive officers."
+  *Why it matters:* Dual clawback policies (one for misconduct, one for restatements) reduce the risk of executives benefiting from misrepresented performance, strengthening pay-for-performance integrity.
+- **`proxy`** **⚠️ NO-MATCH** — "our Insider Trading Policy explicitly prohibits any director or employee, including our NEOs, from hedging their equity ownership in Adobe by engaging in short sales or trading in any derivatives involving Adobe securities."
+  *Why it matters:* Anti-hedging and anti-pledging rules ensure that executives bear full downside risk on their equity holdings, reinforcing alignment with long-term shareholder interests.
 
 ### Pass 1 counter-evidence considered
 
-The provided proxy window does not include the beneficial ownership table, making it impossible to confirm actual share ownership levels for the CEO or directors — a critical data point for scoring insider alignment. Additionally, the CEO's total target equity award was increased to $45.5M in FY2025 (vs. peers' pay levels), which could reflect committee generosity rather than pure performance discipline. The 80% say-on-pay approval rate, while passing, is below the ~90%+ threshold that typically signals strong shareholder endorsement of the compensation structure.
-
-### Pass 2 — Skeptic
-
-*Adjustment: recommends +0.5 (upgrade)*
-
-Pass 1 identified three concerns: (1) beneficial ownership table unavailable in the window, (2) CEO equity award increase to $45.5M, and (3) 80% say-on-pay approval. Reviewing the primary sources for evidence Pass 1 may have missed, I find several positive structural features that were not addressed in the counter-evidence section: (a) CEO ownership guidelines set at 20x base salary — an above-market requirement — and as of November 28, 2025, all NEOs were confirmed in compliance; (b) explicit anti-hedging and anti-pledging policies prohibiting short sales, derivatives, margin accounts, pledging, prepaid variable forwards, equity swaps, exchange funds, and collars; (c) dual clawback policies — a mandatory SEC Rule 10D-1 policy plus a supplemental misconduct-triggered policy covering both incentive and time-based equity; (d) 70% of CEO and President equity in performance-based PSPs with no vesting before 3-year period completion; and (e) the 2023 PSP Relative TSR payout came in at only 45% (28th percentile rank), demonstrating that the compensation structure actually delivered below-target outcomes when performance lagged — a real accountability signal. None of these specifics appear in Pass 1's counter-evidence. However, these are largely structural governance features that a well-calibrated 5.5 score would be expected to partially reflect. The 45% Relative TSR payout is new evidence of genuine accountability that Pass 1 did not surface, and the above-market 20x salary ownership guideline confirmed met by all NEOs is a meaningful positive not weighed. Together these modestly support a small upward adjustment.
-
-- **`proxy (DEF 14A) — Stock Ownership Guidelines`** — "We have above-market stock ownership guidelines for all employees at the senior vice president level and above (including our executive officers)... PositionMinimum Ownership ValueChief Executive Officer20x base salary... As of November 28, 2025, each of our NEOs was in compliance with the applicable guidelines."
-  *Why it matters:* Pass 1 could not confirm actual ownership levels due to the unavailable beneficial ownership table, but the proxy affirmatively states all NEOs — including the CEO — are in compliance with above-market ownership requirements (20x base salary for CEO). This partially addresses the ownership alignment gap Pass 1 flagged and is a positive not included in counter-evidence.
-- **`proxy (DEF 14A) — 2023 Performance Share Program Relative TSR Results`** — "With the above TSR performance, our percentile rank among the 96 companies against whom relative TSR performance was compared as of December 31, 2025 was at the 28th percentile. Based on this result, the Relative TSR Goal payout for calendar years 2023 to 2025 was 45% of target shares."
-  *Why it matters:* The 2023 PSP Relative TSR component paid out at only 45% of target (28th percentile rank), demonstrating that the program delivered genuine below-target consequences when stock performance lagged peers. This is concrete accountability evidence not addressed in Pass 1's counter-evidence, partially counterbalancing concerns about compensation generosity.
-- **`proxy (DEF 14A) — Insider Trading, Anti-Hedging and Anti-Pledging Policies`** — "our Insider Trading Policy explicitly prohibits any director or employee, including our NEOs, from hedging their equity ownership in Adobe by engaging in short sales or trading in any derivatives involving Adobe securities. All employees are also prohibited from holding Adobe stock in a margin account or otherwise pledging Adobe stock or using financial instruments such as prepaid variable forwards, equity swaps, exchange funds and collars."
-  *Why it matters:* Comprehensive anti-hedging and anti-pledging policies ensure executives cannot economically neutralize their equity exposure, reinforcing genuine ownership alignment. Pass 1 did not note this structural protection.
-
-### Pass 3 — Judge
-
-**Final score: 6.0 / 10** *(decision: split)*
-
-Pass 2's rebuttal surfaces three genuinely incremental positives not weighted in Pass 1: (1) the proxy affirmatively confirms all NEOs were in compliance with ownership guidelines as of November 28, 2025, partially resolving Pass 1's concern about unverifiable ownership levels; (2) comprehensive anti-hedging and anti-pledging policies explicitly prohibiting short sales, derivatives, margin accounts, pledging, prepaid variable forwards, equity swaps, exchange funds, and collars — a structural protection Pass 1 omitted entirely; and (3) dual clawback policies covering both incentive and time-based equity beyond the statutory minimum. These are real, verified positives confirmed in the primary source text. However, Pass 2's recommended adjustment of +0.5 slightly overstates the net impact given that the 80% say-on-pay concern and the $45.5M equity award increase remain unrebutted negatives, and the ownership compliance confirmation is procedural rather than a disclosure of actual share counts. A partial credit of roughly half the recommended adjustment is warranted, yielding a final score of 5.75, rounded to 6.0.
-
-## Cyclicality awareness
-
-**Score:** 7.5 / 10   _samples: [7.5, 7.5, 7.5], range 0.0_ *(tight: low uncertainty)*
-
-Adobe's subscription-based model provides substantial insulation from economic cyclicality. Revenue is recognized ratably over subscription terms, meaning current-period revenue largely reflects prior-period commitments — creating a natural buffer against short-term demand shocks. Risk Factors do acknowledge macroeconomic sensitivity (enterprise spend scrutiny, customer insolvency risk) but frame these as lagged and partial effects rather than acute cyclical exposure. The MDA confirms 'strong demand' and 'continued growth in software-based subscription revenue' in fiscal 2025, consistent with through-cycle resilience rather than peak-cycle dynamics.
-
-### Citations
-
-- **`risk-factors`** — "most of the subscription revenue we report each quarter is the result of subscription agreements entered into during previous quarters"
-  *Why it matters:* This structural feature of ratable revenue recognition means Adobe's reported results are inherently smoothed across economic cycles, reducing the acute cyclical swings that affect transaction-based businesses.
-- **`risk-factors`** *(punctuation-normalized match)* — "Adverse changes in global economic conditions, including, but not limited to recessions or slow economic growth have in the past resulted and may in the future result in our customers' and business partners' insolvency, inability to obtain credit to finance or purchase our solutions, or a delay in paying or an inability to pay their obligations to us."
-  *Why it matters:* Management does acknowledge macro-driven demand risk, confirming some cyclicality exists, but notably frames this as a lagged credit and renewal risk rather than immediate revenue collapse — consistent with a moderately resilient model.
-- **`risk-factors`** *(punctuation-normalized match)* — "Adverse macroeconomic and geopolitical events such as trade disputes and tariffs have caused, and may continue to cause, additional spend scrutiny and delays in our enterprise customers' purchasing decisions, particularly for larger and more complex deals."
-  *Why it matters:* Enterprise segment shows genuine cyclical sensitivity to macro conditions, partially offsetting the consumer/SMB subscription base's smoother characteristics — this is the key vulnerability to the otherwise resilient model.
-- **`mda`** — "we have continued to experience growth in software-based subscription revenue across our portfolio of offerings"
-  *Why it matters:* The fiscal 2025 narrative confirms ongoing subscription revenue growth, consistent with a business that sustains momentum rather than experiencing cyclical peaks and troughs.
-
-### Pass 1 counter-evidence considered
-
-Risk Factors explicitly flag that enterprise customers subject Adobe to 'additional spend scrutiny and delays' during adverse macro conditions, and that customer insolvency or inability to obtain credit could reduce demand. The enterprise segment's complex, extended sales cycles make it meaningfully more cyclical than the consumer creative subscription base. The filing does not provide explicit revenue data from 2020 or 2008-2009 downturns in the sections provided, limiting direct through-cycle validation.
+The 2025 say-on-pay vote received only ~80% approval (20% dissent is elevated), and a stockholder proposal on golden parachutes received 47% support at the 2025 Annual Meeting — signaling meaningful shareholder concern about severance terms. Additionally, CEO Narayen's absolute share ownership is very low relative to company market cap, and the proxy notes no significant open-market purchases by insiders, suggesting alignment is primarily through compensation structure rather than co-investment.
 
 ### Pass 2 — Skeptic
 
 *Adjustment: no change recommended*
 
-Pass 1's counter-evidence already addresses the core cyclicality concerns visible in the primary sources: enterprise spend scrutiny during adverse macro conditions, extended sales cycles, and customer insolvency/credit risks. I reviewed the risk-factors section thoroughly for any incremental cyclicality evidence not captured by Pass 1. The subscription model's revenue-smoothing effect (ratably recognized over 1–36 month terms) is implicitly a cyclicality buffer, and the MDA confirms continued growth in fiscal 2025. The government-sector risk (budget fluctuations, shutdowns) is a modest additional cyclical vector not explicitly named in Pass 1's counter-evidence, but it is a minor concern given government is not identified as a dominant revenue segment. Overall, the 7.5 score reflects appropriate weighting of Adobe's subscription-based revenue resilience against its enterprise segment's cyclical exposure. No material new evidence found that Pass 1 did not already address.
+Pass 1's counter-evidence already addresses the two primary concerns (elevated say-on-pay dissent / golden parachute proposal support, and thin absolute ownership relative to market cap). Reviewing the proxy independently, I find no material additional concerns that would warrant adjustment in either direction. The governance structure is well-documented: above-market stock ownership guidelines (CEO at 20x base salary), robust clawback policies (both the Rule 10D-1 restatement clawback adopted October 2023 and the supplemental Misconduct clawback adopted November 2024), anti-hedging and anti-pledging policies, independent compensation committee (100% independent directors), and an active Lead Director with clearly enumerated authority. The deferred compensation plan usage by multiple directors and NEOs modestly reinforces long-term alignment. The new Executive Officer Cash Severance Policy limiting new cash severance to 2.99x without stockholder ratification is a positive structural addition but was adopted in 2026 in apparent response to the 47% golden parachute proposal — itself a concern Pass 1 already noted. None of these observations constitute new material evidence beyond what Pass 1 weighed. The score of 5.5 reflects a reasonable balance between structural alignment mechanisms (ownership guidelines, clawbacks, equity-heavy pay mix) and the genuine concerns about low absolute co-investment and elevated stockholder dissent.
+
+### Pass 3 — Judge
+
+**Final score: 5.5 / 10** *(decision: no-change)*
+
+Pass 2 conducted an independent review of the proxy and confirmed Pass 1's assessment without surfacing any material new evidence. Both analysts agree that structural alignment mechanisms (20x CEO ownership guideline, dual clawbacks, anti-hedging/pledging policies, equity-heavy pay mix) are offset by thin absolute co-investment (<0.2% CEO ownership), 20% say-on-pay dissent, and a 47% shareholder vote supporting a golden parachute restriction proposal. The 5.5 score accurately reflects this balanced picture.
+
+## Cyclicality awareness
+
+**Score:** 7.5 / 10   _samples: [7.5, 7.5, 7.5], range 0.0_ *(tight: low uncertainty)*
+
+Adobe's subscription-based model provides substantial revenue predictability and insulation from economic cycles, as explicitly acknowledged in MD&A: management notes revenue and earnings are 'relatively predictable as a result of our subscription-based business model.' The multi-year revenue table shows consistent double-digit growth through recent macro pressures ($19.4B → $21.5B → $23.8B), with 96% of revenue from subscriptions. Risk Factors acknowledge macro sensitivity — spend scrutiny, delayed enterprise deals, potential renewal rate declines — but frame these as headwinds that slow growth rather than threaten the core. The subscription model creates a natural lag between macro deterioration and revenue impact, providing a meaningful buffer that pure transactional software businesses lack.
+
+### Citations
+
+- **`mda`** — "While our revenue and earnings are relatively predictable as a result of our subscription-based business model, the broader implications of these macroeconomic events on our business, results of operations and overall financial position, particularly in the long term, remain uncertain."
+  *Why it matters:* Management explicitly acknowledges the subscription model as a cyclical buffer, while honestly flagging that long-term macro impacts remain uncertain — a balanced, credible disclosure.
+- **`risk-factors`** *(punctuation-normalized match)* — "Adverse macroeconomic and geopolitical events such as trade disputes and tariffs have caused, and may continue to cause, additional spend scrutiny and delays in our enterprise customers' purchasing decisions, particularly for larger and more complex deals."
+  *Why it matters:* This identifies the primary cyclical risk vector — enterprise deal delays — which is real but limited in scope compared to businesses with fully discretionary, non-recurring revenue.
+- **`risk-factors`** *(punctuation-normalized match)* — "Our renewal rates may decline or fluctuate as a result of a number of factors, including our customers' level of satisfaction, our ability to continue enhancing features and functionality, reliability of our solutions, prices of ours and competitors' solutions"
+  *Why it matters:* Renewal rate risk is the key cyclical lever in a subscription model; declining spend in a recession could accelerate churn, but the enumerated factors are mostly company-specific rather than macro-driven.
+- **`mda`** — "Total Adobe ARR grew to $25.20 billion exiting fiscal 2025, representing 11.5% year-over-year growth."
+  *Why it matters:* Consistent double-digit ARR growth through a period of elevated macro uncertainty (2023–2025) demonstrates empirical through-cycle revenue resilience rather than just model-level claims.
+
+### Pass 1 counter-evidence considered
+
+Risk Factors note that 'recessions or slow economic growth have in the past resulted and may in the future result in our customers' and business partners' insolvency, inability to obtain credit to finance or purchase our solutions.' Additionally, the enterprise sales cycle risk and the subscription lag effect mean that a sustained downturn would eventually compress revenue, just with a delay. The filing does not provide explicit data from the 2008–2009 or 2020 downturns to demonstrate through-cycle performance, limiting the score from reaching 8–9.
+
+### Pass 2 — Skeptic
+
+*Adjustment: no change recommended*
+
+Pass 1's counter-evidence already addresses the key cyclical risks: recession-driven customer insolvency, subscription lag effects, and the absence of through-cycle historical data. Reviewing the primary sources independently, the MDA explicitly acknowledges macroeconomic sensitivity ('we are subject to risks and exposures from the evolving macroeconomic environment, including the effects of increased global inflationary pressures and interest rates, fluctuations in foreign currency exchange rates, potential economic slowdowns or recessions and geopolitical pressures') while simultaneously noting that 'our revenue and earnings are relatively predictable as a result of our subscription-based business model.' The financial results corroborate the resilience narrative: 96% of total revenue is subscription-based, ARR grew 11.5% YoY to $25.20 billion, and cash flows from operations grew 25% to $10.03 billion. The Risk Factors section does note extended enterprise sales cycles and macro-driven spend scrutiny ('Adverse macroeconomic and geopolitical events such as trade disputes and tariffs have caused, and may continue to cause, additional spend scrutiny and delays in our enterprise customers' purchasing decisions'), but this concern is substantively captured in Pass 1's reference to enterprise sales cycle risk. No new material evidence exists in the primary sources that Pass 1 failed to address. The 7.5 score appropriately reflects a predominantly subscription-based model with genuine but lagged cyclical exposure.
 
 ### Pass 3 — Judge
 
 **Final score: 7.5 / 10** *(decision: no-change)*
 
-Pass 2 recommended zero adjustment and found no material new evidence beyond what Pass 1 already identified and weighed. Pass 2's only incremental point—government sector budget/shutdown risk—is minor and explicitly acknowledged as such by Pass 2 itself, given government is not a dominant revenue segment. Pass 1's score of 7.5 appropriately balances Adobe's subscription-smoothed revenue model against its genuine enterprise cyclical exposure, and neither analyst surfaced primary-source evidence contradicting that calibration.
+Pass 2 independently reviewed the same primary sources and found no new material evidence that Pass 1 had missed or underweighted. Both analysts identified the same key evidence: the 96% subscription revenue base, 11.5% ARR growth through macro uncertainty, management's explicit acknowledgment of relative predictability, and the enterprise spend scrutiny risk. Pass 2 recommended zero adjustment and explicitly agreed the 7.5 score appropriately reflects a predominantly subscription-based model with genuine but lagged cyclical exposure.

@@ -1,0 +1,144 @@
+{
+  "ticker": "NOW",
+  "cik": "0001373715",
+  "accession": "0001373715-26-000007",
+  "form": "10-K",
+  "filingDate": "2026-01-29",
+  "primaryDocument": "now-20251231.htm",
+  "parsedAt": "2026-06-25T05:27:46.132Z",
+  "cleanedTextLength": 367098,
+  "sections": [
+    {
+      "id": "business",
+      "label": "Business",
+      "itemNumber": "1",
+      "charLength": 50643,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "Item 1. Business",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "larger-font",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "risk-factors",
+      "label": "Risk Factors",
+      "itemNumber": "1A",
+      "charLength": 91880,
+      "confidence": "high",
+      "warnings": [
+        "absorbed bundled content from \"properties\""
+      ],
+      "bundled": [
+        "properties"
+      ],
+      "chosenAnchor": {
+        "text": "Item 1A. Risk Factors",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "larger-font",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "properties",
+      "label": "Properties",
+      "itemNumber": "2",
+      "charLength": 579,
+      "confidence": "high",
+      "warnings": [
+        "incorporation-by-reference: real content lives elsewhere in the filing",
+        "bundled into \"risk-factors\" (91,880 chars vs threshold 82,500)"
+      ],
+      "bundled": [
+        "risk-factors"
+      ],
+      "chosenAnchor": {
+        "text": "Item 2. Properties",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "larger-font",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "legal-proceedings",
+      "label": "Legal Proceedings",
+      "itemNumber": "3",
+      "charLength": 6680,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "Item 3. Legal Proceedings",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "larger-font",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "mda",
+      "label": "Management's Discussion and Analysis",
+      "itemNumber": "7",
+      "charLength": 54678,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "Item 7. Management’s Discussion and Analysis of Financial Condition and Results of Operations",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "larger-font",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "quant-risk",
+      "label": "Quantitative and Qualitative Disclosures About Market Risk",
+      "itemNumber": "7A",
+      "charLength": 7668,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "Item 7A. Qualitative and Quantitative Disclosures About Market Risk",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "larger-font",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "financial-statements",
+      "label": "Financial Statements",
+      "itemNumber": "8",
+      "charLength": 126430,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "Item 8. Consolidated Financial Statements and Supplementary Data",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "larger-font",
+          "top-level-body-descendant"
+        ]
+      }
+    }
+  ],
+  "parserWarnings": [],
+  "missing": []
+}

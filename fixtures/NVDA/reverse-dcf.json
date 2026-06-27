@@ -1,0 +1,57 @@
+{
+  "ticker": "NVDA",
+  "asOf": "2026-06-25",
+  "currentPrice": 199,
+  "sharesOutstanding": 24514,
+  "startingFcfMillions": 102718,
+  "actualFcfCagr3y": 1.6308544294070741,
+  "actualFcfCagr5y": 0.7754762642159825,
+  "grid": [
+    {
+      "discountRate": 0.08,
+      "terminalMultiple": 15,
+      "impliedFcfCagr": 0.16484375
+    },
+    {
+      "discountRate": 0.08,
+      "terminalMultiple": 20,
+      "impliedFcfCagr": 0.13876953124999997
+    },
+    {
+      "discountRate": 0.08,
+      "terminalMultiple": 25,
+      "impliedFcfCagr": 0.11796875000000001
+    },
+    {
+      "discountRate": 0.1,
+      "terminalMultiple": 15,
+      "impliedFcfCagr": 0.18652343750000003
+    },
+    {
+      "discountRate": 0.1,
+      "terminalMultiple": 20,
+      "impliedFcfCagr": 0.15986328125
+    },
+    {
+      "discountRate": 0.1,
+      "terminalMultiple": 25,
+      "impliedFcfCagr": 0.13876953124999997
+    },
+    {
+      "discountRate": 0.12,
+      "terminalMultiple": 15,
+      "impliedFcfCagr": 0.20791015624999998
+    },
+    {
+      "discountRate": 0.12,
+      "terminalMultiple": 20,
+      "impliedFcfCagr": 0.18095703125
+    },
+    {
+      "discountRate": 0.12,
+      "terminalMultiple": 25,
+      "impliedFcfCagr": 0.159423828125
+    }
+  ],
+  "narrative": "At a current price of $199.00 per share and trailing FCF of $102.7B, the reverse DCF asks: what 10-year FCF growth rate would justify this price under various assumptions?\n\nUnder the central assumptions (10% discount rate, 20× terminal P/FCF), the market is pricing in approximately 16.0% annual FCF growth for 10 years.\nFor comparison, actual FCF CAGR has been 77.5% over the past 5 years and 163.1% over the past 3 years.\nThe implied growth is below the historical pace — the market may be pricing in a deceleration or slowdown.\n\nRead the sensitivity grid below to see how this implied growth shifts under different discount rates and terminal multiples. A value-investing skeptic would ask whether the highest-implied-growth cells in the grid are achievable, and whether the assumptions that produce a more attractive picture are themselves reasonable."
+}

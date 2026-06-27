@@ -1,0 +1,86 @@
+{
+  "ticker": "NVDA",
+  "cik": "0001045810",
+  "accession": "0001045810-26-000052",
+  "form": "10-Q",
+  "filingDate": "2026-05-20",
+  "primaryDocument": "nvda-20260426.htm",
+  "parsedAt": "2026-06-15T23:25:17.271Z",
+  "cleanedTextLength": 154161,
+  "sections": [
+    {
+      "id": "quant-risk",
+      "label": "Quantitative and Qualitative Disclosures About Market Risk",
+      "itemNumber": "3",
+      "charLength": 4137,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "Item 3. Quantitative and Qualitative Disclosures About Market Risk",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "financial-statements",
+      "label": "Financial Statements",
+      "itemNumber": "1",
+      "charLength": 215,
+      "confidence": "failed",
+      "warnings": [
+        "incorporation-by-reference: real content lives elsewhere in the filing"
+      ],
+      "chosenAnchor": {
+        "text": "Item 1. Legal Proceedings",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "risk-factors",
+      "label": "Risk Factors (updates)",
+      "itemNumber": "1A",
+      "charLength": 42941,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "Item 1A. Risk Factors",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "mda",
+      "label": "Management's Discussion and Analysis",
+      "itemNumber": "2",
+      "charLength": 6652,
+      "confidence": "low",
+      "warnings": [
+        "Section length 6652 below expected floor for mda"
+      ],
+      "chosenAnchor": {
+        "text": "Item 2. Unregistered Sales of Equity Securities and Use of Proceeds",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    }
+  ],
+  "parserWarnings": [
+    "Item not extracted cleanly: financial-statements"
+  ],
+  "missing": [
+    "financial-statements"
+  ]
+}

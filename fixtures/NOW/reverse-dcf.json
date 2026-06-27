@@ -1,0 +1,57 @@
+{
+  "ticker": "NOW",
+  "asOf": "2026-06-25",
+  "currentPrice": 93.8,
+  "sharesOutstanding": 1046.691,
+  "startingFcfMillions": 4576,
+  "actualFcfCagr3y": 0.2817660466526304,
+  "actualFcfCagr5y": 0.2732867481439345,
+  "grid": [
+    {
+      "discountRate": 0.08,
+      "terminalMultiple": 15,
+      "impliedFcfCagr": 0.059960937500000006
+    },
+    {
+      "discountRate": 0.08,
+      "terminalMultiple": 20,
+      "impliedFcfCagr": 0.03740234375
+    },
+    {
+      "discountRate": 0.08,
+      "terminalMultiple": 25,
+      "impliedFcfCagr": 0.01953125
+    },
+    {
+      "discountRate": 0.1,
+      "terminalMultiple": 15,
+      "impliedFcfCagr": 0.07958984375
+    },
+    {
+      "discountRate": 0.1,
+      "terminalMultiple": 20,
+      "impliedFcfCagr": 0.05673828125000001
+    },
+    {
+      "discountRate": 0.1,
+      "terminalMultiple": 25,
+      "impliedFcfCagr": 0.03857421875
+    },
+    {
+      "discountRate": 0.12,
+      "terminalMultiple": 15,
+      "impliedFcfCagr": 0.09921875
+    },
+    {
+      "discountRate": 0.12,
+      "terminalMultiple": 20,
+      "impliedFcfCagr": 0.07578125
+    },
+    {
+      "discountRate": 0.12,
+      "terminalMultiple": 25,
+      "impliedFcfCagr": 0.05732421875
+    }
+  ],
+  "narrative": "At a current price of $93.80 per share and trailing FCF of $4.6B, the reverse DCF asks: what 10-year FCF growth rate would justify this price under various assumptions?\n\nUnder the central assumptions (10% discount rate, 20× terminal P/FCF), the market is pricing in approximately 5.7% annual FCF growth for 10 years.\nFor comparison, actual FCF CAGR has been 27.3% over the past 5 years and 28.2% over the past 3 years.\nThe implied growth is below the historical pace — the market may be pricing in a deceleration or slowdown.\n\nRead the sensitivity grid below to see how this implied growth shifts under different discount rates and terminal multiples. A value-investing skeptic would ask whether the highest-implied-growth cells in the grid are achievable, and whether the assumptions that produce a more attractive picture are themselves reasonable."
+}

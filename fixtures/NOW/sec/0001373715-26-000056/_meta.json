@@ -1,0 +1,94 @@
+{
+  "ticker": "NOW",
+  "cik": "0001373715",
+  "accession": "0001373715-26-000056",
+  "form": "10-Q",
+  "filingDate": "2026-04-23",
+  "primaryDocument": "now-20260331.htm",
+  "parsedAt": "2026-06-25T05:27:46.377Z",
+  "cleanedTextLength": 144986,
+  "sections": [
+    {
+      "id": "quant-risk",
+      "label": "Quantitative and Qualitative Disclosures About Market Risk",
+      "itemNumber": "3",
+      "charLength": 2543,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "Item 3. Qualitative and Quantitative Disclosures About Market Risk",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "larger-font",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "financial-statements",
+      "label": "Financial Statements",
+      "itemNumber": "1",
+      "charLength": 612,
+      "confidence": "failed",
+      "warnings": [
+        "incorporation-by-reference: real content lives elsewhere in the filing"
+      ],
+      "chosenAnchor": {
+        "text": "Item 1. Legal Proceedings",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "larger-font",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "risk-factors",
+      "label": "Risk Factors (updates)",
+      "itemNumber": "1A",
+      "charLength": 691,
+      "confidence": "failed",
+      "warnings": [
+        "Section length 691 far below floor — likely TOC entry or missing content"
+      ],
+      "chosenAnchor": {
+        "text": "Item 1A. Risk Factors",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "larger-font",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "mda",
+      "label": "Management's Discussion and Analysis",
+      "itemNumber": "2",
+      "charLength": 7093,
+      "confidence": "low",
+      "warnings": [
+        "Section length 7093 below expected floor for mda"
+      ],
+      "chosenAnchor": {
+        "text": "Item 2. Unregistered Sales of Equity Securities and Use of Proceeds",
+        "score": 7,
+        "signals": [
+          "descendant-bold",
+          "larger-font",
+          "top-level-body-descendant"
+        ]
+      }
+    }
+  ],
+  "parserWarnings": [
+    "Item not extracted cleanly: financial-statements",
+    "Item not extracted cleanly: risk-factors"
+  ],
+  "missing": [
+    "financial-statements",
+    "risk-factors"
+  ]
+}

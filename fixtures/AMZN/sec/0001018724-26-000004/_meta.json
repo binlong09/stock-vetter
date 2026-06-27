@@ -1,0 +1,128 @@
+{
+  "ticker": "AMZN",
+  "cik": "0001018724",
+  "accession": "0001018724-26-000004",
+  "form": "10-K",
+  "filingDate": "2026-02-06",
+  "primaryDocument": "amzn-20251231.htm",
+  "parsedAt": "2026-06-25T05:28:14.190Z",
+  "cleanedTextLength": 307494,
+  "sections": [
+    {
+      "id": "business",
+      "label": "Business",
+      "itemNumber": "1",
+      "charLength": 13431,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "Item 1.Business",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "risk-factors",
+      "label": "Risk Factors",
+      "itemNumber": "1A",
+      "charLength": 64638,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "Item 1A.Risk Factors",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "properties",
+      "label": "Properties",
+      "itemNumber": "2",
+      "charLength": 1206,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "Item 2.Properties",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "legal-proceedings",
+      "label": "Legal Proceedings",
+      "itemNumber": "3",
+      "charLength": 722,
+      "confidence": "high",
+      "warnings": [
+        "incorporation-by-reference: real content lives elsewhere in the filing"
+      ],
+      "chosenAnchor": {
+        "text": "Item 3.Legal Proceedings",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "mda",
+      "label": "Management's Discussion and Analysis",
+      "itemNumber": "7",
+      "charLength": 46090,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "Item 7.Management’s Discussion and Analysis of Financial Condition and Results of Operations",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "quant-risk",
+      "label": "Quantitative and Qualitative Disclosures About Market Risk",
+      "itemNumber": "7A",
+      "charLength": 6096,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "Item 7A.Quantitative and Qualitative Disclosures About Market Risk",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "financial-statements",
+      "label": "Financial Statements",
+      "itemNumber": "8",
+      "charLength": 142176,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "Item 8.Financial Statements and Supplementary Data",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    }
+  ],
+  "parserWarnings": [],
+  "missing": []
+}

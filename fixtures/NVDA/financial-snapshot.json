@@ -1,0 +1,129 @@
+{
+  "ticker": "NVDA",
+  "asOf": "2026-06-25",
+  "price": 199,
+  "marketCap": 4819978813440,
+  "enterpriseValue": 4775442120704,
+  "netCash": 40357998592,
+  "peRatio": 30.474731,
+  "evEbit": 36.62513993499352,
+  "evSales": 22.114876125109987,
+  "fcfYield": 0.009613293920462333,
+  "peRatio10yMedian": 4.0312526170289225,
+  "evEbit10yMedian": 5.085557448830047,
+  "annual": [
+    {
+      "year": 2017,
+      "revenue": 6910000000,
+      "ebit": 1934000000,
+      "netIncome": 1666000000,
+      "fcf": 1672000000,
+      "sharesOutstanding": 649000000,
+      "longTermDebt": 1983000000,
+      "roic": null,
+      "debtToEquity": 0.3441513363415481
+    },
+    {
+      "year": 2018,
+      "revenue": 9714000000,
+      "ebit": 3210000000,
+      "netIncome": 3047000000,
+      "fcf": 3502000000,
+      "sharesOutstanding": 632000000,
+      "longTermDebt": 1985000000,
+      "roic": null,
+      "debtToEquity": 0.26569401686521216
+    },
+    {
+      "year": 2019,
+      "revenue": 11716000000,
+      "ebit": 3804000000,
+      "netIncome": 4141000000,
+      "fcf": 3743000000,
+      "sharesOutstanding": 625000000,
+      "longTermDebt": 1988000000,
+      "roic": null,
+      "debtToEquity": 0.21280239777349605
+    },
+    {
+      "year": 2020,
+      "revenue": 10918000000,
+      "ebit": 2846000000,
+      "netIncome": 2796000000,
+      "fcf": 4761000000,
+      "sharesOutstanding": 618000000,
+      "longTermDebt": 1991000000,
+      "roic": null,
+      "debtToEquity": 0.16314323172730252
+    },
+    {
+      "year": 2021,
+      "revenue": 16675000000,
+      "ebit": 4532000000,
+      "netIncome": 4332000000,
+      "fcf": 5822000000,
+      "sharesOutstanding": 628000000,
+      "longTermDebt": 5964000000,
+      "roic": null,
+      "debtToEquity": 0.3530456402060025
+    },
+    {
+      "year": 2022,
+      "revenue": 26914000000,
+      "ebit": 10041000000,
+      "netIncome": 9752000000,
+      "fcf": 9108000000,
+      "sharesOutstanding": 2535000000,
+      "longTermDebt": 10946000000,
+      "roic": null,
+      "debtToEquity": 0.41131820231474525
+    },
+    {
+      "year": 2023,
+      "revenue": 26974000000,
+      "ebit": 4224000000,
+      "netIncome": 4368000000,
+      "fcf": 5641000000,
+      "sharesOutstanding": 2507000000,
+      "longTermDebt": 9703000000,
+      "roic": null,
+      "debtToEquity": 0.43902990814895254
+    },
+    {
+      "year": 2024,
+      "revenue": 60922000000,
+      "ebit": 32972000000,
+      "netIncome": 29760000000,
+      "fcf": 28090000000,
+      "sharesOutstanding": 2494000000,
+      "longTermDebt": 8459000000,
+      "roic": null,
+      "debtToEquity": 0.19682162967099445
+    },
+    {
+      "year": 2025,
+      "revenue": 130497000000,
+      "ebit": 81453000000,
+      "netIncome": 72880000000,
+      "fcf": 64089000000,
+      "sharesOutstanding": 24804000000,
+      "longTermDebt": 8463000000,
+      "roic": null,
+      "debtToEquity": 0.10668498745698186
+    },
+    {
+      "year": 2026,
+      "revenue": 215938000000,
+      "ebit": 130387000000,
+      "netIncome": 120067000000,
+      "fcf": 102718000000,
+      "sharesOutstanding": 24514000000,
+      "longTermDebt": 7469000000,
+      "roic": null,
+      "debtToEquity": 0.047484630593859864
+    }
+  ],
+  "isProfitable": true,
+  "hasPositiveFcf": true,
+  "shareCountTrend": "growing"
+}

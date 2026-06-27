@@ -1,0 +1,59 @@
+# NOW — Decision Card
+
+**Verdict:** 🟡 Watchlist  •  **Weighted score:** 6.4 / 10
+
+*Generated:* 2026-06-25  •  *10-K:* `0001373715-26-000007`  •  *Analyst videos:* 0
+
+> *No analyst content configured for this ticker — verdict based on primary sources only.*
+
+## Summary
+
+ServiceNow lands on Watchlist, held back not by business quality but by how earnings quality and capital allocation are measured against the sticker price. The moat is real — deep workflow integrations across enterprise functions create high switching costs — and the balance sheet is essentially pristine with $10B in cash against $1.5B in debt. The problem is valuation math and cash flow optics: GAAP and operating cash flow are both inflated by substantial stock-based compensation ($1.4B) and deferred revenue timing, meaning owner earnings are considerably thinner than headline numbers suggest. At a 55.8x P/E versus a 10-year median of 48.6x, the market is already pricing in robust growth — yet the reverse DCF implies only a 5.7% FCF CAGR is needed to justify today's price against ServiceNow's actual 3- and 5-year FCF CAGRs above 27%, which looks like a gift until you recognize the owner earnings quality adjustment deflates the FCF base significantly. The stock isn't obviously cheap, but it isn't obviously a pass either — the business earns its premium if AI-driven platform expansion sustains historical growth rates.
+
+*Total LLM cost for this analysis:* $1.16 *(re-runs hit cache and cost $0).*
+
+## Dimension scores
+
+| Dimension | Score | Range | Uncertainty | Effective weight |
+|---|---|---|---|---|
+| Moat durability | **7.0** | 0.0 | tight | 0.20 |
+| Owner earnings quality | **4.5** | 0.0 | tight | 0.20 |
+| Capital allocation | **4.5** | 0.0 | tight | 0.20 |
+| Debt sustainability | **9.2** | 0.0 | tight | 0.15 |
+| Insider alignment | **6.5** | 0.0 | tight | 0.10 |
+| Cyclicality awareness | **7.5** | 0.0 | tight | 0.15 |
+
+### Dimension reasoning
+
+**Moat durability (7.0):** Pass 2 found no new material evidence beyond what Pass 1 already identified and weighed. Both analysts converge on the same assessment: a real but contestable moat resting on switching costs, platform depth, and accumulated enterprise trust, offset by explicit 'low barriers to entry' disclosure and credible AI-native competitive threats. Pass 2's cited moat-supporting features (patents, partner ecosystem, Now on Now feedback loops) were implicitly captured in Pass 1's reasoning and do not alter the score. The 7/10 stands as well-calibrated.
+
+**Owner earnings quality (4.5):** Pass 2 recommended zero adjustment and its rebuttal actually identifies factors that modestly support a higher score (deferred tax dynamics revealing stronger underlying earnings improvement, deferred commissions policy being earnings-quality positive), yet concludes these don't reach the threshold for adjustment. Pass 1's core concerns remain valid: SBC at 112% of GAAP net income, systematic deferred revenue inflation of OCF, and capitalized commission costs overstating owner-extractable cash are real and well-cited. Pass 2 found no material counter-evidence that Pass 1 missed or misweighted, so the original score of 4.5 stands.
+
+**Capital allocation (4.5):** Pass 2's rebuttal surfaces a genuine incremental concern that Pass 1 noted but did not fully weight: the simultaneous acceleration of buybacks ($1.84B in 2025, $5B newly authorized in 2026) at ~51x EV/EBIT concurrent with a $7.75B leveraged acquisition creates a capital allocation tension beyond what Pass 1 articulated. Pass 1's counter-evidence focused on cash flow strength and strategic coherence but did not address the competing-capital-demands problem when the company is explicitly planning to increase debt for Armis while also authorizing record buybacks. Pass 2's citations are directly supported by the primary sources, and the -0.5 adjustment is modest and proportionate to the incremental risk identified.
+
+**Debt sustainability (9.2):** Pass 2 fully agrees with Pass 1's score and reasoning, citing the same primary-source passages confirming $1.5 billion of fixed-rate 2030 Notes against $10.1 billion in liquid assets, minimal covenant constraints, and interest coverage exceeding 79×. Pass 2 recommended zero adjustment and surfaced no new concerns. The score of 9.2 accurately reflects exceptional debt sustainability with only a minor deduction for the prospective Armis debt financing that could modestly increase gross leverage.
+
+**Insider alignment (6.5):** Pass 2 explicitly recommends 0 adjustment and confirms Pass 1's score is well-calibrated. The additional details Pass 2 surfaces — the option-heavy CEO ownership structure, the increased ownership guidelines, and the minor related-party employment arrangement — were either already noted by Pass 1 or are too modest in scale to shift the score. The related-party transactions (Miller $365K, Fipps daughter employment) are properly disclosed and reviewed under policy, representing minimal alignment risk. Pass 1's 6.5 accurately reflects the tension between strong governance structures and low aggregate insider ownership (~0.3% of outstanding shares).
+
+**Cyclicality awareness (7.5):** Pass 2 found no new primary-source evidence beyond what Pass 1 already identified and weighed. Both analysts agree the 98% renewal rate, ratable revenue recognition over 12-36 month terms, decade-plus positive operating cash flow streak, and $28.2B RPO support a structurally non-cyclical business, while the acknowledged macro sensitivity to new bookings and FX-driven RPO volatility appropriately cap the score below the maximum. Pass 2's rebuttal explicitly concurs with the 7.5 score and recommends zero adjustment.
+
+## Valuation context
+
+- Reverse DCF (10% discount, 20× terminal): market is pricing in **5.7%** annual FCF growth for 10 years.
+- Actual delivered 5-year FCF CAGR: **27.3%**
+- Gap: -21.7pp *(price embeds growth below the historical track record)*
+
+See `reverse-dcf.md` for full sensitivity grid.
+
+## Things to verify before acting
+
+- Reconstruct true owner earnings: take operating cash flow ($5.444B), subtract stock-based compensation ($1.4B reported), subtract the deferred revenue build (~$1.179B), and subtract maintenance capex. Compare the resulting figure to the market cap to get a honest FCF yield — the headline 5.28% FCF yield may be overstated if these adjustments are not already reflected in the figure provided.
+- Check the 2025 10-K or most recent 10-Q for M&A spend and acquisition goodwill/intangibles balances. ServiceNow has been acquiring AI-adjacent companies; assess whether purchased intangibles are being amortized faster or slower than replaceable, and whether deal prices reflect disciplined valuation.
+- Pull the Q1 2026 earnings transcript or 10-Q and verify that the net revenue retention rate and renewal rate remain at or above 98%. Any deterioration below 97% would be an early signal that competitive pressure from Microsoft, Salesforce, or AI-native point solutions is beginning to erode the moat.
+- Examine the SBC trajectory as a percentage of revenue over the last four years (2022–2025). If SBC as a share of revenue is declining, owner earnings quality is improving and the 4.5 score may be conservative; if it is flat or rising despite scale, the dilution concern compounds at current valuations.
+- Run a sensitivity on the reverse DCF: at a more conservative 15x terminal P/FCF (acknowledging that SaaS multiples can compress) and using an SBC-adjusted FCF base, what implied CAGR does the current price require? If the answer exceeds 10–12%, the margin of safety is thin relative to the risk of multiple compression.
+- Review the $1.5B senior notes due September 2030 for any change-of-control provisions or covenants that could be triggered by large M&A, given management's stated intent to continue tuck-in acquisitions in the AI space.
+
+---
+
+*This card is a synthesis of the primary-source value-investing checklist (3 LLM passes per dimension, triple-sampled), reverse DCF, historical valuation context, and no analyst content. Citations and full reasoning live in `primary-source-checklist.md` and `reverse-dcf.md`. The tool produces this card to inform your judgment, not to substitute for it.*
