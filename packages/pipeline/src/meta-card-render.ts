@@ -115,6 +115,52 @@ export function renderMetaCardMarkdown(c: MetaCard): string {
       lines.push('');
     }
   }
+  // Changes since the annual baseline (10-Q delta). ADDITIVE — does not affect
+  // the verdict or any dimension score; provenance (which 10-Q vs which 10-K) is
+  // shown so the comparison's basis is visible.
+  if (c.tenqDelta) {
+    const d = c.tenqDelta;
+    // Headline encodes scope (e.g. "10 risk-factor changes; MD&A not assessed")
+    // so the count itself is honest, not a bare number over a footnote.
+    lines.push(`## Changes since annual baseline (10-Q) — ${d.headline}`);
+    lines.push('');
+    lines.push(
+      `*Comparing* 10-Q \`${d.tenqAccession}\` (filed ${d.tenqFilingDate}) ` +
+        `*against* 10-K \`${d.tenkAccession}\` (filed ${d.tenkFilingDate}). ` +
+        `*This is change detection only — it does not affect the verdict or dimension scores.*`,
+    );
+    lines.push('');
+    // Coverage stamp: visible banner above the change list when a depended-on
+    // section failed extraction, so the limitation isn't hidden behind the count.
+    if (d.coverageWarnings.length > 0) {
+      for (const w of d.coverageWarnings) {
+        lines.push(`> ⚠️ **Coverage limitation:** ${w}`);
+      }
+      lines.push('');
+    }
+    if (d.summary.trim().length > 0) {
+      lines.push(d.summary);
+      lines.push('');
+    }
+    if (d.changes.length === 0) {
+      lines.push('> No material qualitative change detected versus the annual baseline.');
+      lines.push('');
+    } else {
+      for (const ch of d.changes) {
+        const arrow =
+          ch.direction === 'improving' ? '▲ improving' :
+          ch.direction === 'deteriorating' ? '▼ deteriorating' :
+          '◆ neutral-but-notable';
+        lines.push(`### ${ch.area} — ${arrow}`);
+        lines.push('');
+        lines.push(ch.change);
+        lines.push('');
+        lines.push(`- **10-Q** (\`${ch.tenqCitation.section}\`): "${ch.tenqCitation.quote}"`);
+        lines.push(`- **10-K** (\`${ch.tenkCitation.section}\`): "${ch.tenkCitation.quote}"`);
+        lines.push('');
+      }
+    }
+  }
   // Things to verify.
   lines.push('## Things to verify before acting');
   lines.push('');

@@ -1,5 +1,6 @@
 /**
- * Turso (libSQL) persistence for the read-only web viewer.
+ * Pipeline-domain Turso persistence: decision-card / meta-card push, and the
+ * web viewer's sign-in allowlist.
  *
  * This module is a *best-effort side channel*. The pipeline's source of truth
  * is the `fixtures/<TICKER>/` directory on the laptop that runs the CLI; pushing
@@ -8,115 +9,77 @@
  * set, every entry point here is a silent no-op so people who never set up Turso
  * aren't nagged.
  *
- * Schema lives in `packages/pipeline/migrations/*.sql`. `migrate()` applies any
- * not-yet-applied migrations (tracked in a `schema_migrations` table). The web
- * app reads these tables; it never writes them.
+ * The generic libSQL client + migration runner moved to @stock-vetter/core
+ * (both the pipeline and the signal tracker need them). Schema lives in
+ * `packages/core/migrations/*.sql`. We re-export isTursoConfigured /
+ * getTursoClient / migrate so existing pipeline-barrel consumers are unchanged.
  */
 
-import { readdir, readFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { createClient, type Client } from '@libsql/client';
 import type {
   DecisionCard,
   FinancialSnapshot,
   MetaCard,
   ReverseDcfReport,
 } from '@stock-vetter/schema';
+import { getTursoClient, isTursoConfigured, migrate } from '@stock-vetter/core';
 import { loadTickerFixtures } from './fixture-loader.js';
 
-const MIGRATIONS_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'migrations');
+export { isTursoConfigured, getTursoClient, migrate } from '@stock-vetter/core';
 
-/** True when the env vars needed to talk to Turso are present. */
-export function isTursoConfigured(): boolean {
-  return Boolean(process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN);
+// ---- sign-in allowlist --------------------------------------------------
+//
+// The web viewer's allowlist lives in the `allowed_emails` table (migration
+// 0004) so a reader can be added with one CLI command — no env change, no
+// Vercel redeploy. These write helpers are used by `scripts/allow-email.ts`;
+// the web app's auth.ts reads the table directly via its own libSQL client
+// (it must not import this package, to keep the pipeline out of the Vercel
+// bundle). All comparisons are on lowercased/trimmed emails.
+
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
 }
 
-let cachedClient: Client | null = null;
-
-/** Get (and cache) a libSQL client, or null if Turso isn't configured. */
-export function getTursoClient(): Client | null {
-  if (!isTursoConfigured()) return null;
-  if (cachedClient) return cachedClient;
-  cachedClient = createClient({
-    url: process.env.TURSO_DATABASE_URL as string,
-    authToken: process.env.TURSO_AUTH_TOKEN as string,
-  });
-  return cachedClient;
-}
-
-// ---- migrations ----------------------------------------------------------
-
-interface MigrationFile {
-  version: number;
-  name: string;
-  sql: string;
-}
-
-async function loadMigrations(): Promise<MigrationFile[]> {
-  const entries = await readdir(MIGRATIONS_DIR);
-  const files = entries.filter((f) => f.endsWith('.sql')).sort();
-  const out: MigrationFile[] = [];
-  for (const f of files) {
-    const m = /^(\d+)_(.+)\.sql$/.exec(f);
-    if (!m) continue;
-    const sql = await readFile(join(MIGRATIONS_DIR, f), 'utf-8');
-    out.push({ version: Number(m[1]), name: m[2] ?? f, sql });
-  }
-  return out;
-}
-
-/**
- * Split a migration file into individual statements on `;`. Strips `--` line
- * comments first (so a `;` inside a comment doesn't end a statement); migration
- * files therefore must not contain `;` inside string literals.
- */
-function splitStatements(sql: string): string[] {
-  const withoutComments = sql
-    .split('\n')
-    .map((line) => {
-      const idx = line.indexOf('--');
-      return idx === -1 ? line : line.slice(0, idx);
-    })
-    .join('\n');
-  return withoutComments
-    .split(';')
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
-}
-
-/**
- * Apply any migrations not yet recorded in `schema_migrations`. Idempotent.
- * Returns the list of versions applied this call (empty if up to date).
- * No-op (returns []) when Turso isn't configured.
- */
-export async function migrate(): Promise<number[]> {
+/** Add (or no-op upsert) an email to the allowlist. Runs migrate() first. */
+export async function addAllowedEmail(email: string, note?: string): Promise<void> {
   const client = getTursoClient();
-  if (!client) return [];
+  if (!client) throw new Error('Turso is not configured (TURSO_DATABASE_URL / TURSO_AUTH_TOKEN).');
+  const normalized = normalizeEmail(email);
+  if (!normalized.includes('@')) throw new Error(`Not a valid email: ${email}`);
+  await migrate();
+  await client.execute({
+    sql: `INSERT INTO allowed_emails (email, note, added_at) VALUES (?, ?, ?)
+          ON CONFLICT(email) DO UPDATE SET note=excluded.note`,
+    args: [normalized, note ?? null, new Date().toISOString()],
+  });
+}
 
-  await client.execute(
-    `CREATE TABLE IF NOT EXISTS schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)`,
-  );
-  const applied = new Set(
-    (await client.execute(`SELECT version FROM schema_migrations`)).rows.map((r) =>
-      Number(r.version),
-    ),
-  );
+/** Remove an email from the allowlist. Returns true if a row was deleted. */
+export async function removeAllowedEmail(email: string): Promise<boolean> {
+  const client = getTursoClient();
+  if (!client) throw new Error('Turso is not configured (TURSO_DATABASE_URL / TURSO_AUTH_TOKEN).');
+  await migrate();
+  const res = await client.execute({
+    sql: `DELETE FROM allowed_emails WHERE email = ?`,
+    args: [normalizeEmail(email)],
+  });
+  return res.rowsAffected > 0;
+}
 
-  const migrations = await loadMigrations();
-  const appliedNow: number[] = [];
-  for (const mig of migrations) {
-    if (applied.has(mig.version)) continue;
-    for (const stmt of splitStatements(mig.sql)) {
-      await client.execute(stmt);
-    }
-    await client.execute({
-      sql: `INSERT INTO schema_migrations (version, applied_at) VALUES (?, ?)`,
-      args: [mig.version, new Date().toISOString()],
-    });
-    appliedNow.push(mig.version);
-  }
-  return appliedNow;
+/** List the current allowlist, newest first. */
+export async function listAllowedEmails(): Promise<
+  { email: string; note: string | null; addedAt: string }[]
+> {
+  const client = getTursoClient();
+  if (!client) throw new Error('Turso is not configured (TURSO_DATABASE_URL / TURSO_AUTH_TOKEN).');
+  await migrate();
+  const res = await client.execute(
+    `SELECT email, note, added_at FROM allowed_emails ORDER BY added_at DESC`,
+  );
+  return res.rows.map((r) => ({
+    email: String(r.email),
+    note: r.note == null ? null : String(r.note),
+    addedAt: String(r.added_at),
+  }));
 }
 
 // ---- push ---------------------------------------------------------------

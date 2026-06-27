@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation';
 import { signIn } from '@/auth';
 
 export const dynamic = 'force-dynamic';
@@ -41,7 +42,12 @@ export default async function SignInPage({
         action={async (formData) => {
           'use server';
           const email = String(formData.get('email') ?? '').trim();
-          await signIn('resend', { email, redirectTo: '/' });
+          // redirect: false stops Auth.js from redirecting to its verifyRequest
+          // page (now the bare /signin); we then redirect to /signin?sent=1
+          // ourselves so the "check your email" banner shows. redirectTo is the
+          // post-verification destination (where the magic link lands).
+          await signIn('resend', { email, redirect: false, redirectTo: '/' });
+          redirect('/signin?sent=1');
         }}
         className="mt-5 space-y-3"
       >

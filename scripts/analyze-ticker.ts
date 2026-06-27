@@ -28,19 +28,21 @@
 import 'dotenv/config';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
-import { fetchAndParseFiling, fetchLatestProxy, type FilingMeta } from '../packages/pipeline/src/sec-filings.js';
+import { fetchAndParseFiling, fetchLatestProxy, type FilingMeta } from '@stock-vetter/core';
 import { runPipeline } from '../packages/pipeline/src/orchestrate.js';
-import { getVideoCard, putVideoCard } from '../packages/pipeline/src/cache.js';
-import { newCostTracker, summarizeCost, type CostTracker } from '../packages/pipeline/src/llm.js';
+import { getVideoCard, putVideoCard } from '@stock-vetter/core';
+import { newCostTracker, summarizeCost, type CostTracker } from '@stock-vetter/core';
 import { runPrimarySourceFull } from '../packages/pipeline/src/primary-source.js';
 import { renderPrimaryChecklistMarkdown } from '../packages/pipeline/src/primary-source-render.js';
 import { verifyChecklistCitations, verifySkepticCitations } from '../packages/pipeline/src/citation-verifier.js';
-import { fetchFinancialSnapshot } from '../packages/pipeline/src/financials.js';
-import { buildReverseDcf, renderReverseDcfMarkdown } from '../packages/pipeline/src/reverse-dcf.js';
+import { fetchFinancialSnapshot } from '@stock-vetter/core';
+import { buildReverseDcf, renderReverseDcfMarkdown } from '@stock-vetter/core';
 import { buildMetaCard } from '../packages/pipeline/src/meta-card.js';
 import { renderMetaCardMarkdown } from '../packages/pipeline/src/meta-card-render.js';
 import { DecisionCard, type FinancialSnapshot, type MetaCard, type PrimarySourceChecklist, type PrimarySourceJudgment, type PrimarySourceSkeptic, type ReverseDcfReport } from '@stock-vetter/schema';
-import { isTursoConfigured, pushTickerFromFixtures } from '@stock-vetter/pipeline';
+import { isTursoConfigured, pushTickerFromFixtures, fetchEarningsTranscriptBundle, runTenqDelta, type TenqDeltaSourceText, type SectionConfidence } from '@stock-vetter/pipeline';
+import { mostRecentQuarter } from '@stock-vetter/signals';
+import { getSecSection } from '@stock-vetter/core';
 
 // Defaults to 'fixtures' (production). Override with FIXTURES_ROOT to run an
 // isolated experiment (e.g. a different model, or the prompt-cache A/B) without
@@ -120,6 +122,51 @@ async function processVideos(
   return { ran, cached, cost: totalVideoCost };
 }
 
+// Vet the ticker on its Alpha Vantage earnings-call transcript. The bundle is
+// fed through the same runPipeline path as analyst videos, so its decision card
+// lands in fixtures/<TICKER>/videos/ (videoId `av:<TICKER>:<quarter>`) and flows
+// into loadAnalystCards → meta-card → the Turso push, exactly like a video.
+//
+// quarter defaults to the most-recent COMPLETED calendar quarter (the same
+// derivation the signals cron uses to key the av:<ticker>:<quarter> cache, so a
+// cache hit is most likely there); pass an explicit quarter to override.
+// Returns null when AV has no transcript for that (ticker, quarter) — the run
+// then proceeds without a transcript card, never failing.
+async function processTranscript(
+  ticker: string,
+  quarter: string,
+): Promise<{ ran: boolean; cost: number; quarter: string }> {
+  const videoId = `av:${ticker.toUpperCase()}:${quarter}`;
+  const existing = await getVideoCard<unknown>(videoId);
+  if (existing) {
+    const target = join(FIXTURES_ROOT, ticker.toUpperCase(), 'videos', `${videoId}.json`);
+    await writeJson(target, existing);
+    console.error(`[ticker] transcript ${quarter}: cached`);
+    return { ran: false, cost: 0, quarter };
+  }
+  console.error(`[ticker] transcript ${quarter}: fetching Alpha Vantage bundle...`);
+  const bundle = await fetchEarningsTranscriptBundle(ticker, quarter);
+  if (!bundle) {
+    console.error(`[ticker] transcript ${quarter}: AV has no transcript — skipping`);
+    return { ran: false, cost: 0, quarter };
+  }
+  console.error(`[ticker] transcript ${quarter}: running pipeline (this is slow)`);
+  let lastCost = 0;
+  const card = await runPipeline(`av:${ticker}:${quarter}`, {
+    bundle,
+    onProgress: (stage, costSoFar) => {
+      lastCost = costSoFar;
+      process.stderr.write(`[pipeline:${videoId}] ${stage} ($${costSoFar.toFixed(3)})\n`);
+    },
+    onCostWarning: (cost) => process.stderr.write(`[pipeline:${videoId}] WARN cost ${cost.toFixed(3)}\n`),
+    onCostAbort: (cost) => process.stderr.write(`[pipeline:${videoId}] ABORT cost ${cost.toFixed(3)}\n`),
+  });
+  await putVideoCard(videoId, card);
+  const target = join(FIXTURES_ROOT, ticker.toUpperCase(), 'videos', `${videoId}.json`);
+  await writeJson(target, card);
+  return { ran: true, cost: lastCost, quarter };
+}
+
 async function processSec(ticker: string, form: '10-K' | '10-Q'): Promise<FilingMeta | null> {
   console.error(`[ticker] fetching latest ${form}...`);
   try {
@@ -163,6 +210,67 @@ async function processProxy(ticker: string): Promise<void> {
     console.error(`[ticker] proxy ${proxy.accession}: ${proxy.cleanedText.length.toLocaleString()} chars`);
   } catch (e) {
     console.error(`[ticker] proxy fetch failed: ${(e as Error).message}`);
+  }
+}
+
+// Load the MD&A + risk-factor text for a filing from the SEC section cache
+// (populated when processSec ran fetchAndParseFiling for this accession), along
+// with each section's parser confidence from the FilingMeta so the delta pass
+// can refuse to mine a section that failed extraction and stamp the limitation
+// on the card. A section absent from meta.sections is reported as 'missing'.
+async function loadDeltaSections(meta: FilingMeta): Promise<TenqDeltaSourceText> {
+  const [mda, riskFactors] = await Promise.all([
+    getSecSection<string>(meta.accession, 'mda'),
+    getSecSection<string>(meta.accession, 'risk-factors'),
+  ]);
+  const confOf = (id: string): SectionConfidence =>
+    (meta.sections.find((s) => s.id === id)?.confidence as SectionConfidence | undefined) ?? 'missing';
+  return {
+    mda,
+    riskFactors,
+    mdaConfidence: confOf('mda'),
+    riskFactorsConfidence: confOf('risk-factors'),
+  };
+}
+
+// ADDITIVE 10-Q-vs-10-K change-detection pass. Runs independently of the scoring
+// path: it never feeds processPrimaryChecklist or processMetaCard. The result is
+// attached to the meta-card AFTER synthesis (see main), so the verdict and all
+// dimension scores are untouched. Returns null when either filing is missing.
+async function processTenqDelta(
+  tenK: FilingMeta,
+  tenQ: FilingMeta,
+  tracker: CostTracker,
+): Promise<Awaited<ReturnType<typeof runTenqDelta>> | null> {
+  console.error(
+    `[ticker] 10-Q delta: comparing 10-Q ${tenQ.accession} (${tenQ.filingDate}) vs 10-K ${tenK.accession} (${tenK.filingDate})...`,
+  );
+  try {
+    const [tenkText, tenqText] = await Promise.all([
+      loadDeltaSections(tenK),
+      loadDeltaSections(tenQ),
+    ]);
+    if (!tenqText.mda && !tenqText.riskFactors) {
+      console.error('[ticker] 10-Q delta skipped: 10-Q has no MD&A or risk-factor text');
+      return null;
+    }
+    const result = await runTenqDelta({ tenkMeta: tenK, tenqMeta: tenQ, tenkText, tenqText, tracker });
+    const v = result.verification;
+    console.error(
+      `[ticker] 10-Q delta: ${result.delta.headline}; ` +
+        `citations resolved ${v.resolved}/${v.total} ` +
+        `(10-Q no-match ${v.tenqNoMatch}, 10-K no-match ${v.tenkNoMatch}, truncated ${v.truncatedQuotes})`,
+    );
+    for (const w of result.delta.coverageWarnings) {
+      console.error(`[ticker] 10-Q delta COVERAGE: ${w}`);
+    }
+    if (v.tenqNoMatch > 0 || v.tenkNoMatch > 0) {
+      console.error('[ticker] 10-Q delta WARNING: some citations did not resolve to source text');
+    }
+    return result;
+  } catch (e) {
+    console.error(`[ticker] 10-Q delta failed: ${(e as Error).message}`);
+    return null;
   }
 }
 
@@ -320,8 +428,22 @@ async function main() {
   const debug = args.includes('--debug');
   const skipLlm = args.includes('--no-llm');
   const forceTriple = args.includes('--always-triple');
+  // The 10-Q delta is additive and on by default; --no-tenq-delta opts out
+  // (e.g. to isolate scoring cost or prove the delta doesn't perturb the card).
+  const skipTenqDelta = args.includes('--no-tenq-delta');
+  // --transcript           vet on the most-recent completed quarter's call
+  // --transcript=2026Q1    vet on an explicit quarter
+  const transcriptArg = args.find((a) => a === '--transcript' || a.startsWith('--transcript='));
+  const transcriptRequested = transcriptArg !== undefined;
+  const transcriptQuarterOverride = transcriptArg?.includes('=')
+    ? transcriptArg.split('=')[1]
+    : undefined;
+  if (transcriptQuarterOverride !== undefined && !/^\d{4}Q[1-4]$/.test(transcriptQuarterOverride)) {
+    console.error(`Invalid --transcript quarter "${transcriptQuarterOverride}" (expected e.g. 2026Q1)`);
+    process.exit(1);
+  }
   if (!ticker) {
-    console.error('Usage: pnpm tsx scripts/analyze-ticker.ts <TICKER> [--debug] [--no-llm] [--always-triple]');
+    console.error('Usage: pnpm tsx scripts/analyze-ticker.ts <TICKER> [--debug] [--no-llm] [--always-triple] [--transcript[=YYYYQn]] [--no-tenq-delta]');
     process.exit(1);
   }
   const upper = ticker.toUpperCase();
@@ -341,6 +463,8 @@ async function main() {
   // failure of the others — partial output is more useful than no output.
   const results = {
     videos: { ran: 0, cached: 0, cost: 0 },
+    transcript: null as { ran: boolean; cost: number; quarter: string } | null,
+    tenqDelta: null as Awaited<ReturnType<typeof processTenqDelta>>,
     tenK: null as FilingMeta | null,
     tenQ: null as FilingMeta | null,
     primaryChecklist: null as Awaited<ReturnType<typeof processPrimaryChecklist>>,
@@ -351,6 +475,13 @@ async function main() {
 
   if (videoUrls.length && !skipLlm) {
     results.videos = await processVideos(upper, videoUrls, debug);
+  }
+  // Earnings-call transcript vet. Its decision card lands alongside the video
+  // cards so loadAnalystCards (in the meta-card stage) picks it up. Quarter
+  // defaults to the most-recent completed one; --transcript=YYYYQn overrides.
+  if (transcriptRequested && !skipLlm) {
+    const quarter = transcriptQuarterOverride ?? mostRecentQuarter(new Date().toISOString().slice(0, 10));
+    results.transcript = await processTranscript(upper, quarter);
   }
   results.tenK = await processSec(upper, '10-K');
   results.tenQ = await processSec(upper, '10-Q');
@@ -376,7 +507,7 @@ async function main() {
     // *before* meta-card synthesis so we can pass it in as the value to
     // record on the card; the meta-card call then adds its own cost on top
     // and the renderer shows the sum it received plus the synthesis call.
-    const preMetaCardCost = results.videos.cost + sharedTracker.total;
+    const preMetaCardCost = results.videos.cost + (results.transcript?.cost ?? 0) + sharedTracker.total;
     results.metaCard = await processMetaCard(
       upper,
       results.primaryChecklist.pass1,
@@ -386,6 +517,26 @@ async function main() {
       sharedTracker,
       preMetaCardCost,
     );
+  }
+
+  // ADDITIVE: 10-Q-vs-10-K change detection. Runs AFTER the meta-card is built
+  // and only attaches its result to the optional `tenqDelta` field — it never
+  // feeds the checklist, the meta-card synthesis, or the reverse DCF, so the
+  // verdict and all six dimension scores are identical with or without this
+  // pass. Requires both a 10-K and a 10-Q. The card files are re-written so the
+  // Turso push below carries the delta.
+  if (!skipLlm && !skipTenqDelta && results.metaCard && results.tenK && results.tenQ) {
+    results.tenqDelta = await processTenqDelta(results.tenK, results.tenQ, sharedTracker);
+    if (results.tenqDelta) {
+      results.metaCard.tenqDelta = results.tenqDelta.delta;
+      const mdTarget = join(FIXTURES_ROOT, upper, 'decision-card.md');
+      await writeText(mdTarget, renderMetaCardMarkdown(results.metaCard));
+      const jsonTarget = join(FIXTURES_ROOT, upper, 'decision-card.json');
+      await writeJson(jsonTarget, results.metaCard);
+      // Persist the dual-citation verification alongside, for auditing.
+      const vTarget = join(FIXTURES_ROOT, upper, 'tenq-delta-verification.json');
+      await writeJson(vTarget, results.tenqDelta.verification);
+    }
   }
 
   // Best-effort push to Turso for the web viewer. Only after the meta-card
@@ -400,12 +551,20 @@ async function main() {
     }
   }
 
-  const totalCost = results.videos.cost + sharedTracker.total;
+  const totalCost = results.videos.cost + (results.transcript?.cost ?? 0) + sharedTracker.total;
   console.error('');
   console.error(`[ticker] ${upper}: done`);
   console.error(`  videos: ${results.videos.ran} fresh, ${results.videos.cached} cached  (cost $${results.videos.cost.toFixed(3)})`);
+  if (results.transcript) {
+    const t = results.transcript;
+    console.error(`  transcript: ${t.quarter} ${t.ran ? `vetted (cost $${t.cost.toFixed(3)})` : 'cached/unavailable'}`);
+  }
   console.error(`  10-K: ${results.tenK ? `${results.tenK.sections.length}/${results.tenK.sections.length + results.tenK.missing.length} sections (${results.tenK.missing.length} missing)` : 'failed'}`);
   console.error(`  10-Q: ${results.tenQ ? `${results.tenQ.sections.length} sections` : 'failed'}`);
+  if (results.tenqDelta) {
+    const v = results.tenqDelta.verification;
+    console.error(`  10-Q delta: ${results.tenqDelta.delta.headline}, citations resolved ${v.resolved}/${v.total}`);
+  }
   if (results.metaCard) {
     console.error(`  decision: ${results.metaCard.verdict} (${results.metaCard.weightedScore.toFixed(1)} / 10)`);
   }

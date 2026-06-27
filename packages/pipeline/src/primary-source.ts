@@ -18,12 +18,12 @@ import {
   type PrimaryDimensionKey,
   type ReverseDcfReport,
 } from '@stock-vetter/schema';
-import { llmCallJson, newCostTracker, type CostTracker } from './llm.js';
-import { loadPrompt } from './prompts.js';
-import { fetchAndParseFiling, fetchLatestProxy, type FilingMeta } from './sec-filings.js';
-import { fetchFinancialSnapshot } from './financials.js';
-import { buildReverseDcf } from './reverse-dcf.js';
-import { getLlmOutput, putLlmOutput, hashInputs } from './cache.js';
+import { llmCallJson, newCostTracker, type CostTracker } from '@stock-vetter/core';
+import { loadPrompt } from '@stock-vetter/core';
+import { fetchAndParseFiling, fetchLatestProxy, type FilingMeta } from '@stock-vetter/core';
+import { fetchFinancialSnapshot } from '@stock-vetter/core';
+import { buildReverseDcf } from '@stock-vetter/core';
+import { getLlmOutput, putLlmOutput, hashInputs } from '@stock-vetter/core';
 import {
   decideSampleCount,
   loadVarianceHistory,
@@ -563,6 +563,12 @@ export async function runPrimarySourcePass1(
   const snapshot = options.snapshot ?? (await fetchFinancialSnapshot(ticker));
   const dcf = options.dcf ?? (snapshot ? buildReverseDcf(snapshot) : null);
   const financialContext = renderFinancialContext(snapshot, dcf);
+  // Hash the rendered context (price / multiples / FCF yield / ...) rather than
+  // the snapshot's `asOf` date — `asOf` changes every day, busting cache even
+  // when the underlying numbers haven't moved. Hashing content means a re-run
+  // tomorrow with the same numbers hits cache; a re-run after a real change
+  // (new price, new fundamentals) invalidates correctly.
+  const financialContextHash = financialContext ? hashInputs(financialContext) : null;
 
   // Adaptive Pass 1 sampling: dimensions whose prior run had tight
   // variance (range ≤ 0.5) single-sample on subsequent runs; everything
@@ -590,7 +596,7 @@ export async function runPrimarySourcePass1(
       dimension: key,
       sourcesUsed,
       contextLength: context.length,
-      financialContextDate: includeFinancial ? snapshot?.asOf : null,
+      financialContextHash: includeFinancial ? financialContextHash : null,
       sampleIndex,
       totalSamples,
       model: options.pass1Model ?? 'default',
@@ -773,6 +779,9 @@ export async function runPrimarySourcePass2(
   const snapshot = options.snapshot ?? (await fetchFinancialSnapshot(ticker));
   const dcf = options.dcf ?? (snapshot ? buildReverseDcf(snapshot) : null);
   const financialContext = renderFinancialContext(snapshot, dcf);
+  // See Pass 1: hash the content, not the date stamp, so day-to-day re-runs
+  // with unchanged numbers still hit cache.
+  const financialContextHash = financialContext ? hashInputs(financialContext) : null;
 
   const rebuttalResults: Record<string, unknown> = {};
   for (const key of PRIMARY_DIMENSION_KEYS) {
@@ -806,7 +815,7 @@ export async function runPrimarySourcePass2(
       pass1CounterEvidenceLen: pass1CounterEvidence.length,
       sourcesUsed,
       contextLength: context.length,
-      financialContextDate: includeFinancial ? snapshot?.asOf : null,
+      financialContextHash: includeFinancial ? financialContextHash : null,
     });
     const cached = await getLlmOutput<unknown>(`ps2-${key}`, inputHash, promptText);
     if (cached) {
@@ -884,6 +893,8 @@ export async function runPrimarySourcePass3(
   const snapshot = options.snapshot ?? (await fetchFinancialSnapshot(ticker));
   const dcf = options.dcf ?? (snapshot ? buildReverseDcf(snapshot) : null);
   const financialContext = renderFinancialContext(snapshot, dcf);
+  // See Pass 1: hash the content, not the date stamp.
+  const financialContextHash = financialContext ? hashInputs(financialContext) : null;
 
   const judgments: Record<string, unknown> = {};
   for (const key of PRIMARY_DIMENSION_KEYS) {
@@ -909,7 +920,7 @@ export async function runPrimarySourcePass3(
       pass2: pass2Dim,
       sourcesUsed,
       contextLength: context.length,
-      financialContextDate: includeFinancial ? snapshot?.asOf : null,
+      financialContextHash: includeFinancial ? financialContextHash : null,
     });
     const cached = await getLlmOutput<unknown>(`ps3-${key}`, inputHash, promptText);
     if (cached) {

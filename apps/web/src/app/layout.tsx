@@ -14,9 +14,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="min-h-screen antialiased">
         <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
           <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
-            <a href="/" className="text-sm font-semibold tracking-tight text-slate-900">
-              Stock&nbsp;Vetter
-            </a>
+            <div className="flex items-center gap-4">
+              <a href="/" className="text-sm font-semibold tracking-tight text-slate-900">
+                Stock&nbsp;Vetter
+              </a>
+              <a href="/theses" className="text-xs text-slate-500 hover:text-slate-800">
+                Theses
+              </a>
+            </div>
             {session?.user?.email ? (
               <form
                 action={async () => {

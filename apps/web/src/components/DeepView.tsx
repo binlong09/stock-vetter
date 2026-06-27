@@ -10,9 +10,11 @@ import { DimensionDeepDive } from './DimensionDeepDive';
 import { ReverseDcfGrid } from './ReverseDcfGrid';
 import { HistoricalFinancials } from './HistoricalFinancials';
 import { ThingsToVerify } from './ThingsToVerify';
+import { TenqDeltaSection } from './TenqDeltaSection';
 import { indexMatchTiers, type ChecklistBundle } from '@/lib/checklist';
 import type { AnalystCardSummaryRow } from '@/queries';
 import { isoDate } from '@/lib/format';
+import { isAvTranscriptId } from '@/lib/transcript-source';
 
 const DIM_LABELS: Record<(typeof PRIMARY_DIMENSION_KEYS)[number], string> = {
   moatDurability: 'Moat durability',
@@ -95,35 +97,53 @@ export function DeepView({
         {analystCards.length > 0 && (
           <DeepSection title="Analyst videos" count={analystCards.length}>
             <ul className="divide-y divide-slate-100">
-              {analystCards.map((c) => (
-                <li key={c.videoId} className="py-2 text-[12px] first:pt-0 last:pb-0">
-                  <Link
-                    href={`/ticker/${ticker}/video/${c.videoId}`}
-                    className="font-medium text-slate-800 hover:underline"
-                  >
-                    {c.title ?? c.channel ?? c.videoId}
-                  </Link>
-                  <span className="text-slate-400">
-                    {c.channel && c.title ? ` · ${c.channel}` : ''}
-                    {c.publishedAt ? ` · ${isoDate(c.publishedAt)}` : ''}
-                    {c.weightedScore != null
-                      ? ` · analyst-pipeline score ${c.weightedScore.toFixed(1)}`
-                      : ''}
-                    {c.verdict ? ` (${c.verdict})` : ''}
-                  </span>
-                  <a
-                    href={`https://www.youtube.com/watch?v=${c.videoId}`}
-                    className="ml-1.5 text-slate-500 hover:underline"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    ▷ watch
-                  </a>
-                </li>
-              ))}
+              {analystCards.map((c) => {
+                // An av:<TICKER>:<quarter> card is a hosted earnings-call
+                // transcript, not a YouTube video — link to the in-app card
+                // page (which shows the transcript) instead of a dead YouTube
+                // URL. Real videos keep the external "watch" link.
+                const isTranscript = isAvTranscriptId(c.videoId);
+                return (
+                  <li key={c.videoId} className="py-2 text-[12px] first:pt-0 last:pb-0">
+                    <Link
+                      href={`/ticker/${ticker}/video/${c.videoId}`}
+                      className="font-medium text-slate-800 hover:underline"
+                    >
+                      {c.title ?? c.channel ?? (isTranscript ? 'Earnings-call transcript' : c.videoId)}
+                    </Link>
+                    <span className="text-slate-400">
+                      {c.channel && c.title ? ` · ${c.channel}` : ''}
+                      {c.publishedAt ? ` · ${isoDate(c.publishedAt)}` : ''}
+                      {c.weightedScore != null
+                        ? ` · analyst-pipeline score ${c.weightedScore.toFixed(1)}`
+                        : ''}
+                      {c.verdict ? ` (${c.verdict})` : ''}
+                    </span>
+                    {isTranscript ? (
+                      <Link
+                        href={`/ticker/${ticker}/video/${c.videoId}`}
+                        className="ml-1.5 text-slate-500 hover:underline"
+                      >
+                        ▷ read transcript
+                      </Link>
+                    ) : (
+                      <a
+                        href={`https://www.youtube.com/watch?v=${c.videoId}`}
+                        className="ml-1.5 text-slate-500 hover:underline"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        ▷ watch
+                      </a>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </DeepSection>
         )}
+
+        {metaCard.tenqDelta && <TenqDeltaSection delta={metaCard.tenqDelta} />}
 
         {metaCard.thingsToVerify.length > 0 && (
           <DeepSection title="Things to verify yourself" count={metaCard.thingsToVerify.length}>
@@ -155,9 +175,19 @@ export function DeepView({
               </li>
             )}
             <li className="text-[11px] text-slate-400">
-              Primary sources for this card: the latest 10-K, the latest DEF 14A proxy (when one
-              exists), SEC companyfacts, and the current price. Not 10-Qs, 8-Ks, earnings calls, or
-              news.
+              The scored dimensions draw only on the latest 10-K, the latest DEF 14A proxy (when one
+              exists), SEC companyfacts, and the current price — not 10-Qs, 8-Ks, or news.
+              {metaCard.inputs.analystVideoCount > 0 ? (
+                <>
+                  {' '}
+                  Analyst content ({metaCard.inputs.analystVideoCount} source
+                  {metaCard.inputs.analystVideoCount === 1 ? '' : 's'}, which may include an
+                  earnings-call transcript) is compared against these filings but does not change the
+                  scores.
+                </>
+              ) : (
+                ' Earnings calls are not used.'
+              )}
             </li>
           </ul>
         </DeepSection>

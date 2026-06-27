@@ -1,8 +1,8 @@
-import type { DecisionCard } from '@stock-vetter/schema';
+import type { DecisionCard, VideoBundle } from '@stock-vetter/schema';
 import { CostCeilingError } from './errors.js';
-import { newCostTracker } from './llm.js';
+import { newCostTracker } from '@stock-vetter/core';
 import { fetchVideoBundle } from './transcript.js';
-import { fetchFinancialSnapshot, fetchPeerSnapshots } from './financials.js';
+import { fetchFinancialSnapshot, fetchPeerSnapshots } from '@stock-vetter/core';
 import { getPeers } from './comps.js';
 import { normalizeTranscript } from './normalize.js';
 import { extractAnalysis } from './extract.js';
@@ -23,6 +23,11 @@ export type PipelineOptions = {
   onCostWarning?: (costSoFar: number) => void;
   onCostAbort?: (costSoFar: number) => void;
   debug?: boolean;
+  // Pre-fetched transcript bundle (e.g. an Alpha Vantage earnings call via
+  // fetchEarningsTranscriptBundle). When provided, the pipeline uses it instead
+  // of fetching from `url` — letting the vet run on a real earnings-call
+  // transcript. Backward-compatible: omit it and the URL path is unchanged.
+  bundle?: VideoBundle;
 };
 
 const COST_WARN = 0.75;
@@ -49,7 +54,9 @@ export async function runPipeline(
   };
 
   progress('transcript');
-  const bundle = await fetchVideoBundle(url, { debug: options.debug === true });
+  // Use a caller-supplied bundle (e.g. an Alpha Vantage earnings transcript) if
+  // present; otherwise fetch from the YouTube URL as before.
+  const bundle = options.bundle ?? (await fetchVideoBundle(url, { debug: options.debug === true }));
 
   progress('normalize');
   const normalized = await normalizeTranscript(bundle, tracker);

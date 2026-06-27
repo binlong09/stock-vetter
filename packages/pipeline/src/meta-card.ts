@@ -27,9 +27,9 @@ import {
   type PrimaryDimensionKey,
   type CrossSourceFinding,
 } from '@stock-vetter/schema';
-import { llmCallJson, newCostTracker, type CostTracker } from './llm.js';
-import { loadPrompt } from './prompts.js';
-import { getLlmOutput, putLlmOutput, hashInputs } from './cache.js';
+import { llmCallJson, newCostTracker, type CostTracker } from '@stock-vetter/core';
+import { loadPrompt } from '@stock-vetter/core';
+import { getLlmOutput, putLlmOutput, hashInputs } from '@stock-vetter/core';
 
 // Per-dimension weights. Mirrors the analyst-pipeline weights on similar
 // dimensions and reflects value-investing emphasis: business quality and
@@ -282,7 +282,10 @@ export async function buildMetaCard(args: {
     dimensionUncertainty: PRIMARY_DIMENSION_KEYS.map((k) => dimensions[k].uncertainty),
     analystVideoIds: analystCards.map((c) => c.videoId).sort(),
     dcfImplied: reverseDcf?.grid.find((c) => Math.abs(c.discountRate - 0.10) < 1e-6 && c.terminalMultiple === 20)?.impliedFcfCagr ?? null,
-    snapshotDate: snapshot?.asOf ?? null,
+    // Hash the content of the historical block, not the snapshot's date stamp.
+    // `asOf` rolls over daily and would bust cache on every re-run; hashing the
+    // block invalidates only when the actual numbers change.
+    snapshotHash: histBlock ? hashInputs(histBlock) : null,
   });
   const cached = await getLlmOutput<z.infer<typeof SynthesisOutputSchema>>('meta-card', inputHash, promptText);
   let synthesis: z.infer<typeof SynthesisOutputSchema>;

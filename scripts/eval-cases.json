@@ -4,5 +4,69 @@
     "yourView": "unsure",
     "videoUrl": "https://www.youtube.com/watch?v=MOmmdN2y9L0",
     "notes": "Drew Cohen's Sea Limited analysis — used for spec validation"
+  },
+  {
+    "kind": "signal",
+    "thesisId": "NVDA-margin-durability",
+    "watchItemId": "nvda-gross-margin-guide",
+    "eventDedupKey": "0001045810-26-000052",
+    "eventSource": "sec-10q",
+    "expectedDirection": "strengthens",
+    "expectedMagnitudeBand": "low-mid",
+    "expectedPricedIn": "not-priced-in",
+    "handChecked": true,
+    "citationVerified": "Revenue 81,615 / Cost 20,458 / Gross profit 61,157 → 74.9% GAAP gross margin, verified against the real 10-Q. ~290bps above the 72% tripwire.",
+    "notes": "Actual reported margin (genuinely new vs the compression fear) — correctly strengthens, mag 0.35, confidence capped medium with the transient-Blackwell-mix contrary reading noted."
+  },
+  {
+    "kind": "signal",
+    "thesisId": "NVDA-margin-durability",
+    "watchItemId": "nvda-gross-margin-guide",
+    "eventDedupKey": "0001045810-26-000051",
+    "eventSource": "sec-8k",
+    "expectedDirection": "neutral",
+    "expectedMagnitudeBand": "near-zero",
+    "expectedPricedIn": "already-priced-in",
+    "handChecked": true,
+    "citationVerified": "'GAAP and non-GAAP gross margins are expected to be 74.9% and 75.0%, respectively, plus or minus 50 basis points.' — verbatim in q1fy27pr.htm (Ex-99.1).",
+    "notes": "THE KEY PRICED-IN TEST. Forward guide is a continuation of the established 74-76% run-rate. Critique survives=false, already-priced-in; judge correctly resolved to neutral mag 0.05 (NOT strengthens). This is the behavior the tool exists for."
+  },
+  {
+    "kind": "signal",
+    "thesisId": "GOOGL-TPU-not-in-consensus",
+    "watchItemId": "googl-tpu-disclosure",
+    "eventDedupKey": "0001652044-26-000043",
+    "eventSource": "sec-8k",
+    "expectedDirection": "none",
+    "expectedOutcome": "no-candidate",
+    "handChecked": true,
+    "citationVerified": "Earnings 8-K discloses Google Cloud revenue growth and 'enterprise AI Infrastructure' as a driver, but does NOT quantify external/third-party TPU revenue — verified.",
+    "notes": "NEAR-MISS RESISTANCE. TPU is in the air, but the SPECIFIC disclosure the thesis watches for (quantified external TPU revenue) didn't happen. Correctly returned no-candidate instead of manufacturing a signal."
+  },
+  {
+    "kind": "signal",
+    "thesisId": "infra-cycle-accelerating",
+    "watchItemId": "hyperscaler-capex-guide",
+    "eventDedupKey": "0001193125-26-257724",
+    "eventSource": "sec-8k",
+    "expectedDirection": "strengthens",
+    "expectedMagnitudeBand": "mid",
+    "expectedPricedIn": "partially-priced-in",
+    "handChecked": true,
+    "citationVerified": "'2026 capital expenditures are expected to be $180-$190 billion, and that it expects 2027 capital expenditures to significantly increase compared to 2026' — verbatim in d83560dex991.htm (Ex-99.1). Note: primary 8-K doc has NO capex; the signal correctly came from the exhibit (validates exhibit-fetching).",
+    "notes": "GOOGL combined equity-raise + capex-guidance 8-K. Forward capex guide UP with explicit 2027 escalation → strengthens 0.55, partially-priced-in caps magnitude. Correct."
+  },
+  {
+    "kind": "signal",
+    "thesisId": "infra-cycle-accelerating",
+    "watchItemId": "hyperscaler-capex-guide",
+    "eventDedupKey": "0001018724-26-000014",
+    "eventSource": "sec-10q",
+    "expectedDirection": "strengthens",
+    "expectedMagnitudeBand": "mid",
+    "expectedPricedIn": "not-priced-in",
+    "handChecked": true,
+    "citationVerified": "'Purchases of property and equipment (25,019)(44,203)...' — verbatim in amzn-20260331.htm. $44.2B current Q vs $25.0B prior = 77% YoY surge, verified.",
+    "notes": "AMZN Q1 capex +77% YoY, hard cash-flow figure directly opposite the flat/down tripwire → strengthens 0.55 high. Correct; high confidence justified by unambiguous audited numbers."
   }
 ]

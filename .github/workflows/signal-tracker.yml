@@ -1,0 +1,83 @@
+name: Signal Tracker
+
+# Daily cursor-gated run: ingest new SEC filings + FMP estimates/revisions,
+# diff against the Turso cursor, evaluate ONLY new events, update tripwire
+# state, persist to Turso. Steady-state runs are cents (only genuinely new
+# events are evaluated); the cold-start guard in track.ts prevents a newly
+# added thesis/ticker from running its whole backlog by accident.
+#
+# The cron is the AUTHORITATIVE writer (track.ts takes a Turso run-lock with
+# holder=cron). Avoid concurrent manual `pnpm track` runs while this is active.
+
+on:
+  schedule:
+    # 06:30 UTC daily — after US market close + overnight filing/estimate
+    # updates settle. Cron has no market-hours awareness; daily cadence is the
+    # point (this tool should make you act less, not more).
+    - cron: '30 6 * * *'
+  workflow_dispatch:
+    inputs:
+      since:
+        description: 'SEC lookback start (YYYY-MM-DD). Blank = 14-day steady-state window (empty-cursor theses auto-widen to a year regardless).'
+        required: false
+        type: string
+      allow_backlog:
+        description: 'Evaluate a full cold-start backlog (skips the cost guard).'
+        required: false
+        type: boolean
+        default: false
+
+# Never let two runs write cursors at once.
+concurrency:
+  group: signal-tracker
+  cancel-in-progress: false
+
+jobs:
+  track:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Run the tracker (cursor-gated, cron is authoritative writer)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          FMP_API_KEY: ${{ secrets.FMP_API_KEY }}
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+          # SEC requires an identifying UA. Set this repo/org secret to
+          # "Your Name your@email.com" form.
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+          # Email digest on tripwire flips (optional). Reuses the web app's
+          # Resend key / from-address. SIGNAL_DIGEST_TO is the recipient;
+          # SIGNAL_TRACKER_BASE_URL is the deployed web origin for detail links.
+          # If any are unset, no digest is sent (the run still works).
+          AUTH_RESEND_KEY: ${{ secrets.AUTH_RESEND_KEY }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          SIGNAL_DIGEST_TO: ${{ secrets.SIGNAL_DIGEST_TO }}
+          SIGNAL_TRACKER_BASE_URL: ${{ secrets.SIGNAL_TRACKER_BASE_URL }}
+        run: |
+          # Steady-state window: 14 days. This is the safety margin against a
+          # missed cron run (a skipped day still gets re-examined); dedup makes
+          # the overlap free. Cold starts (empty-cursor theses) are NOT seeded on
+          # this narrow window — track.ts auto-widens an empty cursor to a full
+          # year so a filing older than 14 days isn't permanently missed (gated
+          # by the cost guard / --allow-backlog). Override the window with the
+          # workflow_dispatch `since` input.
+          SINCE="${{ inputs.since }}"
+          if [ -z "$SINCE" ]; then SINCE="$(date -u -d '14 days ago' +%Y-%m-%d)"; fi
+          ARGS="--holder cron --since $SINCE"
+          if [ "${{ inputs.allow_backlog }}" = "true" ]; then ARGS="$ARGS --allow-backlog"; fi
+          echo "Running: pnpm track $ARGS"
+          pnpm track $ARGS

@@ -15,6 +15,7 @@ import { promisify } from 'node:util';
 import { Innertube } from 'youtubei.js';
 import type { Chapter, TranscriptCue, VideoBundle } from '@stock-vetter/schema';
 import { InvalidYoutubeUrlError, MissingCaptionsError } from './errors.js';
+import { getNormalizedTranscript, newCostTracker, type CostTracker } from '@stock-vetter/core';
 
 const execFileP = promisify(execFile);
 
@@ -365,4 +366,50 @@ export async function fetchVideoBundle(
       throw new MissingCaptionsError(videoId);
     }
   }
+}
+
+// ---- Alpha Vantage earnings-call transcript → VideoBundle ----------------
+//
+// Lets the vet use a REAL earnings-call transcript as an analyst-content source
+// alongside (or instead of) YouTube videos. We shape the AV transcript into the
+// existing VideoBundle so it flows through the unchanged runPipeline/extract
+// path. Backward-compatible: returns null when AV has no transcript for the
+// (ticker, quarter), so callers fall back to their existing behavior — the vet
+// must not break when AV returns nothing.
+//
+// Reuses the cache-checked getNormalizedTranscript in core, so this never
+// re-pays the normalize cost the signals tracker already paid for the same
+// (ticker, quarter).
+export async function fetchEarningsTranscriptBundle(
+  ticker: string,
+  quarter: string,
+  opts: { tracker?: CostTracker; now?: string } = {},
+): Promise<VideoBundle | null> {
+  const tracker = opts.tracker ?? newCostTracker();
+  const now = opts.now ?? new Date().toISOString();
+  const norm = await getNormalizedTranscript(ticker, quarter, tracker, now);
+  if (!norm) return null;
+
+  // AV turns have no real timestamps; assign synthetic sequential cues so the
+  // VideoBundle (and the citation [MM:SS] format downstream) stays well-formed.
+  // Each turn gets a ~30s slot; this is presentational only.
+  const SLOT = 30;
+  const transcript: TranscriptCue[] = norm.turns.map((t, i) => ({
+    startSec: i * SLOT,
+    endSec: (i + 1) * SLOT,
+    text: `${t.speaker} (${t.title}): ${t.content}`,
+  }));
+
+  return {
+    videoId: `av:${norm.ticker}:${norm.quarter}`,
+    title: `${norm.ticker} ${norm.quarter} earnings call`,
+    channel: 'Alpha Vantage (earnings call)',
+    channelId: 'alpha-vantage',
+    publishedAt: now.slice(0, 10),
+    description: `${norm.ticker} ${norm.quarter} earnings-call transcript via Alpha Vantage. Auto-transcribed text normalized for proper-noun mangling. AV per-turn sentiment is low-confidence and unused.`,
+    tags: [norm.ticker, 'earnings', 'transcript'],
+    chapters: [],
+    transcript,
+    durationSeconds: norm.turns.length * SLOT,
+  };
 }

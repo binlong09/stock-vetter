@@ -118,6 +118,19 @@ function itemsForForm(form: FilingForm): ItemDef[] {
   return [];
 }
 
+// True iff every section the meta claims has text (charLength > 0) still has a
+// resolvable body in the `sec` cache. A section parsed as empty/failed legitimately
+// has no body, so it doesn't count against presence. Used to detect a meta that
+// has outlived its section bodies (see fetchAndParseFiling's cache-hit branch).
+async function sectionBodiesPresent(meta: FilingMeta): Promise<boolean> {
+  const expected = meta.sections.filter((s) => s.charLength > 0);
+  for (const s of expected) {
+    const body = await getSecSection<string>(meta.accession, s.id);
+    if (body == null) return false;
+  }
+  return true;
+}
+
 // Public API: fetch + parse + cache one filing. Returns the meta plus a
 // loader for individual sections. Sections aren't returned in memory by
 // default to keep this lightweight.
@@ -130,8 +143,15 @@ export async function fetchAndParseFiling(
   const found = findLatestFiling(sub, form);
   if (!found) throw new Error(`no ${form} found for ${ticker}`);
 
+  // Cache hit is only trustworthy when the section BODIES are still present.
+  // The meta (`sec-meta` namespace) and the bodies (`sec` namespace) are written
+  // separately, so the meta can outlive the bodies (partial cache clear, an
+  // interrupted earlier write). Returning a cached meta whose getSection yields
+  // null would silently feed empty section text to downstream consumers — e.g.
+  // the 10-Q delta pass then sees no MD&A/risk text and skips with no error.
+  // So we validate the bodies exist and fall through to a full re-parse if not.
   const cachedMeta = await getSecFilingMeta<FilingMeta>(found.accession);
-  if (cachedMeta) {
+  if (cachedMeta && (await sectionBodiesPresent(cachedMeta))) {
     return {
       meta: cachedMeta,
       getSection: (id) => getSecSection<string>(found.accession, id),
@@ -142,7 +162,9 @@ export async function fetchAndParseFiling(
   const items = itemsForForm(form);
   const result: ParseResult = parseFiling(html, items);
 
-  // Persist each section body individually, then write the meta.
+  // Persist each section body individually, then write the meta. Order matters:
+  // bodies first, meta last, so a cache hit on the meta implies the bodies are
+  // already written (and the presence check above guards the inverse).
   for (const s of result.sections) {
     await putSecSection<string>(found.accession, s.id, s.body);
   }

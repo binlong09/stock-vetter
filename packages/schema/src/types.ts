@@ -428,6 +428,87 @@ export const CrossSourceFinding = z.object({
 });
 export type CrossSourceFinding = z.infer<typeof CrossSourceFinding>;
 
+// ---- 10-Q delta (change detection vs the annual baseline) ----
+//
+// ADDITIVE, NON-SCORING. The six dimension scores, the meta-card verdict, and
+// the reverse DCF are anchored on the 10-K + DEF 14A and are NOT affected by
+// anything here. This section detects material QUALITATIVE change in the
+// already-fetched 10-Q (MD&A + risk factors) against the corresponding 10-K
+// sections — the one thing value frameworks actually use a thin, unaudited
+// quarterly for: "what changed since the annual baseline?"
+//
+// Source separation is load-bearing: each change carries TWO citations, one to
+// the 10-Q passage and one to the 10-K passage it diverges from, each attributed
+// to its own filing. The two are never merged into a single claim. That is why
+// this avoids the citation-consistency hazard that blocked folding the 10-Q into
+// scoring.
+export const TenqChangeDirection = z.enum(['improving', 'deteriorating', 'neutral-but-notable']);
+export type TenqChangeDirection = z.infer<typeof TenqChangeDirection>;
+
+// One side of a dual citation, attributed to a single filing. `form` records
+// which filing this passage came from so the UI/markdown can label it and so the
+// citation verifier resolves it against the right accession.
+export const TenqCitation = z.object({
+  form: z.enum(['10-Q', '10-K']),
+  section: z.string(),   // 'mda' | 'risk-factors' (the section id within that filing)
+  quote: z.string(),     // verbatim passage from THIS filing only — never merged
+});
+export type TenqCitation = z.infer<typeof TenqCitation>;
+
+export const TenqChange = z.object({
+  // What changed, in plain English. Describes the divergence; does not merge the
+  // two sources' wording into one sentence as if both said it.
+  change: z.string(),
+  // Which thesis-relevant area this touches (e.g. "margins", "demand",
+  // "competition", "regulatory/export controls", "liquidity"). Free text — this
+  // is NOT one of the six scored dimensions and must not be conflated with them.
+  area: z.string(),
+  direction: TenqChangeDirection,
+  // Dual citation: the 10-Q passage and the 10-K passage it diverges from. Each
+  // stays attributed to its own filing.
+  tenqCitation: TenqCitation,   // form must be '10-Q'
+  tenkCitation: TenqCitation,   // form must be '10-K'
+});
+export type TenqChange = z.infer<typeof TenqChange>;
+
+export const TenqDelta = z.object({
+  // Provenance so the comparison's basis is visible on the card.
+  tenqAccession: z.string(),
+  tenqFilingDate: z.string(),
+  tenkAccession: z.string(),
+  tenkFilingDate: z.string(),
+  // 2-4 sentence plain-English overview of how the quarter's narrative differs
+  // from the annual baseline. Empty-ish when nothing material changed.
+  summary: z.string(),
+  changes: z.array(TenqChange),
+  // Scoped headline that states what was ACTUALLY assessed — e.g.
+  // "10 changes" when full coverage, or "10 risk-factor changes; MD&A not
+  // assessed" when a depended-on section failed extraction. The card shows this
+  // verbatim so a reader scanning only the count sees the honest scope without
+  // reading a footnote. Computed from section confidence, never the model.
+  //
+  // BACKWARD COMPAT: cards persisted by the first 10-Q-delta release (316ab88)
+  // predate this field. Rather than 500 on those rows, fall back to a plain
+  // count derived from `changes` — the same full-coverage wording the producer
+  // emits when no section failed extraction.
+  headline: z.string().optional(),
+  // Data-quality stamp: one entry per depended-on section (MD&A, risk factors)
+  // that failed extraction or was missing, so the limitation is visible on the
+  // card rather than hidden behind a confident change count. Empty when both
+  // compared sections parsed cleanly. Same spirit as the SEC dataQuality note
+  // and the transcript-normalization stamp. NOTE: this flags an extraction
+  // failure; it does not fix the parser.
+  //
+  // BACKWARD COMPAT: defaults to [] for pre-9dd2052 rows — an empty stamp reads
+  // as "no known coverage gaps", which is the honest reading for a card that
+  // never computed the stamp.
+  coverageWarnings: z.array(z.string()).default([]),
+}).transform((d) => ({
+  ...d,
+  headline: d.headline ?? `${d.changes.length} change${d.changes.length === 1 ? '' : 's'}`,
+}));
+export type TenqDelta = z.infer<typeof TenqDelta>;
+
 export const MetaCard = z.object({
   ticker: z.string(),
   generatedAt: z.string(),
@@ -470,6 +551,11 @@ export const MetaCard = z.object({
   // the user. Surfaces the meta-card's "where to focus your own judgment"
   // signal. Optional — empty string when there are no notable disagreements.
   divergenceCommentary: z.string(),
+  // ADDITIVE: change detection of the latest 10-Q vs the 10-K baseline. Does
+  // NOT influence verdict, weightedScore, dimensions, or the reverse DCF — it
+  // is attached after synthesis. Absent when no 10-Q was available or the pass
+  // was skipped (backward-compatible with cards generated before this field).
+  tenqDelta: TenqDelta.optional(),
 });
 export type MetaCard = z.infer<typeof MetaCard>;
 
@@ -543,3 +629,258 @@ export function computeVerdict(scores: ScoredAnalysis['scores']): Verdict {
   if (weighted >= 6.0) return 'Watchlist';
   return 'Pass';
 }
+
+// =========================================================================
+// Signal Tracker (packages/signals) — Phase 1 schemas.
+//
+// A sibling tool that watches a small set of theses and flags when new
+// evidence (SEC filings, FMP consensus estimates, FMP analyst-ratings drift,
+// or a hand-entered note) moves one. Phase 1 is schema + ingestion + diff,
+// NO LLM. The `Signal` shape is defined now but only produced in Phase 2.
+//
+// Design constraint from the Phase 0 gate: we are on the FMP Starter tier, so
+// consensus is ANNUAL-ONLY and the "estimate revision" feed is a monthly
+// analyst-RATINGS-distribution bull-index proxy, NOT true per-analyst estimate
+// changes. Every Signal therefore carries a `dataQuality` field naming its
+// source and known degradation, so Phase 2's eval can attribute a weak
+// classification to thin data vs. a weak prompt.
+// =========================================================================
+
+// ---- Event sources -------------------------------------------------------
+//
+// Where an Event came from. Drives both ingestion (which adapter produced it)
+// and the dataQuality string a downstream Signal inherits.
+//   - sec-8k / sec-10q / sec-10k : company-reported filings (EDGAR). The
+//     primary-source half — guidance (8-K Ex-99.1), MD&A + capex (10-Q/10-K).
+//   - fmp-estimates  : annual consensus estimate snapshot (FMP Starter).
+//   - fmp-revisions  : monthly analyst-ratings bull-index snapshot (FMP proxy).
+//   - manual         : hand-entered event for a watch-item with no feed on our
+//     tier (e.g. TSMC capex — foreign filer, not on EDGAR/Starter).
+export const EventSource = z.enum([
+  'sec-8k',
+  'sec-10q',
+  'sec-10k',
+  'fmp-estimates',
+  'fmp-revisions',
+  'av-transcript',
+  'manual',
+]);
+export type EventSource = z.infer<typeof EventSource>;
+
+// A normalized unit of new information, source-agnostic. Phase 1 ingests these
+// and diffs them against a cursor; Phase 2 classifies (Event × Thesis) → Signal.
+export const Event = z.object({
+  // Stable, content-derived identity used for dedup across runs. Construction
+  // is per-source (see feeds.ts): SEC = accession no.; estimates = hash of the
+  // estimate snapshot; revisions = `${ticker}:${snapshotDate}`; manual = a
+  // caller-supplied id. Two ingests of the same underlying fact MUST produce
+  // the same dedupKey.
+  dedupKey: z.string(),
+  source: EventSource,
+  ticker: z.string(),
+  // The date the event is "as of" (filing date, estimate fiscal date, ratings
+  // snapshot month, or the manual note's date). YYYY-MM-DD.
+  date: z.string(),
+  // One-line human summary for the track.ts printout (no LLM — built
+  // mechanically from the source fields).
+  title: z.string(),
+  // A link a human can follow to verify (EDGAR doc URL, FMP endpoint, or a
+  // user-supplied reference for manual events). Null when none applies.
+  url: z.string().nullable(),
+  // The raw normalized payload from the adapter, kept verbatim so Phase 2 has
+  // the structured numbers without a re-fetch. Shape varies by source; the
+  // adapters own the contract, so this is intentionally loose here.
+  payload: z.record(z.string(), z.unknown()),
+  // Source + known degradation, e.g.
+  //   "consensus=annual-only (FMP Starter)"
+  //   "revision=ratings-bull-index-proxy; not true estimate revisions"
+  //   "manual entry; not independently verified"
+  // A Signal derived from this Event inherits/extends this string.
+  dataQuality: z.string(),
+});
+export type Event = z.infer<typeof Event>;
+
+// ---- Watch-items + theses ------------------------------------------------
+
+// How a watch-item is fed. `auto` items are populated by a feed adapter;
+// `manual` items require a hand-entered Event (the TSMC-capex case).
+export const WatchItemFeed = z.enum(['auto', 'manual']);
+export type WatchItemFeed = z.infer<typeof WatchItemFeed>;
+
+// A single thing we watch for a thesis, with the tripwire that, when crossed,
+// flips the thesis status. The threshold is intentionally a free-form string +
+// a typed direction in Phase 1 (the numeric/zod-validated comparison logic
+// lands with the evaluator in Phase 2/3); here it documents intent and seeds
+// the diff/printout.
+export const WatchItem = z.object({
+  id: z.string(),
+  label: z.string(),
+  // Which Event sources can satisfy this watch-item. e.g. a guidance item
+  // watches ['sec-8k']; a "consensus catching up" item watches
+  // ['fmp-estimates','fmp-revisions']; TSMC capex watches ['manual'].
+  sources: z.array(EventSource).min(1),
+  feed: WatchItemFeed,
+  // Plain-English tripwire, e.g. "gross margin guide below 70%" or
+  // "consensus FY revenue revised up >15% (thesis getting priced in)".
+  tripwire: z.string(),
+  // Whether crossing the tripwire strengthens or weakens the thesis. `either`
+  // when direction depends on the reading (decided by the Phase 2 judge).
+  tripwireDirection: z.enum(['strengthens', 'weakens', 'either']),
+});
+export type WatchItem = z.infer<typeof WatchItem>;
+
+export const Thesis = z.object({
+  id: z.string(),
+  // The plain-English claim the tracker is arguing with.
+  claim: z.string(),
+  // Tickers whose filings/estimates feed this thesis (uppercase).
+  tickers: z.array(z.string()).min(1),
+  // Non-ticker entities the thesis depends on (e.g. "TSMC", "hyperscaler capex")
+  // — watched via manual events on our tier.
+  entities: z.array(z.string()),
+  watchItems: z.array(WatchItem).min(1),
+});
+export type Thesis = z.infer<typeof Thesis>;
+
+export const ThesesFile = z.object({
+  // Mirrors data/tickers.json's leading-underscore doc convention.
+  _doc: z.string().optional(),
+  theses: z.array(Thesis),
+});
+export type ThesesFile = z.infer<typeof ThesesFile>;
+
+// ---- Signal (defined now, produced in Phase 2) ---------------------------
+
+export const SignalDirection = z.enum(['strengthens', 'weakens', 'neutral']);
+export type SignalDirection = z.infer<typeof SignalDirection>;
+
+// The Phase 2 classifier's output for one (Event × Thesis × WatchItem). Phase 1
+// does NOT emit these — the shape is fixed here so feeds/diff and the eval
+// harness agree on it ahead of time.
+export const Signal = z.object({
+  thesisId: z.string(),
+  watchItemId: z.string(),
+  // The Event that triggered this classification (by dedupKey).
+  eventDedupKey: z.string(),
+  direction: SignalDirection,
+  // 0–1: how much this moves the thesis probability. Phase 2 fills this in.
+  magnitude: z.number().min(0).max(1),
+  confidence: Confidence,
+  rationale: z.string(),
+  // Verbatim citation back to the source (filing line / estimate figure).
+  citation: z.string(),
+  // Inherited from the triggering Event and possibly extended by the evaluator.
+  // REQUIRED so a weak classification can be attributed to thin data.
+  dataQuality: z.string(),
+});
+export type Signal = z.infer<typeof Signal>;
+
+// ---- Eval log ------------------------------------------------------------
+//
+// One row per (event × watch-item) pair the engine ACTUALLY evaluated (reached
+// extract→critique→judge). Records what was looked at and what the engine
+// concluded — including no_candidate and neutral, the dismissed cases that
+// never become signals and are otherwise invisible. Pairs filtered out by
+// watch-item mapping before any LLM call are NOT logged here.
+
+export const EvaluationOutcomeKind = z.enum(['no_candidate', 'neutral', 'signal']);
+export type EvaluationOutcomeKind = z.infer<typeof EvaluationOutcomeKind>;
+
+export const EvaluationRecord = z.object({
+  thesisId: z.string(),
+  watchItemId: z.string(),
+  // Stable event identity — SEC accession / `av:<ticker>:<quarter>` / FMP
+  // snapshot hash. Same key the signals table uses, so a `signal` outcome links
+  // 1:1 to its signal by (thesisId, watchItemId, eventDedupKey).
+  eventDedupKey: z.string(),
+  ticker: z.string(),
+  source: EventSource,
+  eventDate: z.string(), // YYYY-MM-DD
+  outcome: EvaluationOutcomeKind,
+  hasSignal: z.boolean(),
+  evaluatedAt: z.string(),
+});
+export type EvaluationRecord = z.infer<typeof EvaluationRecord>;
+
+// ---- Phase 2 evaluator: per-step LLM I/O schemas -------------------------
+//
+// The evaluator (packages/signals/src/evaluate.ts) runs extract → critique →
+// judge per (Event × WatchItem). Each step's LLM output is validated against
+// the matching schema below; the judge's output becomes a `Signal`.
+
+// Stage 1 (extract). `candidate: null` is the common "no signal here" answer.
+export const SignalCandidate = z.object({
+  fact: z.string(),
+  citation: z.string(),
+  sourceLocation: z.string(),
+  relevance: z.string(),
+});
+export type SignalCandidate = z.infer<typeof SignalCandidate>;
+
+export const SignalExtractResult = z.object({
+  candidate: SignalCandidate.nullable(),
+  // Present on the null path; optional on the hit path.
+  reason: z.string().optional(),
+  candidate_present: z.boolean().optional(),
+});
+export type SignalExtractResult = z.infer<typeof SignalExtractResult>;
+
+// Stage 2 (critique). The adversarial verdicts that bind the judge.
+export const PricedInVerdict = z.enum([
+  'already-priced-in',
+  'partially-priced-in',
+  'not-priced-in',
+]);
+export type PricedInVerdict = z.infer<typeof PricedInVerdict>;
+
+export const SignalCritique = z.object({
+  pricedIn: z.object({
+    verdict: PricedInVerdict,
+    reasoning: z.string(),
+  }),
+  noiseDressedAsSignal: z.object({
+    verdict: z.enum(['noise', 'marginal', 'substantive']),
+    reasoning: z.string(),
+  }),
+  contraryReading: z.string(),
+  survives: z.boolean(),
+});
+export type SignalCritique = z.infer<typeof SignalCritique>;
+
+// Stage 3 (judge). The raw LLM output, before we attach thesis/watch-item/event
+// ids and dataQuality to form the full `Signal`. direction+magnitude+confidence
+// are the noisy, triple-sampled fields.
+export const SignalJudgment = z.object({
+  direction: SignalDirection,
+  magnitude: z.number().min(0).max(1),
+  confidence: Confidence,
+  rationale: z.string(),
+  citation: z.string(),
+});
+export type SignalJudgment = z.infer<typeof SignalJudgment>;
+
+// ---- Thesis status -------------------------------------------------------
+
+// green = confirmed / on-track; amber = watch (something moved, not decisive);
+// red = tripped (a tripwire crossed against the thesis).
+export const ThesisHealth = z.enum(['green', 'amber', 'red']);
+export type ThesisHealth = z.infer<typeof ThesisHealth>;
+
+export const WatchItemState = z.object({
+  watchItemId: z.string(),
+  health: ThesisHealth,
+  // dedupKeys of the events that last moved this watch-item.
+  lastEventKeys: z.array(z.string()),
+  note: z.string(),
+});
+export type WatchItemState = z.infer<typeof WatchItemState>;
+
+export const ThesisStatus = z.object({
+  thesisId: z.string(),
+  health: ThesisHealth,
+  updatedAt: z.string(),
+  watchItems: z.array(WatchItemState),
+  // Tripwires crossed on the most recent update (empty when none flipped).
+  trippedWatchItemIds: z.array(z.string()),
+});
+export type ThesisStatus = z.infer<typeof ThesisStatus>;
