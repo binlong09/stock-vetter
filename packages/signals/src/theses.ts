@@ -5,10 +5,13 @@
 // crossed. A tripwire flips when this run's accumulated signals for a watch-item
 // move in the watch-item's adverse direction with enough magnitude.
 //
-// Health semantics (from the schema):
-//   green = nothing material moved against the thesis on this watch-item;
-//   amber = something moved (non-trivial signal) but didn't cross the tripwire;
-//   red   = a tripwire crossed (the watch-item's adverse condition is met).
+// Health semantics (exit-risk oriented — see the web UI's Hold/Watch/Exit):
+//   green (Hold)  = nothing moved AGAINST the thesis; supportive (confirming)
+//                   movement also stays green — getting stronger is not a warning;
+//   amber (Watch) = an ADVERSE signal moved materially but didn't cross the wire;
+//   red   (Exit)  = an adverse tripwire crossed.
+// Only adverse movement raises the health. Supportive signals are recorded for
+// context but never push a thesis toward Watch/Exit.
 //
 // Conservative by construction, matching the rest of the tracker: we only flip
 // red on a clear adverse, surviving signal.
@@ -36,7 +39,7 @@ const WATCH_MAGNITUDE = 0.2;
 //     (e.g. GOOGL "consensus prices in the TPU edge" — strengthening consensus
 //     is what trips that watch-item, because the edge is then gone).
 //   - tripwireDirection 'either'     ⇒ any non-neutral signal is adverse.
-function isAdverse(signal: Signal, watchItem: WatchItem): boolean {
+export function isAdverse(signal: Signal, watchItem: WatchItem): boolean {
   switch (watchItem.tripwireDirection) {
     case 'weakens':
       return signal.direction === 'weakens';
@@ -66,16 +69,19 @@ function evaluateWatchItem(
   for (const s of mine) {
     if (s.direction === 'neutral' || s.magnitude < WATCH_MAGNITUDE) continue;
     movingKeys.push(s.eventDedupKey);
-    const adverse = isAdverse(s, watchItem);
-    if (adverse && s.magnitude >= TRIP_MAGNITUDE) {
+    if (!isAdverse(s, watchItem)) {
+      // Supportive movement CONFIRMS the thesis — it lowers exit risk, so it must
+      // not raise health. Record it for context; health stays as-is (green).
+      notes.push(`supportive ${s.direction} mag ${s.magnitude.toFixed(2)}`);
+      continue;
+    }
+    if (s.magnitude >= TRIP_MAGNITUDE) {
       tripped = true;
       health = 'red';
       notes.push(`TRIPPED: ${s.direction} mag ${s.magnitude.toFixed(2)} — ${s.rationale}`);
     } else {
       health = worstHealth(health, 'amber');
-      notes.push(
-        `${adverse ? 'adverse' : 'supportive'} ${s.direction} mag ${s.magnitude.toFixed(2)}`,
-      );
+      notes.push(`adverse ${s.direction} mag ${s.magnitude.toFixed(2)}`);
     }
   }
 
