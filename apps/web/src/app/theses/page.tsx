@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { listTheses } from '@/signals-queries';
 import { ThesisStatusChip } from '@/components/ThesisStatusChip';
 import { RunNowButton } from '@/components/RunNowButton';
-import { HEALTH_ORDER } from '@/lib/thesis-status';
+import { HEALTH_ORDER, healthLegend } from '@/lib/thesis-status';
 import { isoDate } from '@/lib/format';
 
 // Reflects whatever the last cron run wrote to Turso.
@@ -32,6 +32,18 @@ export default async function ThesesPage() {
       <p className="mt-1 text-xs text-slate-400">
         Signal tracker — a noise filter, not a feed. Status reflects the last scheduled run.
       </p>
+
+      {/* Status legend — each thesis's status maps to an exit decision. */}
+      <dl className="mt-3 flex flex-col gap-1.5 rounded-lg border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 sm:flex-row sm:flex-wrap sm:gap-x-5">
+        {healthLegend().map((m) => (
+          <div key={m.label} className="flex items-baseline gap-1.5 text-xs">
+            <dt className={`shrink-0 rounded-full border px-2 py-0.5 font-medium ${m.pill}`}>
+              {m.emoji} {m.label}
+            </dt>
+            <dd className="text-slate-500">{m.blurb}</dd>
+          </div>
+        ))}
+      </dl>
 
       <div className="mt-3 space-y-2">
         {sorted.length === 0 ? (
