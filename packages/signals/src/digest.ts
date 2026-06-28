@@ -57,10 +57,11 @@ function esc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+// Keep these in sync with the web UI's healthMeta() labels (apps/web).
 const HEALTH_LABEL: Record<ThesisHealth, string> = {
-  green: '🟢 on track',
-  amber: '🟡 watch',
-  red: '🔴 tripped',
+  green: '🟢 Hold',
+  amber: '🟡 Watch',
+  red: '🔴 Exit',
 };
 
 // Render the digest HTML for a set of flips (already filtered to real

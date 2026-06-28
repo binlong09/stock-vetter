@@ -13,6 +13,8 @@ export const HEALTH_ORDER: ThesisHealth[] = ['red', 'amber', 'green'];
 export function healthMeta(h: string): {
   label: string;
   emoji: string;
+  /** One-line meaning + action, for the legend and tooltips. */
+  blurb: string;
   /** Tailwind classes for a pill: bg + text + border. */
   pill: string;
   dot: string;
@@ -20,8 +22,9 @@ export function healthMeta(h: string): {
   switch (h) {
     case 'red':
       return {
-        label: 'Tripped',
+        label: 'Exit',
         emoji: '🔴',
+        blurb: 'A tripwire crossed — review/exit the position.',
         pill: 'bg-rose-50 text-rose-800 border-rose-200',
         dot: 'bg-rose-500',
       };
@@ -29,18 +32,28 @@ export function healthMeta(h: string): {
       return {
         label: 'Watch',
         emoji: '🟡',
+        blurb: 'Early warning — a signal is moving toward your exit line.',
         pill: 'bg-amber-50 text-amber-900 border-amber-200',
         dot: 'bg-amber-500',
       };
     case 'green':
     default:
       return {
-        label: 'On track',
+        label: 'Hold',
         emoji: '🟢',
+        blurb: 'Thesis intact — stay invested.',
         pill: 'bg-emerald-50 text-emerald-800 border-emerald-200',
         dot: 'bg-emerald-500',
       };
   }
+}
+
+/** Legend rows in dashboard order (Exit → Watch → Hold). */
+export function healthLegend(): { label: string; emoji: string; blurb: string; pill: string }[] {
+  return HEALTH_ORDER.map((h) => {
+    const m = healthMeta(h);
+    return { label: m.label, emoji: m.emoji, blurb: m.blurb, pill: m.pill };
+  });
 }
 
 export function directionMeta(d: string): { label: string; glyph: string; text: string } {
