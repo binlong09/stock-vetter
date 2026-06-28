@@ -138,22 +138,43 @@ function isRetryableLlmError(e: unknown): boolean {
 // connection/transport errors (dropped sockets, "Premature close"). Back off
 // exponentially up to 5 attempts: 4s, 8s, 16s, 32s. Anything past that is
 // likely a sustained outage; fail loudly.
+// Compact one-line error description including the `cause` chain — undici hides
+// the real transport failure there ("Premature close" is the wrapper; the cause
+// is the actual ECONNRESET / UND_ERR_* / timeout).
+function shortErrorDetail(e: unknown): string {
+  const parts: string[] = [];
+  let cur: unknown = e;
+  let depth = 0;
+  while (cur && depth < 4) {
+    const x = cur as { name?: string; code?: string; status?: number; message?: string; cause?: unknown };
+    const seg = [x.name, x.code, x.status != null ? `status=${x.status}` : '', x.message?.slice(0, 120)]
+      .filter(Boolean)
+      .join(' ');
+    parts.push(depth === 0 ? seg : `cause→ ${seg}`);
+    cur = x.cause;
+    depth++;
+  }
+  return parts.join(' | ');
+}
+
 async function callWithRetry(
   body: MessageCreateParamsNonStreaming,
   stage: string,
 ): Promise<Message> {
   const maxAttempts = 5;
   let lastErr: unknown;
+  // Rough request size for diagnosing oversized-request failures.
+  const reqChars = JSON.stringify(body).length;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
       return await client().messages.create(body);
     } catch (e) {
       lastErr = e;
-      const err = e as { status?: number; message?: string };
       if (!isRetryableLlmError(e) || attempt === maxAttempts - 1) throw e;
       const delayMs = 4000 * Math.pow(2, attempt);
       process.stderr.write(
-        `[llm:${stage}] ${err.status ?? 'conn'} ${err.message?.slice(0, 80) ?? 'transient error'}; retrying in ${delayMs / 1000}s (attempt ${attempt + 1}/${maxAttempts})\n`,
+        `[llm:${stage}] retryable error (req ~${reqChars} chars): ${shortErrorDetail(e)}; ` +
+          `retrying in ${delayMs / 1000}s (attempt ${attempt + 1}/${maxAttempts})\n`,
       );
       await new Promise((r) => setTimeout(r, delayMs));
     }
