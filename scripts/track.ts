@@ -356,17 +356,33 @@ async function main(): Promise<void> {
 
       const signals: Signal[] = [];
       const evaluations: EvaluationRecord[] = [];
+      // Events whose evaluation threw (e.g. an LLM call that exhausted its
+      // retries on a transient connection failure). We isolate the failure so
+      // one bad pair doesn't abort the whole run, and we EXCLUDE these events
+      // from the persisted cursor below so the next run re-attempts them rather
+      // than silently dropping the signal.
+      const failedEventKeys = new Set<string>();
       let noCandidate = 0;
       for (const { event, watchItem } of pairs) {
-        const outcome = await evaluatePair({
-          thesis,
-          watchItem,
-          event,
-          allEvents: fetched,
-          reverseDcfByTicker: dcfByTicker,
-          tracker,
-          now,
-        });
+        let outcome: Awaited<ReturnType<typeof evaluatePair>>;
+        try {
+          outcome = await evaluatePair({
+            thesis,
+            watchItem,
+            event,
+            allEvents: fetched,
+            reverseDcfByTicker: dcfByTicker,
+            tracker,
+            now,
+          });
+        } catch (err) {
+          failedEventKeys.add(event.dedupKey);
+          console.error(
+            `  ⚠ eval failed for ${watchItem.id} / ${event.dedupKey}: ` +
+              `${err instanceof Error ? err.message : String(err)} — skipping (will retry next run)`,
+          );
+          continue;
+        }
         // Eval-log row for EVERY evaluated pair (these `pairs` already passed
         // watch-item mapping — filtered events never reach here). A neutral
         // signal is logged as 'neutral'; a directional signal as 'signal'.
@@ -411,7 +427,17 @@ async function main(): Promise<void> {
       await writeFile(join('fixtures/theses', `${thesis.id}.md`), card, 'utf-8');
 
       if (!flags.dryRun) {
-        await writeCursor(thesis.id, newEvents, nextCursor);
+        // Advance the cursor over everything we evaluated, EXCEPT events that
+        // failed — leave those unseen so the next run retries them. (writeCursor
+        // marks seen from newEvents on the Turso path and from nextCursor.seenKeys
+        // on the local path, so we filter both.)
+        const persistEvents = failedEventKeys.size
+          ? newEvents.filter((e) => !failedEventKeys.has(e.dedupKey))
+          : newEvents;
+        const persistCursor = failedEventKeys.size
+          ? { ...nextCursor, seenKeys: nextCursor.seenKeys.filter((k) => !failedEventKeys.has(k)) }
+          : nextCursor;
+        await writeCursor(thesis.id, persistEvents, persistCursor);
         if (usingTurso) {
           // Persist the individual signals (web-view source), the eval log (what
           // this run evaluated, incl. dismissed cases), AND the aggregate status.
