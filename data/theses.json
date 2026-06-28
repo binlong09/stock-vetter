@@ -80,6 +80,54 @@
           "tripwireDirection": "either"
         }
       ]
+    },
+    {
+      "id": "DRAM-memory-growth",
+      "claim": "DRAM/memory is the best risk-adjusted growth exposure despite an elevated P/E: AI-driven HBM and high-density DRAM demand keeps outpacing supply, so the premium multiple is justified while the up-cycle runs. The exit trigger is the memory PRICING CYCLE rolling over — declining DRAM average selling prices, softening Micron guidance, or supply/inventory-glut signals (from Micron or the Korean majors) mark the top, at which point exit DRAM and the sector. Tracked via Micron (MU) as the US-listed pure-play proxy; consensus-revision feeds are unavailable for MU on our FMP tier, so the cycle is read directly from filings and earnings calls (the better leading indicator anyway).",
+      "tickers": ["MU"],
+      "entities": ["Samsung Electronics", "SK Hynix", "DRAM contract/spot pricing", "HBM demand", "memory/semiconductor ETF (the held position)"],
+      "watchItems": [
+        {
+          "id": "dram-asp-trend",
+          "label": "DRAM average selling price (ASP) / bit-demand trend (MU 8-K Ex-99.1 / 10-Q MD&A / earnings call)",
+          "sources": ["sec-8k", "sec-10q", "sec-10k", "av-transcript"],
+          "feed": "auto",
+          "tripwire": "Micron reports or guides DECLINING DRAM ASPs (sequential price erosion) or decelerating bit-demand growth — the classic leading indicator that the memory pricing cycle is rolling over.",
+          "tripwireDirection": "weakens"
+        },
+        {
+          "id": "micron-forward-guide",
+          "label": "Micron next-quarter revenue / gross-margin guidance direction (8-K Ex-99.1 / 10-Q MD&A / earnings call)",
+          "sources": ["sec-8k", "sec-10q", "sec-10k", "av-transcript"],
+          "feed": "auto",
+          "tripwire": "Micron guides next-quarter revenue OR gross margin DOWN sequentially, or guidance language shifts from supply-constrained ('sold out', 'tight') to demand-softening ('inventory adjustment', 'softer demand').",
+          "tripwireDirection": "weakens"
+        },
+        {
+          "id": "memory-supply-discipline",
+          "label": "Memory supply discipline — capex / wafer capacity & customer inventory (MU 10-Q MD&A / 8-K / earnings call)",
+          "sources": ["sec-8k", "sec-10q", "sec-10k", "av-transcript"],
+          "feed": "auto",
+          "tripwire": "Micron signals a capex INCREASE / wafer-capacity expansion that risks oversupply, or flags RISING customer/channel inventory — an early warning of a supply glut that depresses future DRAM prices.",
+          "tripwireDirection": "weakens"
+        },
+        {
+          "id": "dram-peer-capacity",
+          "label": "Samsung / SK Hynix DRAM capacity & pricing posture (MANUAL — foreign filers, not on EDGAR/FMP)",
+          "sources": ["manual"],
+          "feed": "manual",
+          "tripwire": "Samsung or SK Hynix announces aggressive DRAM capacity additions, restarts idled fabs, or initiates price cuts to gain share — a supply-side signal that the sector pricing cycle is topping.",
+          "tripwireDirection": "weakens"
+        },
+        {
+          "id": "dram-spot-contract-price",
+          "label": "DRAM contract/spot price index, month-over-month (MANUAL — TrendForce/DRAMeXchange monthly print; not on EDGAR/FMP)",
+          "sources": ["manual"],
+          "feed": "manual",
+          "tripwire": "The monthly DRAM contract price index (or spot price) turns DOWN month-over-month — the earliest and purest read that the memory pricing cycle is topping, typically leading Micron's reported ASP decline by a quarter or more.",
+          "tripwireDirection": "weakens"
+        }
+      ]
     }
   ]
 }

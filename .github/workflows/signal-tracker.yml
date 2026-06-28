@@ -50,6 +50,19 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Refresh DRAM price (scrape TrendForce; email reminder on miss)
+        # Best-effort: writes this month's DRAM-price manual Event into the
+        # checkout so the track step below evaluates it (Turso's cursor dedups
+        # so it's scored once/month). On a miss it emails a reminder to enter the
+        # print by hand. Never fails the job (exit 0). 45-day window so the email
+        # only fires on a real outage, not normal cadence.
+        continue-on-error: true
+        env:
+          AUTH_RESEND_KEY: ${{ secrets.AUTH_RESEND_KEY }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          SIGNAL_DIGEST_TO: ${{ secrets.SIGNAL_DIGEST_TO }}
+        run: pnpm fetch-dram-price --days 45
+
       - name: Run the tracker (cursor-gated, cron is authoritative writer)
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
