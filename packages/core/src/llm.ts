@@ -111,10 +111,28 @@ export type LLMCallResult = {
   cost: number;
 };
 
-// Retry transient API errors (429 rate-limit, 529 overloaded, 5xx). Anthropic
-// returns these as `APIError` with `status` set. We back off exponentially
-// up to 5 attempts: 4s, 8s, 16s, 32s. Anything past that and the issue is
-// likely user-facing (e.g. extended outage); fail loudly.
+// Is this a transient error worth retrying?
+//   - HTTP 429 (rate limit), 529 (overloaded), 5xx (server) — carry a status.
+//   - Connection/transport errors carry NO status: a dropped socket, a TLS
+//     reset, or a body stream cut off mid-read ("Premature close"). These are
+//     the failures that most deserve a retry, and the ones that silently killed
+//     the cron before this. The Anthropic SDK wraps them as APIConnectionError;
+//     we also match raw undici/node messages in case the error isn't wrapped.
+function isRetryableLlmError(e: unknown): boolean {
+  const err = e as { status?: number; message?: string; name?: string };
+  const status = err.status ?? 0;
+  if (status === 429 || status === 529 || (status >= 500 && status < 600)) return true;
+  if (e instanceof Anthropic.APIConnectionError || e instanceof Anthropic.APIConnectionTimeoutError) return true;
+  const text = `${err.name ?? ''} ${err.message ?? ''}`;
+  return /premature close|econnreset|etimedout|epipe|socket hang up|fetch failed|terminated|network|connection error|other side closed/i.test(
+    text,
+  );
+}
+
+// Retry transient API errors. Status-carrying ones (429/529/5xx) AND statusless
+// connection/transport errors (dropped sockets, "Premature close"). Back off
+// exponentially up to 5 attempts: 4s, 8s, 16s, 32s. Anything past that is
+// likely a sustained outage; fail loudly.
 async function callWithRetry(
   body: MessageCreateParamsNonStreaming,
   stage: string,
@@ -127,12 +145,10 @@ async function callWithRetry(
     } catch (e) {
       lastErr = e;
       const err = e as { status?: number; message?: string };
-      const status = err.status ?? 0;
-      const isRetryable = status === 429 || status === 529 || (status >= 500 && status < 600);
-      if (!isRetryable || attempt === maxAttempts - 1) throw e;
+      if (!isRetryableLlmError(e) || attempt === maxAttempts - 1) throw e;
       const delayMs = 4000 * Math.pow(2, attempt);
       process.stderr.write(
-        `[llm:${stage}] ${status} ${err.message?.slice(0, 80) ?? 'transient error'}; retrying in ${delayMs / 1000}s (attempt ${attempt + 1}/${maxAttempts})\n`,
+        `[llm:${stage}] ${err.status ?? 'conn'} ${err.message?.slice(0, 80) ?? 'transient error'}; retrying in ${delayMs / 1000}s (attempt ${attempt + 1}/${maxAttempts})\n`,
       );
       await new Promise((r) => setTimeout(r, delayMs));
     }
