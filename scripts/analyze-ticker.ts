@@ -44,7 +44,10 @@ import { isTursoConfigured, pushTickerFromFixtures, fetchEarningsTranscriptBundl
 import { mostRecentQuarter } from '@stock-vetter/signals';
 import { getSecSection } from '@stock-vetter/core';
 
-const FIXTURES_ROOT = 'fixtures';
+// Defaults to 'fixtures' (production). Override with FIXTURES_ROOT to run an
+// isolated experiment (e.g. a different model, or the prompt-cache A/B) without
+// overwriting the canonical fixtures or touching the live web viewer.
+const FIXTURES_ROOT = process.env.FIXTURES_ROOT ?? 'fixtures';
 
 type TickerConfig = {
   videos?: string[];
@@ -394,12 +397,12 @@ async function processPrimaryChecklist(
     console.error(
       `[primary-source] Pass 1 citations: ${pass1Verification.exact}/${pass1Verification.total} exact, ` +
         `${pass1Verification.whitespaceNormalized} ws-norm, ${pass1Verification.caseInsensitive} case-only, ` +
-        `${pass1Verification.punctuationNormalized} punct-norm, ${pass1Verification.noMatch} no-match`,
+        `${pass1Verification.punctuationNormalized} punct-norm, ${pass1Verification.tableNormalized} table-norm, ${pass1Verification.noMatch} no-match`,
     );
     console.error(
       `[primary-source] Pass 2 citations: ${pass2Verification.exact}/${pass2Verification.total} exact, ` +
         `${pass2Verification.whitespaceNormalized} ws-norm, ${pass2Verification.caseInsensitive} case-only, ` +
-        `${pass2Verification.punctuationNormalized} punct-norm, ${pass2Verification.noMatch} no-match`,
+        `${pass2Verification.punctuationNormalized} punct-norm, ${pass2Verification.tableNormalized} table-norm, ${pass2Verification.noMatch} no-match`,
     );
     if (pass1Verification.noMatch > 0) {
       console.error(`[primary-source] WARNING: ${pass1Verification.noMatch} Pass 1 citations could not be located`);
@@ -577,7 +580,7 @@ async function main() {
       console.error(`    ${stage.padEnd(25)} ${s.calls} calls  in=${s.inputTokens}t out=${s.outputTokens}t  $${s.cost.toFixed(3)}${cacheNote}`);
     }
   }
-  console.error(`  artifacts: fixtures/${upper}/decision-card.md`);
+  console.error(`  artifacts: ${join(FIXTURES_ROOT, upper, 'decision-card.md')}`);
 }
 
 main().catch((e) => {

@@ -1,0 +1,60 @@
+# AMZN — Decision Card
+
+**Verdict:** 🟡 Watchlist  •  **Weighted score:** 6.5 / 10
+
+*Generated:* 2026-06-25  •  *10-K:* `0001018724-26-000004`  •  *Analyst videos:* 0
+
+> *No analyst content configured for this ticker — verdict based on primary sources only.*
+
+## Summary
+
+Amazon earns a Watchlist verdict, held back primarily by severely compressed owner earnings quality — 2025 free cash flow collapsed to $11.2B from $38.2B the prior year as the company deployed $128.3B in capital expenditures, leaving a FCF yield of just 0.39%. The moat is genuine and multi-layered across marketplace network effects, AWS switching costs, and Prime ecosystem lock-in, and the debt position is rock-solid. The valuation puzzle here is unusual: the reverse DCF implies only a 3.5% annual FCF growth requirement over 10 years against a 3-year actual CAGR of 44%, which suggests the stock is not expensive on a normalized FCF basis — but 'normalized' is doing enormous work, since the current capex cycle has temporarily obliterated cash generation and the market's P/E of 31.7x is against a 10-year median of just 7.7x, reflecting years of near-zero reported earnings. The key question an investor must answer is whether the $128B capex wave is a one-time step-change investment in AWS and AI infrastructure that will convert to durable free cash flow, or the beginning of a permanently higher reinvestment regime that structurally suppresses owner earnings.
+
+*Total LLM cost for this analysis:* $1.13 *(re-runs hit cache and cost $0).*
+
+## Dimension scores
+
+| Dimension | Score | Range | Uncertainty | Effective weight |
+|---|---|---|---|---|
+| Moat durability | **7.5** | 0.0 | tight | 0.20 |
+| Owner earnings quality | **4.0** | 0.0 | tight | 0.20 |
+| Capital allocation | **6.0** | 0.0 | tight | 0.20 |
+| Debt sustainability | **8.0** | 0.0 | tight | 0.15 |
+| Insider alignment | **8.5** | 0.5 | tight | 0.10 |
+| Cyclicality awareness | **6.0** | 0.0 | tight | 0.15 |
+
+### Dimension reasoning
+
+**Moat durability (7.5):** Pass 2 explicitly found no material evidence missed by Pass 1, recommending a zero adjustment. The GPU/semiconductor supply concern Pass 2 surfaces is correctly characterized as a capital/supply chain risk rather than a structural moat issue. Pass 1's scoring already incorporated the key competitive threats from well-funded cloud rivals and AI-enabled new entrants, and the multi-layered moat sources (Prime ecosystem, AWS switching costs, marketplace network effects) are well-supported by the primary sources.
+
+**Owner earnings quality (4.0):** Pass 2 explicitly recommended zero adjustment and confirmed Pass 1's score of 4 is well-calibrated. Pass 2's additional citations either reaffirm Pass 1's existing concerns (non-operating Anthropic gains inflating GAAP net income, FCF collapse to $11.2B) or introduce a mild positive (conservative useful-life shortening adding $1.4B depreciation) that is insufficient to materially change the dimension's character. The dominant quality concern—that $11.2B in free cash flow against a $2.5T market cap reflects extremely thin owner earnings at this investment stage—remains unchallenged.
+
+**Capital allocation (6.0):** Pass 2 explicitly recommended 0 adjustment and its two cited items (transitory tax benefit and depreciation life change) are acknowledged to be too small to materially affect the capital allocation assessment. Pass 1 already captured the key tensions: massive capex compressing FCF, no buybacks for three consecutive years, and a concentrated Anthropic bet. Pass 2 found no additional evidence that would shift the score, and the positive evidence it cited (AWS asset and income growth) was already implicit in Pass 1's framing of the reinvestment thesis as strategically coherent. Score of 6 stands.
+
+**Debt sustainability (8.0):** Pass 2 independently confirmed all of Pass 1's key findings: no financial covenants, 14.1-year weighted-average maturity, $123B liquidity vs $68.8B debt, ~60x interest coverage, and fully undrawn revolving facilities. Pass 2 found no additional material concerns beyond what Pass 1 already acknowledged in its counter-evidence (massive total contractual commitments of $439.7B and thin near-term FCF of $11.2B due to elevated capex). With zero recommended adjustment and strong corroboration of Pass 1's analysis, the score of 8 stands unchanged.
+
+**Insider alignment (8.5):** Pass 2 found no additional material concerns beyond what Pass 1 already identified and reflected in the score. The rebuttal confirmed the positive features (anti-hedging policy, RSU-only director comp, no post-termination vesting) and noted the clawback policy is standard rather than deficient. With Pass 2 recommending zero adjustment and the primary sources supporting Pass 1's characterization of Bezos's 8.8% stake, Jassy's RSU-anchored compensation, and the absence of golden parachutes, the 8.5 score stands as well-calibrated.
+
+**Cyclicality awareness (6.0):** Pass 2 found no new primary-source evidence materially changing the assessment, explicitly recommending zero adjustment. Pass 2's cited seasonal cash flow patterns and fixed-cost operating leverage were already embedded in Pass 1's counter-evidence. The score of 6 accurately reflects the dual nature of Amazon's cyclicality: meaningful retail/Q4 exposure and tariff sensitivity offset by AWS's long-term contract structure and strong 20% growth providing through-cycle ballast.
+
+## Valuation context
+
+- Reverse DCF (10% discount, 20× terminal): market is pricing in **3.5%** annual FCF growth for 10 years.
+- Actual delivered 5-year FCF CAGR: **16.1%**
+- Gap: -12.6pp *(price embeds growth below the historical track record)*
+
+See `reverse-dcf.md` for full sensitivity grid.
+
+## Things to verify before acting
+
+- Track quarterly capex in each 10-Q through 2026 to determine whether the $128.3B 2025 spend is peaking or accelerating. If capex as a percentage of operating cash flow is not declining by late 2026, the 'temporary compression' thesis breaks down and FCF normalization may be years away.
+- Disaggregate AWS revenue growth and operating margin trends in each earnings release. AWS operating income must grow faster than consolidated capex to justify the infrastructure investment; if AWS margins compress while capex rises, capital allocation discipline is worse than the current score implies.
+- Reconcile the historical P/E median (7.7x) with the current 31.7x by examining whether prior-year earnings were artificially depressed by accounting choices or genuine business underperformance. Read the 10-year trend of GAAP net income vs. operating cash flow to understand what the median P/E actually represents.
+- Review Amazon's 2025 10-K capital commitments footnote for uncommenced lease obligations and purchase commitments beyond the $128.3B already spent. The true capital commitment pipeline may extend the FCF compression period beyond what is visible in the headline capex figure.
+- Check CEO Andy Jassy's most recent earnings call commentary and investor day materials for any explicit capex guidance or FCF targets for 2026-2027. If management is not offering FCF-per-share targets, that itself is a signal worth weighing.
+- Assess the advertising segment's revenue and margin trajectory across the last four quarters. Advertising is Amazon's highest-margin and most FCF-generative business segment; a slowdown there would materially worsen the owner earnings picture even if AWS holds steady.
+- Stress-test the reverse DCF assumption by running it at a 15% discount rate and a 15x terminal multiple to reflect the possibility that the terminal multiple compresses as Amazon matures. Determine what FCF CAGR the stock requires under those conditions to break even, and assess whether that is achievable given the capex cycle.
+
+---
+
+*This card is a synthesis of the primary-source value-investing checklist (3 LLM passes per dimension, triple-sampled), reverse DCF, historical valuation context, and no analyst content. Citations and full reasoning live in `primary-source-checklist.md` and `reverse-dcf.md`. The tool produces this card to inform your judgment, not to substitute for it.*

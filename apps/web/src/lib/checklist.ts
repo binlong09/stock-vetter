@@ -18,6 +18,7 @@ export type MatchTier =
   | 'whitespace-normalized'
   | 'case-insensitive'
   | 'punctuation-normalized'
+  | 'table-normalized'
   | 'no-match';
 
 const VerificationDetail = z.object({
@@ -79,6 +80,8 @@ export function matchTierMeta(tier: MatchTier | undefined): {
       return { label: 'verbatim (case)', pill: 'bg-amber-50 text-amber-800 border-amber-200' };
     case 'punctuation-normalized':
       return { label: 'verbatim (punct.)', pill: 'bg-amber-50 text-amber-800 border-amber-200' };
+    case 'table-normalized':
+      return { label: 'verbatim (table)', pill: 'bg-amber-50 text-amber-800 border-amber-200' };
     case 'no-match':
       return { label: 'not located', pill: 'bg-rose-50 text-rose-700 border-rose-200' };
     default:

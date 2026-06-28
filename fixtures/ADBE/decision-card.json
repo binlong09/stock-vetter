@@ -1,107 +1,106 @@
 {
   "ticker": "ADBE",
-  "generatedAt": "2026-05-12T06:34:48.466Z",
-  "verdict": "Watchlist",
-  "weightedScore": 7.050000000000001,
-  "summary": "Adobe is a Watchlist candidate with a compelling valuation anomaly at the center of the thesis. The reverse DCF implies the market is pricing in a -3.4% annual FCF contraction over the next decade, against a 3-year actual of 10% and 5-year actual of 13.2% — an extraordinarily wide gap that suggests either the market is deeply wrong or the AI disruption risk to Adobe's creative seat model is being priced as near-terminal. The business itself scores well on earnings quality and cyclicality resistance, underpinned by a subscription model with high cash conversion and predictable churn characteristics. The weakest dimension is capital allocation: buybacks have been executed at scale and at optically cheap prices, but the $11.28B repurchased in fiscal 2025 exceeded reported FCF, implying debt or cash drawdown rather than surplus capital — and no dividend or M&A pipeline provides a second leg to the capital return story. The core question this card cannot answer is whether the AI transition (seat shrinkage offset by generative credit pricing) will sustain or erode the revenue growth rate that the current valuation demands almost nothing of.",
+  "generatedAt": "2026-06-25T05:39:07.810Z",
+  "verdict": "Pass",
+  "weightedScore": 6.1000000000000005,
+  "summary": "Adobe is a Pass at current scoring, with the decisive drag coming from capital allocation: the company repurchased $11.28 billion in shares in fiscal 2025 — exceeding its own FCF — at valuations that were historically elevated, destroying value per share in a way that is difficult to reverse. The moat and balance sheet are both genuinely strong, but aggressive buybacks funded partly by incremental debt, combined with mounting AI monetization uncertainty (will Firefly usage-based credits actually offset seat-count pressure?), pull the overall score below threshold. The reverse DCF is the sharpest signal in this card: the stock's current multiples imply a negative 6.5% annual FCF decline over a decade, against an actual 5-year CAGR of 13.2% — this is a historically cheap valuation on any backward-looking metric, and a patient investor could be right that AI fears are overpriced. The reason this is still a Pass rather than a Watchlist is that the capital allocation score is 3.5 with tight confidence, meaning the primary-source evidence is clear and not noisy, and no single dimension offsetting factor is strong enough to overcome it under the scoring rules.",
   "dimensions": {
     "moatDurability": {
-      "finalScore": 7,
+      "finalScore": 6.5,
       "range": 0,
       "uncertainty": "tight",
       "effectiveWeight": 0.2,
-      "rationale": "Pass 2 explicitly agreed with Pass 1's score of 7 and recommended zero adjustment, finding no material concerns that Pass 1 failed to address. Pass 2's rebuttal confirms that the primary sources support both the moat strengths (integrated platform, Firefly IP indemnification, four-decade brand leadership, workflow switching costs) and the competitive risks (limited barriers to entry, AI-native competition) that Pass 1 already weighed. No new evidence surfaced to alter the assessment."
+      "rationale": "Pass 2 found no material new evidence beyond what Pass 1 already incorporated. The one incremental point raised — third-party model supply-side risk — is acknowledged as minor and execution-level rather than structural. Pass 1's 6.5 appropriately balances the genuine ecosystem and PDF-standard moat against credible AI-native competitive threats explicitly enumerated in the Risk Factors."
     },
     "ownerEarningsQuality": {
-      "finalScore": 8.5,
+      "finalScore": 6.5,
+      "range": 0,
+      "uncertainty": "tight",
+      "effectiveWeight": 0.2,
+      "rationale": "Pass 2 conducted an independent review of deferred revenue conversion quality, capitalized contract acquisition costs, deferred tax distortions, and current vs. deferred tax splits, and found no material concerns beyond what Pass 1 already identified and weighted. Pass 2's analysis actually corroborates Pass 1's positive findings on cash conversion quality (1.4x ratio, high deferred revenue conversion) while confirming the SBC treadmill remains the primary offset. With Pass 2 recommending zero adjustment and its citations supporting rather than undermining Pass 1's scoring, the original 6.5 stands."
+    },
+    "capitalAllocation": {
+      "finalScore": 3.5,
       "range": 0.5,
       "uncertainty": "tight",
       "effectiveWeight": 0.2,
-      "rationale": "Pass 2 recommended zero adjustment and independently confirmed Pass 1's findings: OCF of $10.03B versus net income of $7.13B reflects clean subscription-model cash conversion, deferred revenue growth of $771M represents real advance payments, unbilled receivables of $74M are negligible relative to total receivables, and the $2.065B capitalized R&D deferred tax asset is a legitimate IRC Section 174 timing difference rather than earnings management. Pass 2 found no material concerns beyond what Pass 1 had already embedded in its analysis, particularly the SBC burden of $1.94B (~27% of OCF) which Pass 1 explicitly noted as the primary earnings quality caveat. The 8.5 score appropriately reflects high FCF conversion quality tempered by the real but fully disclosed SBC cost."
-    },
-    "capitalAllocation": {
-      "finalScore": 5.5,
-      "range": 0,
-      "uncertainty": "tight",
-      "effectiveWeight": 0.2,
-      "rationale": "Pass 2 found no material evidence that Pass 1 missed. Pass 2 explicitly confirmed the leverage-funded repurchase dynamic was already captured in Pass 1's citations (the $2B senior notes issuance alongside $11.28B buybacks), and agreed that the near-zero net debt position and $10B+ operating cash flow mitigate this concern. Pass 2 also concurred that the Semrush acquisition is not a meaningful capital allocation red flag. The $1B Figma termination fee, the debt-funded buyback structure, and the historically cheap valuation context for repurchases were all properly weighed in Pass 1's 5.5 score, and Pass 2 recommended zero adjustment."
+      "rationale": "Pass 2 surfaces a genuinely under-weighted point: buybacks of $11.28B materially exceeded both net income ($7.13B) and operating cash flow ($10.03B), with the gap partially filled by $2B in new debt issuance — a structural concern Pass 1 acknowledged only implicitly in noting 'levered up to accelerate repurchases' without quantifying the income/FCF exceedance. However, Pass 2's recommended adjustment of -0.5 is modest and the underlying concern is real but not catastrophic given the subscription-model FCF durability. A partial adjustment of -0.5 is warranted, bringing the score from 4 to 3.5, reflecting that debt-financed buybacks exceeding earnings is a genuine discipline concern but not a severe one given the $10B operating cash flow base."
     },
     "debtSustainability": {
       "finalScore": 7.5,
-      "range": 0.5,
+      "range": 0,
       "uncertainty": "tight",
       "effectiveWeight": 0.15,
-      "rationale": "Pass 2 provided no new primary-source citations and explicitly concluded that Pass 1's score was appropriate. The primary sources confirm: interest coverage ~33-40x, $6.6B cash vs $6.2B gross debt (near-net-cash), no current debt maturities, $10B+ operating cash flow, and no covenant or going-concern issues. Pass 1 already acknowledged the key risks (gross debt up from $4.1B to $6.2B, aggressive buybacks, $2.7B floating-rate swap exposure), making 7.5 a fair reflection of strong but not exceptional debt sustainability."
+      "rationale": "Pass 2 fully confirmed Pass 1's analysis and explicitly recommended no adjustment, finding no new evidence from primary sources beyond what Pass 1 already addressed. The debt sustainability picture is strong: 33x interest coverage, no financial covenants, staggered maturities through 2035, undrawn $1.5B revolver, and $10B+ annual OCF dwarfing the $6.15B debt load. The modest concerns about rising interest expense, slightly negative net cash, and the pending Semrush acquisition were already properly weighted by Pass 1."
     },
     "insiderAlignment": {
-      "finalScore": 6,
+      "finalScore": 5.5,
       "range": 0,
       "uncertainty": "tight",
       "effectiveWeight": 0.1,
-      "rationale": "Pass 2's rebuttal surfaces three genuinely incremental positives not weighted in Pass 1: (1) the proxy affirmatively confirms all NEOs were in compliance with ownership guidelines as of November 28, 2025, partially resolving Pass 1's concern about unverifiable ownership levels; (2) comprehensive anti-hedging and anti-pledging policies explicitly prohibiting short sales, derivatives, margin accounts, pledging, prepaid variable forwards, equity swaps, exchange funds, and collars — a structural protection Pass 1 omitted entirely; and (3) dual clawback policies covering both incentive and time-based equity beyond the statutory minimum. These are real, verified positives confirmed in the primary source text. However, Pass 2's recommended adjustment of +0.5 slightly overstates the net impact given that the 80% say-on-pay concern and the $45.5M equity award increase remain unrebutted negatives, and the ownership compliance confirmation is procedural rather than a disclosure of actual share counts. A partial credit of roughly half the recommended adjustment is warranted, yielding a final score of 5.75, rounded to 6.0."
+      "rationale": "Pass 2 conducted an independent review of the proxy and confirmed Pass 1's assessment without surfacing any material new evidence. Both analysts agree that structural alignment mechanisms (20x CEO ownership guideline, dual clawbacks, anti-hedging/pledging policies, equity-heavy pay mix) are offset by thin absolute co-investment (<0.2% CEO ownership), 20% say-on-pay dissent, and a 47% shareholder vote supporting a golden parachute restriction proposal. The 5.5 score accurately reflects this balanced picture."
     },
     "cyclicalityAwareness": {
       "finalScore": 7.5,
       "range": 0,
       "uncertainty": "tight",
       "effectiveWeight": 0.15,
-      "rationale": "Pass 2 recommended zero adjustment and found no material new evidence beyond what Pass 1 already identified and weighed. Pass 2's only incremental point—government sector budget/shutdown risk—is minor and explicitly acknowledged as such by Pass 2 itself, given government is not a dominant revenue segment. Pass 1's score of 7.5 appropriately balances Adobe's subscription-smoothed revenue model against its genuine enterprise cyclical exposure, and neither analyst surfaced primary-source evidence contradicting that calibration."
+      "rationale": "Pass 2 independently reviewed the same primary sources and found no new material evidence that Pass 1 had missed or underweighted. Both analysts identified the same key evidence: the 96% subscription revenue base, 11.5% ARR growth through macro uncertainty, management's explicit acknowledgment of relative predictability, and the enterprise spend scrutiny risk. Pass 2 recommended zero adjustment and explicitly agreed the 7.5 score appropriately reflects a predominantly subscription-based model with genuine but lagged cyclical exposure."
     }
   },
   "inputs": {
     "primarySourceFiling": "0000796343-26-000003",
     "proxyFiling": null,
     "analystVideoCount": 1,
-    "reverseDcfCentralImpliedCagr": -0.034375,
+    "reverseDcfCentralImpliedCagr": -0.06455078125000001,
     "actualFcf5yCagr": 0.13166711980319734
   },
-  "totalLlmCost": 0.80109495,
+  "totalLlmCost": 1.5288146399999998,
   "crossSourceFindings": [
     {
-      "topic": "Valuation multiple and implied upside",
-      "analystView": "At 14x trailing FCF (ex-SBC), Adobe trades at a historically deep discount implying 43-79% upside to a 20-25x fair multiple.",
-      "primarySourceView": "The reverse DCF corroborates the cheapness signal: implied -3.4% FCF CAGR versus 10-13% actuals is an extreme gap. However, GAAP FCF inclusive of SBC (~$1.5-2B annually) pushes the true multiple closer to 17x, narrowing the stated margin of safety.",
+      "topic": "Valuation vs. historical multiples",
+      "analystView": "At roughly 14x trailing FCF the stock is priced for near-zero growth; AI fears appear excessive given a decade of compounding, implying significant mean-reversion upside.",
+      "primarySourceView": "The reverse DCF confirms the market is pricing in a -6.5% annual FCF decline over 10 years against an actual 5-year CAGR of 13.2%. Current EV/EBIT of 9.1x vs. a 10-year median of 40.1x makes the stock look statistically distressed. The primary-source check agrees the multiple is historically low but flags that monetization uncertainty justifies some discount.",
       "agreement": "partial"
     },
     {
-      "topic": "Moat durability",
-      "analystView": "Proprietary file formats (PSD, PDF), suite integration, and Firefly's commercial safety advantage create durable switching costs not easily displaced by AI-native entrants.",
-      "primarySourceView": "Primary sources score moat at 7.0 with tight confidence, affirming the multi-dimensional switching cost story but flagging Canva's upmarket move via Affinity, Salesforce encroachment on Digital Experience, and the risk that AI abstraction layers reduce format lock-in.",
+      "topic": "Moat durability and switching costs",
+      "analystView": "PSD/PDF proprietary formats, ~35-40% Premiere Pro market share, and deep enterprise workflow integration create durable, high switching-cost moats.",
+      "primarySourceView": "The moat score of 6.5 (tight) agrees the moat is real and multi-layered, but Canva via Affinity is moving upmarket and Salesforce is encroaching on Digital Experience. The moat is durable but not impregnable, and competitive threats are more active than the analyst's framing implies.",
       "agreement": "partial"
     },
     {
-      "topic": "Share buyback discipline and capital allocation quality",
-      "analystView": "Adobe repurchased $9.5B in shares while the stock was depressed, demonstrating countercyclical conviction and management confidence.",
-      "primarySourceView": "Capital allocation scores 5.5. The $11.28B in fiscal 2025 buybacks exceeded reported FCF, implying debt or cash reserve drawdown rather than pure surplus capital return. Net cash of only ~$229M confirms balance sheet has been materially deployed, limiting optionality.",
+      "topic": "Capital allocation and share buybacks",
+      "analystView": "$9.5B in buybacks over the past year at a depressed stock price compounds per-share value creation.",
+      "primarySourceView": "The primary-source check scores capital allocation 3.5 (tight). The $11.28B in fiscal 2025 repurchases exceeded reported FCF, required incremental debt issuance, and were executed when the stock was still trading at elevated multiples. Buybacks at a 'depressed' price is only true at current levels; the bulk of the buyback program was conducted at far higher prices across prior years.",
       "agreement": "disagree"
     },
     {
-      "topic": "Revenue growth trajectory",
-      "analystView": "High single-digit to low double-digit growth expected to continue, justifying a re-rating to 20-25x.",
-      "primarySourceView": "Revenue growth has been decelerating per public disclosures. No segment-level acceleration evidence is present in the 10-K data reviewed. The reverse DCF requires only marginal positive FCF growth to be vindicated, so the growth assumption matters less for the valuation case than the analyst's framing implies.",
+      "topic": "AI monetization via Firefly usage-based credits",
+      "analystView": "Even if AI reduces seat count, Adobe can offset revenue through usage-based Firefly credit monetization, making the per-seat transition manageable.",
+      "primarySourceView": "The analyst explicitly flags this as a high-severity risk not fully addressed in the model. No primary-source data yet confirms that Firefly credit revenue is ramping fast enough to offset seat-count pressure; the transition introduces real FCF compression risk not captured in trailing figures.",
       "agreement": "disagree"
     },
     {
-      "topic": "AI partnership leverage (Google/OpenAI distribution)",
-      "analystView": "Leading AI model providers distributing through Adobe's platform position it as AI infrastructure rather than a displaced incumbent.",
-      "primarySourceView": "Primary sources treat this as a near-term positive but a high-severity reversal risk: if any major AI provider achieves sufficient scale, direct customer relationships could be established, unwinding the distribution advantage. Neither source has quantitative evidence of partnership revenue contribution.",
-      "agreement": "partial"
+      "topic": "AI distribution advantage",
+      "analystView": "Because no dominant AI model has emerged, Adobe's distribution advantage embedded in creative workflows matters more than model quality, giving it a durable position.",
+      "primarySourceView": "The owner earnings and moat dimensions both support the view that Adobe's workflow integration is a genuine distribution moat. The primary-source concern is the tail risk of a vertically integrated provider (Google, OpenAI) withdrawing model access, which the analyst acknowledges. This is the one thesis element both sources find credible.",
+      "agreement": "agree"
     },
     {
-      "topic": "Seat shrinkage risk from AI-driven efficiency",
-      "analystView": "Seat loss can be offset by per-user generative credit pricing and enterprise consumption models capturing AI usage rather than headcount.",
-      "primarySourceView": "This is the highest-uncertainty dimension of the thesis. The transition mechanism is plausible but unquantified — elasticity between seat loss and credit pricing adoption is unknown, and no disclosed evidence of material credit monetization exists yet. Both sources agree this is the swing variable.",
-      "agreement": "partial"
+      "topic": "Fair multiple target and near-term upside",
+      "analystView": "Applying a 20-25x forward P/FCF to $7.9B in FCF implies 43-79% upside within one year.",
+      "primarySourceView": "The primary-source valuation framework does not support this as a base case. The 20-25x target is supported by no comparable company analysis or DCF back-solve, uses a trailing FCF figure that may compress if Firefly monetization underdelivers, and assumes multiple expansion back toward historical norms with no catalysts identified for that re-rating.",
+      "agreement": "disagree"
     }
   ],
   "thingsToVerify": [
-    "Pull the fiscal 2025 10-K cash flow statement and reconcile: operating cash flow ($10.03B) vs. net buybacks ($11.28B) vs. debt issuance/repayment and ending cash balance. Confirm whether buybacks were funded by FCF surplus, debt drawdown, or existing cash — this directly determines whether capital allocation is disciplined or over-extended.",
-    "On the next earnings call (Q1 FY2026), listen for any disclosure of generative credit attach rates or consumption-based revenue as a percentage of Creative Cloud ARR. This is the single most important leading indicator of whether the seat-shrinkage offset thesis is materializing.",
-    "Calculate GAAP FCF (operating cash flow minus capex minus SBC) and compare to the analyst's ex-SBC '14x FCF' framing. If SBC runs at $1.5-2B annually, the GAAP FCF yield is meaningfully lower — verify that the valuation cheapness holds on the more conservative basis.",
-    "Check the most recent Canva enterprise pricing page and any Affinity integration announcements. The Canva upmarket threat is the most concretely specifiable competitive risk; tracking whether Canva has crossed into $50k+ enterprise deal territory would update the moat durability score.",
-    "Run the reverse DCF at a range of discount rates (8%, 10%, 12%) and terminal multiples (15x, 20x, 25x) to stress-test the -3.4% implied CAGR. At what assumed terminal multiple does Adobe require positive FCF growth to justify the current price? This tells you how much the terminal value assumption is doing in the bull case.",
-    "Review the 'Remaining Performance Obligations' (RPO) disclosure in the most recent 10-Q. For a subscription business, RPO growth rate is a leading indicator of revenue trajectory 12-24 months forward and can confirm or refute the revenue deceleration concern before it shows up in reported revenue.",
-    "Verify the $6.2B long-term debt maturity schedule in the 10-K notes. With net cash of ~$229M, confirm there are no near-term (1-3 year) maturities that would compete with buybacks for capital allocation priority and could force refinancing at higher rates."
+    "Pull the fiscal 2025 10-K (or most recent 10-Q) and isolate Firefly usage-based revenue as a separate line item if disclosed, or find it in management commentary. The entire bull thesis depends on Firefly credits growing fast enough to offset seat-count pressure — if this figure is not being disclosed separately yet, that itself is a risk signal.",
+    "Reconstruct the actual per-share FCF buyback math: take the $11.28B in fiscal 2025 repurchases and compare to the average repurchase price disclosed in the 10-K vs. the share price at the time. The analyst claims buybacks were at a 'depressed' price; the primary-source check disputes this. The 10-K will show weighted-average repurchase prices by quarter.",
+    "Check the long-term debt schedule in the 10-K. If total senior notes outstanding have grown over the past 2-3 fiscal years while FCF has not proportionally expanded, the buyback program is partially debt-funded — a material capital allocation red flag that the analyst's card does not address.",
+    "Listen to the most recent earnings call (Q4 FY2025 or Q1 FY2026) specifically for management's quantitative guidance on Digital Media ARR growth. The capital allocation concern is only redeemable if organic growth re-accelerates; management's own forward ARR guidance is the leading indicator.",
+    "Run a simple downside scenario: if FCF compresses 15-20% from the fiscal 2025 $7.9B figure (reflecting seat-count pressure before Firefly offsets), what does the stock yield at current prices? At an 11.8% FCF yield today, a 15% FCF compression implies roughly a 10% yield — still attractive, but check whether that scenario changes your conviction level before sizing a position.",
+    "Review the proxy statement to assess executive compensation structure. With insider ownership below 0.2% and no founder-operator dynamic, confirm whether the compensation plan is tied to per-share FCF growth or total FCF/revenue — if it is the latter, management has incentive to grow the denominator rather than optimize for per-share outcomes."
   ],
-  "divergenceCommentary": "The most material disagreement between the analyst and primary-source data is on buyback quality. The analyst frames $9.5B in repurchases as countercyclical discipline; the 10-K data shows fiscal 2025 buybacks of $11.28B exceeded reported FCF entirely, implying the balance sheet was used as a funding source rather than surplus cash. When sources disagree on a fact — specifically, whether buybacks were within-FCF or not — trust the 10-K. A second disagreement on revenue growth is less resolvable: the analyst asserts continued high-single-digit growth without modeling it; primary sources note deceleration but neither source has current segment data. The valuation case is unusual in that it requires almost no growth to be justified by the reverse DCF, which partially defuses this disagreement — but it also means that if AI disruption does accelerate seat churn, the FCF could inflect negative faster than either source has modeled."
+  "divergenceCommentary": "The most important disagreement between the analyst card and the primary-source check is on capital allocation. The analyst frames recent buybacks as value-accretive because the stock is 'depressed'; the primary-source check reaches the opposite conclusion because the buyback program in aggregate — including prior years at 40-45x earnings — destroyed capital at scale, and the fiscal 2025 program exceeded FCF and required incremental debt. When sources disagree on a fact like the average repurchase price vs. intrinsic value, trust the 10-K data over the analyst's narrative framing. The analyst's Watchlist verdict versus the primary-source Pass is also driven by the analyst treating the 20-25x multiple re-rating as a reasonable base case, while the primary-source framework does not credit unanchored multiple expansion as a reason to buy — particularly when the underlying capital allocation discipline that would justify a premium multiple is not present."
 }

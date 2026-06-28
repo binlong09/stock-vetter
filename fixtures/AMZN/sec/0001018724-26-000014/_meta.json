@@ -1,0 +1,88 @@
+{
+  "ticker": "AMZN",
+  "cik": "0001018724",
+  "accession": "0001018724-26-000014",
+  "form": "10-Q",
+  "filingDate": "2026-04-30",
+  "primaryDocument": "amzn-20260331.htm",
+  "parsedAt": "2026-06-25T05:28:14.410Z",
+  "cleanedTextLength": 195475,
+  "sections": [
+    {
+      "id": "financial-statements",
+      "label": "Financial Statements",
+      "itemNumber": "1",
+      "charLength": 130,
+      "confidence": "failed",
+      "warnings": [
+        "incorporation-by-reference: real content lives elsewhere in the filing"
+      ],
+      "chosenAnchor": {
+        "text": "Item 1.Legal Proceedings",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "risk-factors",
+      "label": "Risk Factors (updates)",
+      "itemNumber": "1A",
+      "charLength": 60809,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "Item 1A.Risk Factors",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "mda",
+      "label": "Management's Discussion and Analysis",
+      "itemNumber": "2",
+      "charLength": 71,
+      "confidence": "failed",
+      "warnings": [
+        "Section length 71 far below floor — likely TOC entry or missing content"
+      ],
+      "chosenAnchor": {
+        "text": "Item 2.Unregistered Sales of Equity Securities and Use of Proceeds",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    },
+    {
+      "id": "quant-risk",
+      "label": "Quantitative and Qualitative Disclosures About Market Risk",
+      "itemNumber": "3",
+      "charLength": 3503,
+      "confidence": "high",
+      "warnings": [],
+      "chosenAnchor": {
+        "text": "Item 3.Defaults Upon Senior Securities",
+        "score": 5,
+        "signals": [
+          "descendant-bold",
+          "top-level-body-descendant"
+        ]
+      }
+    }
+  ],
+  "parserWarnings": [
+    "Item not extracted cleanly: financial-statements",
+    "Item not extracted cleanly: mda"
+  ],
+  "missing": [
+    "financial-statements",
+    "mda"
+  ]
+}
