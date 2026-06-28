@@ -15,6 +15,7 @@
     "allow-email": "tsx scripts/allow-email.ts",
     "signals-spike": "tsx scripts/signals-spike.ts",
     "track": "tsx scripts/track.ts",
+    "fetch-dram-price": "tsx scripts/fetch-dram-price.ts",
     "evaluate-signals": "tsx scripts/evaluate-signals.ts",
     "test-coldstart-widen": "tsx scripts/test-coldstart-widen.ts",
     "eval": "tsx scripts/eval.ts"
