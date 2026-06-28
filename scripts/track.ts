@@ -121,6 +121,49 @@ function daysAgoISO(days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+// Fully describe a thrown error for diagnostics — including the `cause` chain,
+// which is where undici/node hide the REAL transport failure ("Premature close"
+// is the wrapper; the cause is the actual socket error: ECONNRESET, UND_ERR_*,
+// timeout, etc.). Also surfaces Anthropic SDK fields (status, error type) and
+// any request_id for support. Walks up to 5 levels of cause to avoid loops.
+function describeError(err: unknown): string {
+  const lines: string[] = [];
+  let cur: unknown = err;
+  let depth = 0;
+  while (cur && depth < 5) {
+    const e = cur as {
+      name?: string;
+      message?: string;
+      code?: string;
+      status?: number;
+      type?: string;
+      request_id?: string;
+      error?: unknown;
+      cause?: unknown;
+      stack?: string;
+    };
+    const parts = [
+      e.name ? `name=${e.name}` : '',
+      e.code ? `code=${e.code}` : '',
+      e.status != null ? `status=${e.status}` : '',
+      e.type ? `type=${e.type}` : '',
+      e.request_id ? `request_id=${e.request_id}` : '',
+      e.message ? `message=${String(e.message).slice(0, 300)}` : '',
+    ].filter(Boolean);
+    lines.push(`${depth === 0 ? '' : `  └ cause[${depth}]: `}${parts.join(' ')}`);
+    // Anthropic SDK errors carry a structured `error` body; show it once.
+    if (depth === 0 && e.error && typeof e.error === 'object') {
+      lines.push(`  error-body=${JSON.stringify(e.error).slice(0, 300)}`);
+    }
+    cur = e.cause;
+    depth++;
+  }
+  // First few stack frames of the top-level error for locating the call site.
+  const stack = (err as { stack?: string })?.stack;
+  if (stack) lines.push(`  stack: ${stack.split('\n').slice(1, 4).map((s) => s.trim()).join(' | ')}`);
+  return lines.join('\n');
+}
+
 function parseArgs(argv: string[]): Flags {
   const oneYearAgo = (() => {
     const d = new Date();
@@ -356,17 +399,36 @@ async function main(): Promise<void> {
 
       const signals: Signal[] = [];
       const evaluations: EvaluationRecord[] = [];
+      // Events whose evaluation threw (e.g. an LLM call that exhausted its
+      // retries on a transient connection failure). We isolate the failure so
+      // one bad pair doesn't abort the whole run, and we EXCLUDE these events
+      // from the persisted cursor below so the next run re-attempts them rather
+      // than silently dropping the signal.
+      const failedEventKeys = new Set<string>();
       let noCandidate = 0;
       for (const { event, watchItem } of pairs) {
-        const outcome = await evaluatePair({
-          thesis,
-          watchItem,
-          event,
-          allEvents: fetched,
-          reverseDcfByTicker: dcfByTicker,
-          tracker,
-          now,
-        });
+        let outcome: Awaited<ReturnType<typeof evaluatePair>>;
+        try {
+          outcome = await evaluatePair({
+            thesis,
+            watchItem,
+            event,
+            allEvents: fetched,
+            reverseDcfByTicker: dcfByTicker,
+            tracker,
+            now,
+          });
+        } catch (err) {
+          failedEventKeys.add(event.dedupKey);
+          console.error(
+            `  ⚠ eval failed — skipping (will retry next run):\n` +
+              `  thesis=${thesis.id} watchItem=${watchItem.id}\n` +
+              `  event: source=${event.source} ticker=${event.ticker} date=${event.date} dedupKey=${event.dedupKey}\n` +
+              `  title=${event.title.slice(0, 160)}\n` +
+              describeError(err),
+          );
+          continue;
+        }
         // Eval-log row for EVERY evaluated pair (these `pairs` already passed
         // watch-item mapping — filtered events never reach here). A neutral
         // signal is logged as 'neutral'; a directional signal as 'signal'.
@@ -411,7 +473,17 @@ async function main(): Promise<void> {
       await writeFile(join('fixtures/theses', `${thesis.id}.md`), card, 'utf-8');
 
       if (!flags.dryRun) {
-        await writeCursor(thesis.id, newEvents, nextCursor);
+        // Advance the cursor over everything we evaluated, EXCEPT events that
+        // failed — leave those unseen so the next run retries them. (writeCursor
+        // marks seen from newEvents on the Turso path and from nextCursor.seenKeys
+        // on the local path, so we filter both.)
+        const persistEvents = failedEventKeys.size
+          ? newEvents.filter((e) => !failedEventKeys.has(e.dedupKey))
+          : newEvents;
+        const persistCursor = failedEventKeys.size
+          ? { ...nextCursor, seenKeys: nextCursor.seenKeys.filter((k) => !failedEventKeys.has(k)) }
+          : nextCursor;
+        await writeCursor(thesis.id, persistEvents, persistCursor);
         if (usingTurso) {
           // Persist the individual signals (web-view source), the eval log (what
           // this run evaluated, incl. dismissed cases), AND the aggregate status.
