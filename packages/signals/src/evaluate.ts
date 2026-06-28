@@ -140,8 +140,19 @@ function isExhibitWorthReading(name: string): boolean {
   return /pr|press|commentary|cfo|exhibit|ex-?99|earnings|q\dfy/i.test(name);
 }
 
-async function loadSecContent(event: Event): Promise<string> {
-  if (!event.url) return `(${event.source} ${event.title} — no document URL available)`;
+const SEC_FORM_LABEL: Record<string, string> = { 'sec-8k': '8-K', 'sec-10q': '10-Q', 'sec-10k': '10-K' };
+
+// Returns the parsed body text AND an EFFECTIVE dataQuality describing what was
+// actually parsed. The event's INGEST-time dataQuality says "filing metadata
+// only (body not yet parsed)" because ingest only sees metadata — but here we
+// fetch the primary document and exhibits (8-K Ex-99 earnings releases). Passing
+// the stale string to the judge made it wrongly cap confidence ("body not yet
+// parsed") even though it had the full text. So we recompute it.
+async function loadSecContent(event: Event): Promise<{ text: string; dataQuality: string }> {
+  const base = `source=SEC EDGAR ${SEC_FORM_LABEL[event.source] ?? event.source}`;
+  if (!event.url) {
+    return { text: `(${event.source} ${event.title} — no document URL available)`, dataQuality: `${base}; no document URL — metadata only` };
+  }
   const primaryHtml = await fetchText(event.url);
   const primaryText = primaryHtml ? htmlToText(primaryHtml) : '';
 
@@ -173,7 +184,18 @@ async function loadSecContent(event: Event): Promise<string> {
   const parts = [...exhibitParts];
   if (primaryText) parts.push(`[primary document]\n${primaryText}`);
   const joined = parts.join('\n\n').trim();
-  return (joined || `(${event.source} ${event.title} — no readable content)`).slice(0, SEC_BODY_CHAR_LIMIT);
+  if (!joined) {
+    return { text: `(${event.source} ${event.title} — no readable content)`, dataQuality: `${base}; body fetch returned no readable text — metadata only` };
+  }
+  const text = joined.slice(0, SEC_BODY_CHAR_LIMIT);
+  const exNote = exhibitParts.length
+    ? ` + ${exhibitParts.length} exhibit(s) (incl. Ex-99 earnings release where present)`
+    : '';
+  const truncNote = joined.length > SEC_BODY_CHAR_LIMIT ? `; truncated to ${SEC_BODY_CHAR_LIMIT} chars` : '';
+  return {
+    text,
+    dataQuality: `${base}; parsed ${primaryText ? 'primary document' : 'exhibits only'}${exNote}${truncNote}`,
+  };
 }
 
 // What the extractor sees as "the event's content". For SEC events we fetch the
@@ -187,12 +209,16 @@ async function loadEventContent(
   event: Event,
   tracker: CostTracker,
   now: string,
-): Promise<string | null> {
+): Promise<{ content: string; dataQuality: string } | null> {
   if (event.source === 'sec-8k' || event.source === 'sec-10q' || event.source === 'sec-10k') {
     try {
-      return await loadSecContent(event);
+      const { text, dataQuality } = await loadSecContent(event);
+      return { content: text, dataQuality };
     } catch (err) {
-      return `(SEC document fetch error: ${err instanceof Error ? err.message : String(err)})`;
+      return {
+        content: `(SEC document fetch error: ${err instanceof Error ? err.message : String(err)})`,
+        dataQuality: `${event.dataQuality}; body fetch ERRORED — metadata only`,
+      };
     }
   }
   if (event.source === 'av-transcript') {
@@ -200,15 +226,15 @@ async function loadEventContent(
     if (!quarter) return null;
     const norm = await getNormalizedTranscript(event.ticker, quarter, tracker, now);
     if (!norm) return null; // AV has no transcript for this quarter → no candidate
-    return `${event.title}\n\n${norm.normalizedText}`;
+    return { content: `${event.title}\n\n${norm.normalizedText}`, dataQuality: event.dataQuality };
   }
   // A manual event may carry a long free-text body (e.g. a transcript) under
   // payload.transcriptText — return it as RAW text, not a JSON-escaped blob.
   if (typeof event.payload.transcriptText === 'string') {
-    return `${event.title}\n\n${event.payload.transcriptText}`;
+    return { content: `${event.title}\n\n${event.payload.transcriptText}`, dataQuality: event.dataQuality };
   }
   // FMP / manual: the payload is the fact.
-  return `${event.title}\n\n${JSON.stringify(event.payload, null, 2)}`;
+  return { content: `${event.title}\n\n${JSON.stringify(event.payload, null, 2)}`, dataQuality: event.dataQuality };
 }
 
 // ---- quantitative inputs for the critique --------------------------------
@@ -511,10 +537,10 @@ export async function evaluatePair(opts: {
   const { thesis, watchItem, event } = opts;
   const now = opts.now ?? '1970-01-01T00:00:00.000Z';
 
-  const content = await loadEventContent(event, opts.tracker, now);
+  const loaded = await loadEventContent(event, opts.tracker, now);
   // Null content (e.g. an av-transcript with no transcript for that quarter) ⇒
   // nothing to evaluate, costing zero further LLM calls.
-  if (content === null) {
+  if (loaded === null) {
     return {
       kind: 'no-candidate',
       thesisId: thesis.id,
@@ -523,6 +549,10 @@ export async function evaluatePair(opts: {
       reason: 'no transcript available for this ticker/quarter',
     };
   }
+  // EFFECTIVE dataQuality reflects what was actually parsed at eval time (e.g.
+  // the 8-K body + Ex-99 exhibits), not the event's ingest-time "metadata only"
+  // — so the judge doesn't wrongly cap confidence on data it actually has.
+  const { content, dataQuality } = loaded;
   const extract = await runExtract({ thesis, watchItem, event, content, tracker: opts.tracker });
 
   if (!extract.candidate) {
@@ -552,7 +582,7 @@ export async function evaluatePair(opts: {
     watchItem,
     candidate: extract.candidate,
     critique,
-    dataQuality: event.dataQuality,
+    dataQuality,
     tracker: opts.tracker,
   });
 
@@ -565,10 +595,10 @@ export async function evaluatePair(opts: {
     confidence: judgment.confidence,
     rationale: judgment.rationale,
     citation: judgment.citation,
-    // Carry the event's dataQuality onto the signal (per the gate requirement),
+    // Carry the EFFECTIVE dataQuality (what was actually parsed) onto the signal,
     // and note when the critique flagged it priced-in (audit trail).
     dataQuality:
-      `${event.dataQuality}` +
+      `${dataQuality}` +
       (critique.pricedIn.verdict === 'already-priced-in'
         ? '; critique=already-priced-in (magnitude capped)'
         : ''),
