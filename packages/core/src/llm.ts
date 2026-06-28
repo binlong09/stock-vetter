@@ -31,7 +31,17 @@ function client(): Anthropic {
   if (!apiKey) {
     throw new Error('ANTHROPIC_API_KEY is not set. Add it to .env or your environment.');
   }
-  _client = new Anthropic({ apiKey });
+  // Force the SDK onto Node's native fetch (undici) instead of the bundled
+  // node-fetch@2. node-fetch v2 throws `ERR_STREAM_PREMATURE_CLOSE` from its
+  // Gunzip handler on gzipped responses under newer Node (seen failing EVERY
+  // call in CI on Node 22.x, regardless of request size). Native fetch
+  // decompresses gzip correctly. Guard for older runtimes without global fetch.
+  const nativeFetch = (globalThis as { fetch?: unknown }).fetch;
+  const opts: ConstructorParameters<typeof Anthropic>[0] = { apiKey };
+  if (typeof nativeFetch === 'function') {
+    (opts as { fetch?: unknown }).fetch = nativeFetch;
+  }
+  _client = new Anthropic(opts);
   return _client;
 }
 
