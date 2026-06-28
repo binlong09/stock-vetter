@@ -4,19 +4,26 @@
 // tripwire state (that's Phase 3). Adapted from the pipeline's render.ts.
 
 import { type Signal, type Thesis, type ThesisHealth } from '@stock-vetter/schema';
+import { isAdverse } from './theses.js';
 
-// Provisional status from this run's signals only. Conservative:
-//   - red   if any surviving signal WEAKENS the thesis with magnitude ≥ 0.5
-//            (a tripwire-grade adverse move).
-//   - amber if there's any non-neutral signal with magnitude ≥ 0.2.
-//   - green otherwise (nothing material moved against it this run).
+// Provisional status from this run's signals only. Mirrors computeThesisStatus
+// (theses.ts) so the snapshot card and the persisted state agree. Conservative,
+// and ADVERSE-only (per the watch-item's tripwireDirection):
+//   - red   if any ADVERSE signal has magnitude ≥ 0.5 (a tripwire-grade move);
+//   - amber if any ADVERSE signal has magnitude ≥ 0.2 but below the trip line;
+//   - green otherwise — including supportive (confirming) movement, which does
+//     NOT raise exit risk.
 // "green" here means "no material adverse movement in THIS snapshot", not a
 // durable all-clear — the wording in the card makes that explicit.
-export function provisionalStatus(signals: Signal[]): ThesisHealth {
+export function provisionalStatus(thesis: Thesis, signals: Signal[]): ThesisHealth {
+  const watchById = new Map(thesis.watchItems.map((w) => [w.id, w]));
   let amber = false;
   for (const s of signals) {
-    if (s.direction === 'weakens' && s.magnitude >= 0.5) return 'red';
-    if (s.direction !== 'neutral' && s.magnitude >= 0.2) amber = true;
+    if (s.direction === 'neutral' || s.magnitude < 0.2) continue;
+    const w = watchById.get(s.watchItemId);
+    if (!w || !isAdverse(s, w)) continue; // unknown or supportive ⇒ no exit risk
+    if (s.magnitude >= 0.5) return 'red';
+    amber = true;
   }
   return amber ? 'amber' : 'green';
 }
@@ -33,7 +40,7 @@ export function renderThesisCard(opts: {
   generatedAt: string;
 }): string {
   const { thesis, signals } = opts;
-  const status = provisionalStatus(signals);
+  const status = provisionalStatus(thesis, signals);
   const lines: string[] = [];
 
   lines.push(`# ${thesis.id} — Thesis Status Card`);
