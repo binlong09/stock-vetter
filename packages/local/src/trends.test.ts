@@ -91,7 +91,7 @@ test('a steady business produces no findings', () => {
 test('receivables lengthening for several quarters is detected', () => {
   // AR climbs while revenue holds: DSO goes from ~64 to ~91 days.
   const set = seriesSet(
-    eightQuarters(BASE, (fy, _fp, i) => (fy === 2025 ? { accountsReceivable: 700 + (i - 3) * 35 } : {})),
+    eightQuarters(BASE, (fy, _fp, i): Record<string, number> => (fy === 2025 ? { accountsReceivable: 700 + (i - 3) * 35 } : {})),
   );
   const f = detectTrends(set).findings.find((x) => x.id === 'dso-lengthening');
   assert.ok(f, 'DSO lengthening not detected');
@@ -107,7 +107,7 @@ test('SEASONALITY: a retailer with a huge but stable Q4 produces no findings', (
   // This is the test that separates a usable detector from a useless one. A
   // sequential comparison reports this business every single year.
   const set = seriesSet(
-    eightQuarters(BASE, (_fy, fp) =>
+    eightQuarters(BASE, (_fy, fp): Record<string, number> =>
       fp === 'Q4'
         ? { revenue: 2500, costOfRevenue: 1500, inventory: 1200, accountsReceivable: 1600, accountsPayable: 900 }
         : fp === 'Q3'
@@ -125,7 +125,7 @@ test('SEASONALITY: a retailer with a huge but stable Q4 produces no findings', (
 
 test('a single bad quarter is not a trend', () => {
   const set = seriesSet(
-    eightQuarters(BASE, (fy, fp) => (fy === 2025 && fp === 'Q4' ? { accountsReceivable: 1400 } : {})),
+    eightQuarters(BASE, (fy, fp): Record<string, number> => (fy === 2025 && fp === 'Q4' ? { accountsReceivable: 1400 } : {})),
   );
   // One acquisition closing near period end inflates DSO once. Requiring a run
   // is what keeps that out of the queue.
@@ -135,14 +135,14 @@ test('a single bad quarter is not a trend', () => {
 test('a real deterioration that is too small to matter is not reported', () => {
   // DSO drifts up ~1 day per quarter — directionally consistent, immaterial.
   const set = seriesSet(
-    eightQuarters(BASE, (fy, _fp, i) => (fy === 2025 ? { accountsReceivable: 700 + (i - 3) * 4 } : {})),
+    eightQuarters(BASE, (fy, _fp, i): Record<string, number> => (fy === 2025 ? { accountsReceivable: 700 + (i - 3) * 4 } : {})),
   );
   assert.equal(detectTrends(set).findings.some((f) => f.id === 'dso-lengthening'), false);
 });
 
 test('cash flow diverging from earnings is detected', () => {
   const set = seriesSet(
-    eightQuarters(BASE, (fy, _fp, i) => (fy === 2025 ? { cfo: 110 - (i - 3) * 22 } : {})),
+    eightQuarters(BASE, (fy, _fp, i): Record<string, number> => (fy === 2025 ? { cfo: 110 - (i - 3) * 22 } : {})),
   );
   const f = detectTrends(set).findings.find((x) => x.id === 'cfo-diverging-from-earnings');
   assert.ok(f, 'CFO/NI divergence not detected');
@@ -151,7 +151,7 @@ test('cash flow diverging from earnings is detected', () => {
 
 test('gross margin erosion is reported in basis points, not as a percent change', () => {
   const set = seriesSet(
-    eightQuarters(BASE, (fy, _fp, i) => (fy === 2025 ? { costOfRevenue: 600 + (i - 3) * 20 } : {})),
+    eightQuarters(BASE, (fy, _fp, i): Record<string, number> => (fy === 2025 ? { costOfRevenue: 600 + (i - 3) * 20 } : {})),
   );
   const f = detectTrends(set).findings.find((x) => x.id === 'gross-margin-eroding');
   assert.ok(f);
@@ -163,7 +163,7 @@ test('gross margin erosion is reported in basis points, not as a percent change'
 
 test('dilution is detected from the diluted share count', () => {
   const set = seriesSet(
-    eightQuarters(BASE, (fy, _fp, i) => (fy === 2025 ? { dilutedShares: 100e6 * (1 + (i - 3) * 0.02) } : {})),
+    eightQuarters(BASE, (fy, _fp, i): Record<string, number> => (fy === 2025 ? { dilutedShares: 100e6 * (1 + (i - 3) * 0.02) } : {})),
   );
   const f = detectTrends(set).findings.find((x) => x.id === 'share-count-growing');
   assert.ok(f);
@@ -172,7 +172,7 @@ test('dilution is detected from the diluted share count', () => {
 
 test('an improving business produces no deterioration findings', () => {
   const set = seriesSet(
-    eightQuarters(BASE, (fy, _fp, i) =>
+    eightQuarters(BASE, (fy, _fp, i): Record<string, number> =>
       fy === 2025 ? { accountsReceivable: 700 - (i - 3) * 30, cfo: 110 + (i - 3) * 15 } : {},
     ),
   );
@@ -184,10 +184,10 @@ test('an improving business produces no deterioration findings', () => {
 
 test('severity rises with the length of the run', () => {
   const short = seriesSet(
-    eightQuarters(BASE, (fy, _fp, i) => (fy === 2025 && i >= 5 ? { accountsReceivable: 700 + (i - 4) * 60 } : {})),
+    eightQuarters(BASE, (fy, _fp, i): Record<string, number> => (fy === 2025 && i >= 5 ? { accountsReceivable: 700 + (i - 4) * 60 } : {})),
   );
   const long = seriesSet(
-    eightQuarters(BASE, (fy, _fp, i) => (fy === 2025 ? { accountsReceivable: 700 + (i - 3) * 60 } : {})),
+    eightQuarters(BASE, (fy, _fp, i): Record<string, number> => (fy === 2025 ? { accountsReceivable: 700 + (i - 3) * 60 } : {})),
   );
   const a = detectTrends(short).findings.find((f) => f.id === 'dso-lengthening');
   const b = detectTrends(long).findings.find((f) => f.id === 'dso-lengthening');
@@ -209,7 +209,7 @@ test('too little history yields no findings and says why', () => {
 });
 
 test('an as-of cutoff excludes periods the filing could not have known', () => {
-  const rows = eightQuarters(BASE, (fy, _fp, i) => (fy === 2025 ? { accountsReceivable: 700 + (i - 3) * 60 } : {}));
+  const rows = eightQuarters(BASE, (fy, _fp, i): Record<string, number> => (fy === 2025 ? { accountsReceivable: 700 + (i - 3) * 60 } : {}));
   const set = seriesSet(rows);
   const full = detectTrends(set);
   const asOf = detectTrends(set, { asOf: '2025-03-31' });
