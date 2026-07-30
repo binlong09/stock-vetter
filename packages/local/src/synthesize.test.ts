@@ -365,3 +365,89 @@ test('the rendered assessment distinguishes verified citations from unverified o
     });
   });
 });
+
+// --- metric history tool ---------------------------------------------------
+
+import { buildConceptSeries, type ConceptSeries, type SeriesSet } from '@stock-vetter/core';
+import { FORENSIC_CONCEPTS } from './concepts.js';
+
+function fakeSeries(): SeriesSet {
+  const tags: Record<string, unknown[]> = {};
+  const quarters = ['Q1', 'Q2', 'Q3', 'Q4'] as const;
+  const ends: Record<string, [string, string]> = {
+    Q1: ['-01-01', '-03-31'],
+    Q2: ['-04-01', '-06-30'],
+    Q3: ['-07-01', '-09-30'],
+    Q4: ['-10-01', '-12-31'],
+  };
+  let i = 0;
+  for (const fy of [2024, 2025]) {
+    for (const fp of quarters) {
+      const [st, en] = ends[fp]!;
+      (tags.RevenueFromContractWithCustomerExcludingAssessedTax ??= []).push({
+        start: `${fy}${st}`, end: `${fy}${en}`, val: 1000, fy, fp, form: '10-Q',
+      });
+      (tags.AccountsReceivableNetCurrent ??= []).push({
+        end: `${fy}${en}`, val: 700 + i * 40, fy, fp, form: '10-Q',
+      });
+      i++;
+    }
+  }
+  const byConcept = new Map<string, ConceptSeries>();
+  for (const spec of FORENSIC_CONCEPTS) {
+    const relevant = Object.fromEntries(
+      spec.tags.filter((t) => tags[t]).map((t) => [t, { units: { [spec.unit ?? 'USD']: tags[t] } }]),
+    );
+    byConcept.set(spec.concept, buildConceptSeries({ cik: 1, facts: { 'us-gaap': relevant } } as any, spec));
+  }
+  return { cik: '1', entityName: 'Test Co', byConcept, missing: [] };
+}
+
+test('get_metric_history returns the quarterly series behind a trend claim', async () => {
+  await withIndex(async (idx) => {
+    const tools = buildVerificationTools(idx, { ticker: 'TEST', accession: 'ACC-1' }, { series: fakeSeries() });
+    const hist = tools.find((t) => t.name === 'get_metric_history')!;
+    const out = await hist.handler({ metric: 'dso' });
+    assert.match(out, /2025Q4/);
+    assert.match(out, /2024Q1/);
+    // The tool must tell the model how to read it; sequential comparison is
+    // meaningless for a seasonal business and it has no way to know that.
+    assert.match(out, /SAME fiscal quarter one year earlier/);
+  });
+});
+
+test('get_metric_history respects the as-of cutoff', async () => {
+  await withIndex(async (idx) => {
+    const tools = buildVerificationTools(
+      idx,
+      { ticker: 'TEST', accession: 'ACC-1' },
+      { series: fakeSeries(), asOf: '2024-12-31' },
+    );
+    const out = await tools.find((t) => t.name === 'get_metric_history')!.handler({ metric: 'dso' });
+    // Grade only the data block — the trailing guidance is prose, not periods.
+    const data = out.split('\n\n')[0]!;
+    // Handing the model 2025 numbers while it analyzes a 2024 filing
+    // contaminates every conclusion with hindsight.
+    assert.doesNotMatch(data, /2025Q/);
+    assert.match(data, /2024Q4/);
+  });
+});
+
+test('an unknown metric lists the available ones instead of failing silently', async () => {
+  await withIndex(async (idx) => {
+    const tools = buildVerificationTools(idx, { ticker: 'TEST', accession: 'ACC-1' }, { series: fakeSeries() });
+    const out = await tools.find((t) => t.name === 'get_metric_history')!.handler({ metric: 'ebitda' });
+    assert.match(out, /Unknown metric "ebitda"/);
+    assert.match(out, /dso/);
+  });
+});
+
+test('the history tool is not offered when there is no series to read', async () => {
+  await withIndex(async (idx) => {
+    // A tool that always answers "no data" teaches the model to stop calling
+    // it, including on the companies where it would have worked.
+    const tools = buildVerificationTools(idx, { ticker: 'TEST', accession: 'ACC-1' });
+    assert.equal(tools.some((t) => t.name === 'get_metric_history'), false);
+    assert.equal(tools.length, 2);
+  });
+});

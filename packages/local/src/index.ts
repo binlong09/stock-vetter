@@ -66,6 +66,38 @@ export {
 
 export { triage, CATEGORY_WEIGHT, SEVERITY_MULTIPLIER, type TriageDecision, type TriageOptions } from './triage.js';
 
+// Cross-filing analysis: the trends that only exist across several filings.
+export { FORENSIC_CONCEPTS } from './concepts.js';
+export {
+  computeRatios,
+  computeAnnualFundamentals,
+  type PeriodRatios,
+  type AnnualFundamentals,
+  type RatioOptions,
+} from './ratios.js';
+export {
+  detectTrends,
+  TREND_DETECTOR_IDS,
+  type TrendFinding,
+  type TrendOptions,
+  type TrendResult,
+} from './trends.js';
+export {
+  beneishMScore,
+  altmanZScore,
+  renderCompositeScores,
+  type BeneishResult,
+  type AltmanResult,
+} from './composite-scores.js';
+export {
+  detectRepeatedExplanations,
+  detectRecurringOneTimeCharges,
+  contentTokens,
+  overlapRatio,
+  type RecurrenceFinding,
+  type RecurrenceOptions,
+} from './recurrence.js';
+
 export {
   synthesizeShortAssessment,
   buildVerificationTools,
@@ -76,6 +108,7 @@ export {
 
 export {
   scanPrepared,
+  computeCrossFiling,
   scanLatestPeriodic,
   scanPeriodicByRef,
   scanEightK,

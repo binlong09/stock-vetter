@@ -22,8 +22,18 @@ import {
 import { ShortAssessment, type FilingBrief } from '@stock-vetter/schema';
 import type { LookbackIndex } from './lookback.js';
 import { renderBriefMarkdown } from './brief.js';
+import { computeRatios, type PeriodRatios } from './ratios.js';
+import type { SeriesSet } from '@stock-vetter/core';
 
 export type SynthesisOptions = {
+  /**
+   * The company's XBRL series, if available. Supplying it adds the
+   * `get_metric_history` tool, which lets the model read the actual numbers
+   * behind a trend claim rather than taking the claim's word for it.
+   */
+  series?: SeriesSet | null;
+  /** Period end of the filing under analysis — caps the history at as-of. */
+  asOf?: string;
   model?: string;
   maxIterations?: number;
   maxTokens?: number;
@@ -43,12 +53,12 @@ export type SynthesisOptions = {
 export function buildVerificationTools(
   index: LookbackIndex,
   ctx: { ticker: string; accession: string },
-  opts: { searchLimit?: number; snippetTokens?: number } = {},
+  opts: { searchLimit?: number; snippetTokens?: number; series?: SeriesSet | null; asOf?: string } = {},
 ): LLMTool[] {
   const searchLimit = opts.searchLimit ?? 4;
   const snippetTokens = opts.snippetTokens ?? 500;
 
-  return [
+  const tools: LLMTool[] = [
     {
       name: 'search_filings',
       description:
@@ -139,7 +149,83 @@ export function buildVerificationTools(
       },
     },
   ];
+
+  if (opts.series) {
+    // Only offered when there is a series to read. A tool that always returns
+    // "no data" trains the model to stop calling it, including on the
+    // companies where it would have worked.
+    const rows = computeRatios(opts.series, { asOf: opts.asOf, quarters: 13 });
+    tools.push({
+      name: 'get_metric_history',
+      description:
+        'Return the quarterly history of a computed financial metric for this company, straight from ' +
+        'its XBRL filings. Use this to check a trend claim in the brief against the actual numbers, ' +
+        'to see whether a move is new or long-running, and to judge magnitude. These values are exact ' +
+        '— arithmetic on figures the filer tagged itself, with no model in between. ' +
+        `Available metrics: ${METRIC_KEYS.join(', ')}.`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          metric: { type: 'string', description: `One of: ${METRIC_KEYS.join(', ')}` },
+          quarters: { type: 'number', description: 'How many recent quarters to return. Default 12.' },
+        },
+        required: ['metric'],
+      },
+      handler: async (input) => {
+        const metric = String(input.metric ?? '') as keyof PeriodRatios;
+        if (!METRIC_KEYS.includes(metric as (typeof METRIC_KEYS)[number])) {
+          return `Unknown metric "${metric}". Available: ${METRIC_KEYS.join(', ')}`;
+        }
+        const n = Math.min(Number(input.quarters ?? 12) || 12, 13);
+        const slice = rows.slice(-n);
+        const values = slice
+          .map((r) => {
+            const v = r[metric];
+            return typeof v === 'number' && Number.isFinite(v)
+              ? `${r.period}: ${Number(v.toFixed(3))}`
+              : `${r.period}: n/a`;
+          })
+          .join('\n');
+        if (!slice.length) return `No history available for ${metric}.`;
+        return (
+          `${metric} — quarterly, oldest first (values are exact, computed from XBRL):\n${values}\n\n` +
+          `Compare each period against the SAME fiscal quarter one year earlier. Sequential ` +
+          `comparison is misleading for any seasonal business. (No concrete periods are named ` +
+          `here on purpose — everything above the blank line is data, everything below is not.)`
+        );
+      },
+    });
+  }
+
+  return tools;
 }
+
+// The numeric fields of PeriodRatios that are worth exposing. Listed rather
+// than derived so adding a field to the ratio type doesn't silently widen the
+// tool's surface.
+const METRIC_KEYS = [
+  'dso',
+  'dio',
+  'dpo',
+  'ccc',
+  'grossMargin',
+  'operatingMargin',
+  'cfoToNetIncome',
+  'accrualRatio',
+  'sgaToRevenue',
+  'capexToDepreciation',
+  'netDebtToAssets',
+  'goodwillToAssets',
+  'revenue',
+  'costOfRevenue',
+  'netIncome',
+  'cfo',
+  'accountsReceivable',
+  'inventory',
+  'accountsPayable',
+  'deferredRevenue',
+  'dilutedShares',
+] as const;
 
 export type SynthesisResult = {
   assessment: ShortAssessment;
@@ -164,7 +250,12 @@ export async function synthesizeShortAssessment(
   const tools = buildVerificationTools(
     index,
     { ticker: brief.ticker, accession: brief.accession },
-    { searchLimit: opts.searchLimit, snippetTokens: opts.snippetTokens },
+    {
+      searchLimit: opts.searchLimit,
+      snippetTokens: opts.snippetTokens,
+      series: opts.series,
+      asOf: opts.asOf,
+    },
   );
 
   const { value, toolCalls, iterations } = await llmCallWithToolsJson({
