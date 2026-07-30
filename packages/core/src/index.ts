@@ -54,6 +54,8 @@ export {
   fetchExhibits,
   fetchEightK,
   fetchFilingSectionsWithLayout,
+  fetchFilingSectionsWithLayoutByRef,
+  parseFilingByRef,
   resolveCik,
   allTickerCiks,
   type FilingForm,

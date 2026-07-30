@@ -13,7 +13,7 @@ import {
 } from './cache.js';
 import { secFetchJson, secFetchText } from './sec-http.js';
 import { parseEightK, type ParsedEightK } from './sec-8k.js';
-import { renderFilingLayout, locateSectionBlocks, blocksToMarkdown } from './sec-layout.js';
+import { renderFilingLayout, locateSectionBlocks, blocksToMarkdown, type LayoutBlock } from './sec-layout.js';
 
 export type FilingForm = '10-K' | '10-Q' | 'DEF 14A' | '8-K';
 
@@ -145,8 +145,34 @@ export async function fetchAndParseFiling(
 ): Promise<{ meta: FilingMeta; getSection: (id: string) => Promise<string | null> }> {
   const cik = await tickerToCik(ticker);
   const sub = await fetchSubmissions(cik);
-  const found = findLatestFiling(sub, form);
-  if (!found) throw new Error(`no ${form} found for ${ticker}`);
+  const latest = findLatestFiling(sub, form);
+  if (!latest) throw new Error(`no ${form} found for ${ticker}`);
+  return parseFilingByRef({
+    ticker: ticker.toUpperCase(),
+    cik,
+    accession: latest.accession,
+    form,
+    filingDate: latest.filingDate,
+    primaryDocument: latest.primaryDoc,
+  });
+}
+
+/**
+ * Parse a SPECIFIC filing, identified by reference rather than by "the latest
+ * one of this form".
+ *
+ * A universe sweep discovers filings by accession number, and several filings
+ * of the same form can fall inside one window — four 10-Qs in a year's
+ * backfill, or an original plus its amendment. Routing those through the
+ * latest-filing path would process the newest one repeatedly and silently drop
+ * the rest.
+ */
+export async function parseFilingByRef(
+  ref: FilingRef,
+): Promise<{ meta: FilingMeta; getSection: (id: string) => Promise<string | null> }> {
+  const { cik, accession, primaryDocument: primaryDoc, filingDate } = ref;
+  const form = (ref.form.startsWith('10-K') ? '10-K' : '10-Q') as '10-K' | '10-Q';
+  const found = { accession, primaryDoc, filingDate };
 
   // Cache hit is only trustworthy when the section BODIES are still present.
   // The meta (`sec-meta` namespace) and the bodies (`sec` namespace) are written
@@ -175,7 +201,7 @@ export async function fetchAndParseFiling(
   }
 
   const meta: FilingMeta = {
-    ticker: ticker.toUpperCase(),
+    ticker: ref.ticker.toUpperCase(),
     cik,
     accession: found.accession,
     form,
@@ -415,6 +441,13 @@ export type LayoutSection = {
   confidence: 'high' | 'low' | 'failed';
   /** Markdown with tables preserved, or the flat text when layout join failed. */
   markdown: string;
+  /**
+   * The section's layout blocks. Consumers that chunk or strip should use
+   * these rather than re-parsing `markdown` — a markdown round trip loses the
+   * heading/table/prose distinction that "never split a table" depends on.
+   * Empty when the layout join failed (see `layoutDegraded`).
+   */
+  blocks: LayoutBlock[];
   /** True when we fell back to flat text — tables in here are run-on lines. */
   layoutDegraded: boolean;
 };
@@ -433,7 +466,22 @@ export async function fetchFilingSectionsWithLayout(
   form: '10-K' | '10-Q',
   sectionIds: string[],
 ): Promise<{ meta: FilingMeta; sections: LayoutSection[] }> {
-  const { meta, getSection } = await fetchAndParseFiling(ticker, form);
+  return renderSections(await fetchAndParseFiling(ticker, form), sectionIds);
+}
+
+/** As above, for a specific filing rather than the latest of its form. */
+export async function fetchFilingSectionsWithLayoutByRef(
+  ref: FilingRef,
+  sectionIds: string[],
+): Promise<{ meta: FilingMeta; sections: LayoutSection[] }> {
+  return renderSections(await parseFilingByRef(ref), sectionIds);
+}
+
+async function renderSections(
+  parsed: { meta: FilingMeta; getSection: (id: string) => Promise<string | null> },
+  sectionIds: string[],
+): Promise<{ meta: FilingMeta; sections: LayoutSection[] }> {
+  const { meta, getSection } = parsed;
   const html = await fetchFilingHtml(meta.cik, meta.accession, meta.primaryDocument);
   const blocks = renderFilingLayout(html);
 
@@ -450,6 +498,7 @@ export async function fetchFilingSectionsWithLayout(
       itemNumber: info.itemNumber,
       confidence: info.confidence,
       markdown: located ? blocksToMarkdown(located) : flat,
+      blocks: located ?? [],
       layoutDegraded: located === null,
     });
   }

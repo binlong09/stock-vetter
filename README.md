@@ -1,13 +1,14 @@
 # Stock Vetter
 
-Two value-investing research tools that share one codebase:
+Three research tools that share one codebase:
 
 - **Stock Vetter** — type a ticker, get one decision card. Fetches the latest 10-K, DEF 14A proxy, 10-Q, SEC companyfacts, and current price; runs a three-pass primary-source value-investing checklist; computes a reverse DCF and historical valuation context; optionally folds in analyst-video or earnings-call analysis; and produces a verdict + 1–10 weighted score.
 - **Signal Tracker** — write a one-line investment thesis with explicit tripwires, then let a daily cron watch SEC filings, consensus estimates, and earnings calls for the events that would confirm or break it. You get an email only when a tripwire actually flips.
+- **Short-Side Scanner** — point a local GPU at the top ~2,000 US companies and read every 10-K, 10-Q, and 8-K they file, looking for the quantitative tells that precede a repricing downward. A local Qwen model does the bulk reading under a rigid schema with every claim quote-verified; a deterministic gate decides which ~15% of filings are worth the Claude API and your attention. Requires Ollama on a machine with a decent GPU.
 
-Both run as a CLI on your laptop (or a scheduled runner). A small read-only Next.js viewer (`apps/web/`, on Vercel free tier) reads the results on your phone. The pipelines are **not** deployed — only the viewer.
+All three run as a CLI on your laptop (or a scheduled runner). A small read-only Next.js viewer (`apps/web/`, on Vercel free tier) reads the results on your phone. The pipelines are **not** deployed — only the viewer.
 
-For operational depth — costs, web-viewer setup/deploy, cache management, reading the verdict — see **[USAGE.md](USAGE.md)**. For design rationale and build history see the spec docs: **[oldSPEC.md](oldSPEC.md)** (Stock Vetter), **[SPEC.md](SPEC.md)** (Signal Tracker build plan), and **[HANDOFF.md](HANDOFF.md)** (packaging overview). This file is the orientation: how to run it, then how each tool actually works.
+For operational depth — costs, web-viewer setup/deploy, cache management, reading the verdict — see **[USAGE.md](USAGE.md)**. For design rationale and build history see the spec docs: **[oldSPEC.md](oldSPEC.md)** (Stock Vetter), **[SPEC.md](SPEC.md)** (Signal Tracker build plan), **[SHORTSPEC.md](SHORTSPEC.md)** (Short-Side Scanner), and **[HANDOFF.md](HANDOFF.md)** (packaging overview). This file is the orientation: how to run it, then how each tool actually works.
 
 ---
 
@@ -61,6 +62,38 @@ pnpm allow-email someone@example.com
 Adding a ticker is just: append it to `data/tickers.json`, run `analyze-ticker`, done — the push to the viewer is automatic. (See [USAGE.md](USAGE.md) for the full add-a-ticker / add-a-reader / deploy flows.)
 
 **Cost:** ~$1.45 per fresh ticker (~$2 with an analyst video); $0 on cached re-runs. Cost is logged to stderr; the pipeline warns above $0.75 and aborts above $1.50 per run.
+
+### Short-Side Scanner
+
+Needs [Ollama](https://ollama.com) running locally with a model pulled
+(`ollama pull qwen3:32b && ollama pull nomic-embed-text`). See
+**[SHORTSPEC.md](SHORTSPEC.md)** for the design and the tuning knobs.
+
+```bash
+# One company's latest 10-K, end to end
+pnpm short-scan NVDA
+
+pnpm short-scan NVDA --form=10-Q
+pnpm short-scan NVDA --8k --since=2026-06-01   # every 8-K since a date
+pnpm short-scan NVDA --no-synthesis            # local tier only, no cloud spend
+pnpm short-scan NVDA --index-only              # fetch + index, no model calls
+
+# Build the universe (slow, weekly at most), then sweep it
+pnpm build-universe --top=2000
+pnpm short-scan --universe=data/universe.json --since=2026-07-01
+
+# Inspect the local index — the same retrieval the cloud model gets
+pnpm lookback stats
+pnpm lookback search "days sales outstanding" --ticker=NVDA
+pnpm lookback verify "Days sales outstanding increased to 78 days"
+
+# Check the chunk-size estimator against your actual model's tokenizer
+pnpm calibrate-tokens
+```
+
+Results land in `fixtures/short/<TICKER>/<accession>/` as `brief.md` (what the
+local tier extracted), `triage.json` (why it did or didn't escalate), and
+`assessment.md` (the thesis, if it escalated).
 
 ### Signal Tracker
 
