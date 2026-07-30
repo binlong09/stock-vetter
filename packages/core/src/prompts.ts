@@ -24,7 +24,10 @@ export type PromptName =
   // Signal Tracker (packages/signals) — Phase 2 evaluator prompts.
   | 'signal-extract'
   | 'signal-critique'
-  | 'signal-judge';
+  | 'signal-judge'
+  // Local-GPU short-side scanner (packages/local).
+  | 'local-chunk-extract'
+  | 'short-synthesis';
 
 const cache = new Map<PromptName, string>();
 

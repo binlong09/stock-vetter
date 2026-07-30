@@ -31,6 +31,7 @@
     "@stock-vetter/pipeline": "workspace:*",
     "@stock-vetter/schema": "workspace:*",
     "@stock-vetter/signals": "workspace:*",
-    "dotenv": "^16.4.7"
+    "dotenv": "^16.4.7",
+    "zod-to-json-schema": "^3.25.2"
   }
 }
