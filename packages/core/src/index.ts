@@ -46,9 +46,53 @@ export {
 export {
   fetchAndParseFiling,
   fetchLatestProxy,
+  listFilings,
+  fetchExhibits,
+  fetchEightK,
+  fetchFilingSectionsWithLayout,
+  resolveCik,
+  allTickerCiks,
   type FilingForm,
   type FilingMeta,
+  type FilingRef,
+  type ListFilingsOptions,
+  type FilingExhibit,
+  type EightKFiling,
+  type LayoutSection,
 } from './sec-filings.js';
+
+// Rate-limited EDGAR HTTP. Every SEC request in the monorepo should go through
+// this so the 10 req/s fair-access limit is enforced in exactly one place.
+export { secFetch, secFetchText, secFetchJson, secFetchTextOrNull, SecHttpError } from './sec-http.js';
+
+// Layout-preserving filing rendering — keeps financial tables as tables.
+export {
+  renderFilingLayout,
+  locateSectionBlocks,
+  blocksToMarkdown,
+  type LayoutBlock,
+} from './sec-layout.js';
+
+// 8-K parsing + deterministic short-side item severity.
+export {
+  parseEightK,
+  criticalItems,
+  maxSeverity,
+  EIGHTK_ITEMS,
+  type EightKItem,
+  type EightKItemDef,
+  type ParsedEightK,
+  type ItemSeverity,
+} from './sec-8k.js';
+
+// EDGAR daily-index sweep — one request covers the whole market for a day.
+export {
+  sweepFilings,
+  fetchDailyIndex,
+  parseMasterIdx,
+  type IndexEntry,
+  type SweepOptions,
+} from './edgar-index.js';
 export {
   parseFiling,
   type AnchorCandidate,

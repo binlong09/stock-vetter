@@ -11,11 +11,11 @@ import {
   getSecSection,
   putSecSection,
 } from './cache.js';
+import { secFetchJson, secFetchText } from './sec-http.js';
+import { parseEightK, type ParsedEightK } from './sec-8k.js';
+import { renderFilingLayout, locateSectionBlocks, blocksToMarkdown } from './sec-layout.js';
 
-const SEC_USER_AGENT =
-  process.env.SEC_USER_AGENT ?? 'stock-vetter (https://example.com / contact@example.com)';
-
-export type FilingForm = '10-K' | '10-Q' | 'DEF 14A';
+export type FilingForm = '10-K' | '10-Q' | 'DEF 14A' | '8-K';
 
 export type FilingMeta = {
   ticker: string;
@@ -42,25 +42,34 @@ export type FilingMeta = {
 
 let _tickerToCikCache: Map<string, string> | null = null;
 
-async function tickerToCik(ticker: string): Promise<string> {
-  if (_tickerToCikCache) {
-    const v = _tickerToCikCache.get(ticker.toUpperCase());
-    if (v) return v;
-    throw new Error(`ticker not found: ${ticker}`);
-  }
-  const res = await fetch('https://www.sec.gov/files/company_tickers.json', {
-    headers: { 'User-Agent': SEC_USER_AGENT },
-  });
-  if (!res.ok) throw new Error(`SEC ticker list fetch failed: ${res.status}`);
-  const json = (await res.json()) as Record<string, { cik_str: number; ticker: string }>;
+async function loadTickerMap(): Promise<Map<string, string>> {
+  if (_tickerToCikCache) return _tickerToCikCache;
+  const json = await secFetchJson<Record<string, { cik_str: number; ticker: string; title?: string }>>(
+    'https://www.sec.gov/files/company_tickers.json',
+  );
   const map = new Map<string, string>();
   for (const v of Object.values(json)) {
     map.set(v.ticker.toUpperCase(), String(v.cik_str).padStart(10, '0'));
   }
   _tickerToCikCache = map;
+  return map;
+}
+
+async function tickerToCik(ticker: string): Promise<string> {
+  const map = await loadTickerMap();
   const cik = map.get(ticker.toUpperCase());
   if (!cik) throw new Error(`ticker not found: ${ticker}`);
   return cik;
+}
+
+/** Ticker → zero-padded CIK. Exported for the universe builder and the sweep. */
+export async function resolveCik(ticker: string): Promise<string> {
+  return tickerToCik(ticker);
+}
+
+/** The whole ticker→CIK table, for building a universe's CIK set in one request. */
+export async function allTickerCiks(): Promise<Map<string, string>> {
+  return new Map(await loadTickerMap());
 }
 
 type SubmissionsResponse = {
@@ -77,10 +86,7 @@ type SubmissionsResponse = {
 };
 
 async function fetchSubmissions(cik: string): Promise<SubmissionsResponse> {
-  const url = `https://data.sec.gov/submissions/CIK${cik}.json`;
-  const res = await fetch(url, { headers: { 'User-Agent': SEC_USER_AGENT } });
-  if (!res.ok) throw new Error(`SEC submissions fetch failed: ${res.status}`);
-  return (await res.json()) as SubmissionsResponse;
+  return secFetchJson<SubmissionsResponse>(`https://data.sec.gov/submissions/CIK${cik}.json`);
 }
 
 function findLatestFiling(
@@ -100,13 +106,12 @@ function findLatestFiling(
   return null;
 }
 
+function filingDirUrl(cik: string, accession: string): string {
+  return `https://www.sec.gov/Archives/edgar/data/${String(parseInt(cik, 10))}/${accession.replace(/-/g, '')}`;
+}
+
 async function fetchFilingHtml(cik: string, accession: string, primaryDoc: string): Promise<string> {
-  const accNoDash = accession.replace(/-/g, '');
-  const cikInt = String(parseInt(cik, 10));
-  const url = `https://www.sec.gov/Archives/edgar/data/${cikInt}/${accNoDash}/${primaryDoc}`;
-  const res = await fetch(url, { headers: { 'User-Agent': SEC_USER_AGENT } });
-  if (!res.ok) throw new Error(`filing fetch failed: ${res.status} (${url})`);
-  return await res.text();
+  return secFetchText(`${filingDirUrl(cik, accession)}/${primaryDoc}`);
 }
 
 function itemsForForm(form: FilingForm): ItemDef[] {
@@ -245,4 +250,208 @@ export async function fetchLatestProxy(ticker: string): Promise<{
     filingDate: found.filingDate,
     cleanedText: text,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Multi-filing discovery and 8-K support
+//
+// Everything above answers "give me the LATEST 10-K/10-Q for this ticker",
+// which is the right shape for on-demand vetting of one company. The
+// short-side scanner asks a different question — "what has this company filed
+// since I last looked, and which of those do I need to read?" — so it needs
+// listing rather than latest-only, and it needs 8-K, whose structure the
+// Item-N parser above does not model.
+// ---------------------------------------------------------------------------
+
+export type FilingRef = {
+  ticker: string;
+  cik: string;
+  accession: string;
+  form: string;
+  filingDate: string;
+  primaryDocument: string;
+};
+
+export type ListFilingsOptions = {
+  /** Forms to include. Matches amendments too: '10-K' also matches '10-K/A'. */
+  forms: string[];
+  /** Inclusive lower bound on filing date, 'YYYY-MM-DD'. */
+  since?: string;
+  /** Cap on returned filings, newest first. */
+  limit?: number;
+};
+
+function formMatchesAny(form: string, wanted: string[]): boolean {
+  const f = form.toUpperCase();
+  return wanted.some((w) => {
+    const W = w.toUpperCase();
+    return f === W || f.startsWith(`${W}/`);
+  });
+}
+
+/**
+ * List a company's filings, newest first.
+ *
+ * Backed by the submissions API's `filings.recent` block, which covers roughly
+ * the last 1,000 filings or one year, whichever is smaller. That is ample for
+ * incremental "since my last sweep" polling and NOT sufficient for deep
+ * history — for backfill, walk the daily indexes in `edgar-index.ts` instead.
+ */
+export async function listFilings(
+  ticker: string,
+  opts: ListFilingsOptions,
+): Promise<FilingRef[]> {
+  const cik = await tickerToCik(ticker);
+  const sub = await fetchSubmissions(cik);
+  const r = sub.filings.recent;
+  const out: FilingRef[] = [];
+  for (let i = 0; i < r.form.length; i++) {
+    const form = r.form[i]!;
+    const filingDate = r.filingDate[i]!;
+    if (!formMatchesAny(form, opts.forms)) continue;
+    if (opts.since && filingDate < opts.since) continue;
+    out.push({
+      ticker: ticker.toUpperCase(),
+      cik,
+      accession: r.accessionNumber[i]!,
+      form,
+      filingDate,
+      primaryDocument: r.primaryDocument[i]!,
+    });
+  }
+  out.sort((a, b) => (a.filingDate < b.filingDate ? 1 : a.filingDate > b.filingDate ? -1 : 0));
+  return opts.limit ? out.slice(0, opts.limit) : out;
+}
+
+type DirectoryListing = {
+  directory: { item: Array<{ name: string; type?: string; size?: string }> };
+};
+
+export type FilingExhibit = { name: string; html: string };
+
+/**
+ * Fetch a filing's EX-99 exhibits.
+ *
+ * This matters most for 8-K Item 2.02: the body routinely says nothing but
+ * "the press release is furnished as Exhibit 99.1", and every number lives in
+ * the exhibit. Analyzing the body alone would find an empty filing.
+ *
+ * Selection is by filename convention (`ex99`, `ex-99`, `exhibit99`) rather
+ * than by declared exhibit type, because the directory listing does not carry
+ * the type. That catches the overwhelming majority; a filer using an
+ * idiosyncratic name yields no exhibit rather than a wrong one.
+ */
+export async function fetchExhibits(
+  cik: string,
+  accession: string,
+  opts: { maxExhibits?: number } = {},
+): Promise<FilingExhibit[]> {
+  const dir = filingDirUrl(cik, accession);
+  let listing: DirectoryListing;
+  try {
+    listing = await secFetchJson<DirectoryListing>(`${dir}/index.json`);
+  } catch {
+    return [];
+  }
+  const names = (listing.directory?.item ?? [])
+    .map((i) => i.name)
+    .filter((n) => /ex-?(hibit)?-?99/i.test(n) && /\.(htm|html|txt)$/i.test(n))
+    .sort();
+  const out: FilingExhibit[] = [];
+  for (const name of names.slice(0, opts.maxExhibits ?? 3)) {
+    try {
+      out.push({ name, html: await secFetchText(`${dir}/${name}`) });
+    } catch {
+      // A single unreadable exhibit shouldn't sink the filing.
+    }
+  }
+  return out;
+}
+
+export type EightKFiling = {
+  ref: FilingRef;
+  parsed: ParsedEightK;
+  exhibits: FilingExhibit[];
+  /** Body + exhibits, markdown-rendered. What the local model actually reads. */
+  fullText: string;
+};
+
+/**
+ * Fetch and parse one 8-K, including its EX-99 exhibits.
+ *
+ * Cached by accession like the 10-K path: 8-Ks are immutable once filed, so a
+ * cache hit is always safe.
+ */
+export async function fetchEightK(ref: FilingRef): Promise<EightKFiling> {
+  const cached = await getSecSection<EightKFiling>(ref.accession, '8k');
+  if (cached) return cached;
+
+  const html = await fetchFilingHtml(ref.cik, ref.accession, ref.primaryDocument);
+  const parsed = parseEightK(html);
+  // Exhibits are only worth the extra requests when the 8-K actually points at
+  // one. Item 9.01 is the exhibit index; 2.02 is the earnings release.
+  const wantsExhibits = parsed.items.some((i) => i.number === '9.01' || i.number === '2.02');
+  const exhibits = wantsExhibits ? await fetchExhibits(ref.cik, ref.accession) : [];
+
+  const parts = [parsed.items.map((i) => i.body).join('\n\n')];
+  for (const ex of exhibits) {
+    parts.push(`\n\n--- EXHIBIT ${ex.name} ---\n\n${blocksToMarkdown(renderFilingLayout(ex.html))}`);
+  }
+
+  const result: EightKFiling = { ref, parsed, exhibits, fullText: parts.join('').trim() };
+  // Don't persist raw exhibit HTML — it's large and re-derivable. The rendered
+  // text in `fullText` is what downstream stages consume.
+  await putSecSection<EightKFiling>(ref.accession, '8k', {
+    ...result,
+    exhibits: exhibits.map((e) => ({ name: e.name, html: '' })),
+  });
+  return result;
+}
+
+export type LayoutSection = {
+  id: string;
+  label: string;
+  itemNumber: string;
+  confidence: 'high' | 'low' | 'failed';
+  /** Markdown with tables preserved, or the flat text when layout join failed. */
+  markdown: string;
+  /** True when we fell back to flat text — tables in here are run-on lines. */
+  layoutDegraded: boolean;
+};
+
+/**
+ * Fetch a 10-K/10-Q and return the requested sections rendered WITH layout.
+ *
+ * `fetchAndParseFiling` gives correct section boundaries but flat text.
+ * `renderFilingLayout` gives correct structure but no section boundaries.
+ * This composes them, and reports honestly (`layoutDegraded`) when the join
+ * failed for a section rather than quietly serving run-on tables that the
+ * local model will misread.
+ */
+export async function fetchFilingSectionsWithLayout(
+  ticker: string,
+  form: '10-K' | '10-Q',
+  sectionIds: string[],
+): Promise<{ meta: FilingMeta; sections: LayoutSection[] }> {
+  const { meta, getSection } = await fetchAndParseFiling(ticker, form);
+  const html = await fetchFilingHtml(meta.cik, meta.accession, meta.primaryDocument);
+  const blocks = renderFilingLayout(html);
+
+  const sections: LayoutSection[] = [];
+  for (const id of sectionIds) {
+    const info = meta.sections.find((s) => s.id === id);
+    if (!info) continue;
+    const flat = await getSection(id);
+    if (!flat) continue;
+    const located = locateSectionBlocks(blocks, flat);
+    sections.push({
+      id,
+      label: info.label,
+      itemNumber: info.itemNumber,
+      confidence: info.confidence,
+      markdown: located ? blocksToMarkdown(located) : flat,
+      layoutDegraded: located === null,
+    });
+  }
+  return { meta, sections };
 }
