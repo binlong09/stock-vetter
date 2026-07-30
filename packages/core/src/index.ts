@@ -6,6 +6,10 @@
 export {
   llmCall,
   llmCallJson,
+  llmCallWithToolsJson,
+  ToolLoopError,
+  type LLMTool,
+  type ToolCallRecord,
   newCostTracker,
   summarizeCost,
   stripJsonFence,

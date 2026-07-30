@@ -1,0 +1,366 @@
+// The synthesis stage, exercised end to end against a stand-in Anthropic API.
+//
+// The tool loop is where a mistake is most expensive and least visible: a
+// citation marked verified that was never checked, a tool error that silently
+// aborts an analysis, a model that never submits and burns the iteration
+// budget. None of that is observable from output shape alone, so it is pinned
+// here.
+
+import { test, before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { createServer, type Server } from 'node:http';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { newCostTracker } from '@stock-vetter/core';
+import type { FilingBrief } from '@stock-vetter/schema';
+import { LookbackIndex } from './lookback.js';
+import { buildVerificationTools, synthesizeShortAssessment, renderAssessmentMarkdown } from './synthesize.js';
+import type { FilingChunk } from './chunk.js';
+
+const AR_TEXT =
+  'NOTE 4 — ACCOUNTS RECEIVABLE\n(in millions)\n\n|  | 2025 | 2024 |\n| --- | --- | --- |\n' +
+  '| Accounts receivable, net | 1,204.5 | 987.1 |\n\n' +
+  'Days sales outstanding increased to 78 days from 61 days in the prior year.';
+
+function chunk(over: Partial<FilingChunk> = {}): FilingChunk {
+  return {
+    id: 'c1',
+    ticker: 'TEST',
+    cik: '0000000001',
+    accession: 'ACC-1',
+    form: '10-K',
+    filingDate: '2026-02-12',
+    sectionId: 'financial-statements',
+    sectionLabel: 'Financial Statements',
+    index: 0,
+    total: 1,
+    headings: ['NOTE 4 — ACCOUNTS RECEIVABLE'],
+    text: AR_TEXT,
+    estimatedTokens: 100,
+    hasTables: true,
+    isTableContinuation: false,
+    ...over,
+  };
+}
+
+const BRIEF: FilingBrief = {
+  ticker: 'TEST',
+  cik: '0000000001',
+  accession: 'ACC-1',
+  form: '10-K',
+  filingDate: '2026-02-12',
+  eightKItems: [],
+  summary: ['Receivables up 22% on 1.6% sales growth'],
+  metrics: [],
+  flags: [
+    {
+      category: 'receivables-quality',
+      severity: 'high',
+      claim: 'DSO rose to 78 days from 61 days',
+      quote: 'Days sales outstanding increased to 78 days from 61 days in the prior year.',
+      whyItMatters: 'Revenue may be pulled forward via terms concessions.',
+      sourceChunkIds: ['c1'],
+      occurrences: 1,
+    },
+  ],
+  managementClaims: [],
+  flagCounts: { 'receivables-quality': 1 },
+  chunksProcessed: 1,
+  chunksFailed: 0,
+  quotesDropped: 0,
+  estimatedTokens: 400,
+  warnings: [],
+};
+
+async function withIndex(fn: (idx: LookbackIndex) => Promise<void>): Promise<void> {
+  const dir = await mkdtemp(join(tmpdir(), 'synth-'));
+  const idx = await LookbackIndex.open({ path: join(dir, 'test.db'), embedder: null });
+  try {
+    await idx.indexFiling([chunk()], { embed: false });
+    await fn(idx);
+  } finally {
+    await idx.close();
+    await rm(dir, { recursive: true, force: true });
+  }
+}
+
+// --- verification tools ----------------------------------------------------
+
+test('search_filings returns passages scoped to the filing under analysis', async () => {
+  await withIndex(async (idx) => {
+    const [search] = buildVerificationTools(idx, { ticker: 'TEST', accession: 'ACC-1' });
+    const out = await search!.handler({ query: 'days sales outstanding' });
+    assert.match(out, /78 days from 61 days/);
+    assert.match(out, /accession ACC-1/);
+  });
+});
+
+test('a search that finds nothing says so without implying the fact is false', async () => {
+  await withIndex(async (idx) => {
+    const [search] = buildVerificationTools(idx, { ticker: 'TEST', accession: 'ACC-1' });
+    const out = await search!.handler({ query: 'goodwill impairment charge recognized' });
+    assert.match(out, /No passages found/);
+    // The distinction matters: "not in the index" and "not true" are different
+    // claims, and conflating them invents findings out of parser failures.
+    assert.match(out, /not evidence that the underlying fact is false/);
+  });
+});
+
+test('verify_quote confirms verbatim text and rejects a rewording', async () => {
+  await withIndex(async (idx) => {
+    const tools = buildVerificationTools(idx, { ticker: 'TEST', accession: 'ACC-1' });
+    const verify = tools.find((t) => t.name === 'verify_quote')!;
+    assert.match(
+      await verify.handler({ quote: 'Days sales outstanding increased to 78 days from 61 days' }),
+      /^VERIFIED/,
+    );
+    // Every word is in the filing; the sentence is not.
+    assert.match(await verify.handler({ quote: 'Days sales outstanding rose to 78 days' }), /^NOT FOUND/);
+  });
+});
+
+test('the two tools are distinct: ranked search never reports a verification', async () => {
+  await withIndex(async (idx) => {
+    const tools = buildVerificationTools(idx, { ticker: 'TEST', accession: 'ACC-1' });
+    const search = tools.find((t) => t.name === 'search_filings')!;
+    assert.match(search.description, /RANKED CANDIDATES/);
+    const out = await search.handler({ query: 'days sales outstanding rose to 45 days' });
+    // Ranked retrieval happily returns the chunk for a query containing a
+    // figure that isn't in it. Only verify_quote settles a citation.
+    assert.doesNotMatch(out, /VERIFIED/);
+  });
+});
+
+// --- the tool loop ---------------------------------------------------------
+
+type Turn = { content: unknown[]; stop_reason?: string };
+
+// ONE server for the whole file, started once.
+//
+// `llm.ts` caches its Anthropic client at module scope (correct in
+// production — one client, one connection pool). That means the base URL is
+// fixed by the first call, so a per-test server would leave the client
+// pointed at a closed port and every later test would spend the full retry
+// backoff on ECONNREFUSED before failing.
+let currentTurns: Turn[] = [];
+let seenRequests: any[] = [];
+let server: Server;
+
+before(async () => {
+  server = createServer((req, res) => {
+    let raw = '';
+    req.on('data', (c) => (raw += c));
+    req.on('end', () => {
+      seenRequests.push(JSON.parse(raw));
+      const turn = currentTurns[Math.min(seenRequests.length - 1, currentTurns.length - 1)]!;
+      res.setHeader('content-type', 'application/json');
+      res.end(
+        JSON.stringify({
+          id: `msg_${seenRequests.length}`,
+          type: 'message',
+          role: 'assistant',
+          model: 'claude-sonnet-4-6',
+          content: turn.content,
+          stop_reason: turn.stop_reason ?? 'tool_use',
+          usage: { input_tokens: 1000, output_tokens: 200 },
+        }),
+      );
+    });
+  });
+  await new Promise<void>((r) => server.listen(0, '127.0.0.1', r));
+  const port = (server.address() as { port: number }).port;
+  process.env.ANTHROPIC_API_KEY = 'test-key';
+  process.env.ANTHROPIC_BASE_URL = `http://127.0.0.1:${port}`;
+});
+
+after(async () => {
+  await new Promise<void>((r) => server.close(() => r()));
+});
+
+async function withAnthropic(turns: Turn[], fn: (seen: any[]) => Promise<void>): Promise<void> {
+  currentTurns = turns;
+  seenRequests = [];
+  await fn(seenRequests);
+}
+
+const ASSESSMENT = {
+  verdict: 'actionable-short',
+  thesis: 'Revenue is being pulled forward through distributor terms concessions.',
+  conviction: 6,
+  catalysts: [{ event: 'Next 10-Q receivables disclosure', expectedWindow: 'Q1 2026' }],
+  evidence: [
+    {
+      point: 'DSO rose to 78 days from 61 days',
+      category: 'receivables-quality',
+      severity: 'high',
+      citation: {
+        claim: 'DSO rose',
+        quote: 'Days sales outstanding increased to 78 days from 61 days',
+        accession: 'ACC-1',
+        sectionId: 'financial-statements',
+        verified: true,
+      },
+    },
+  ],
+  bullCase: 'Terms concessions were a one-time competitive response and normalize next quarter.',
+  whatWouldKillThis: ['Receivables decline sequentially while revenue holds'],
+  mechanicalRisks: ['High short interest'],
+  unverifiedClaims: [],
+};
+
+const submitBlock = (input: unknown = ASSESSMENT) => ({
+  type: 'tool_use',
+  id: 'tu_submit',
+  name: 'submit_assessment',
+  input,
+});
+
+test('the model verifies through the local index before submitting', async () => {
+  await withIndex(async (idx) => {
+    await withAnthropic(
+      [
+        {
+          content: [
+            { type: 'text', text: 'Checking the DSO figure.' },
+            {
+              type: 'tool_use',
+              id: 'tu_1',
+              name: 'verify_quote',
+              input: { quote: 'Days sales outstanding increased to 78 days from 61 days' },
+            },
+          ],
+        },
+        { content: [submitBlock()], stop_reason: 'tool_use' },
+      ],
+      async (seen) => {
+        const tracker = newCostTracker();
+        const r = await synthesizeShortAssessment(BRIEF, idx, tracker);
+        assert.equal(r.assessment.verdict, 'actionable-short');
+        assert.equal(r.iterations, 2);
+        assert.equal(r.toolCalls.length, 1);
+        assert.equal(r.toolCalls[0]!.name, 'verify_quote');
+        assert.match(r.toolCalls[0]!.result, /^VERIFIED/);
+        // The tool result must be fed back as a tool_result block, or the
+        // model answers the second turn having learned nothing.
+        const second = seen[1];
+        const toolResult = second.messages.at(-1).content[0];
+        assert.equal(toolResult.type, 'tool_result');
+        assert.equal(toolResult.tool_use_id, 'tu_1');
+        assert.ok(tracker.total > 0, 'tool-loop turns were not costed');
+        assert.equal(tracker.byCall.length, 2);
+      },
+    );
+  });
+});
+
+test('both verification tools plus submit are offered to the model', async () => {
+  await withIndex(async (idx) => {
+    await withAnthropic([{ content: [submitBlock()] }], async (seen) => {
+      await synthesizeShortAssessment(BRIEF, idx, newCostTracker());
+      const names = seen[0].tools.map((t: { name: string }) => t.name);
+      assert.deepEqual(names.sort(), ['search_filings', 'submit_assessment', 'verify_quote']);
+      assert.ok(seen[0].system[0].cache_control, 'system prompt was not marked cacheable');
+    });
+  });
+});
+
+test('a throwing tool is reported to the model instead of aborting the analysis', async () => {
+  await withIndex(async (idx) => {
+    await withAnthropic(
+      [
+        {
+          content: [{ type: 'tool_use', id: 'tu_1', name: 'search_filings', input: {} }],
+        },
+        { content: [submitBlock()] },
+      ],
+      async () => {
+        const r = await synthesizeShortAssessment(BRIEF, idx, newCostTracker());
+        // A malformed tool call costs one turn, not the whole run.
+        assert.equal(r.toolCalls[0]!.isError, false);
+        assert.match(r.toolCalls[0]!.result, /query is required/);
+        assert.equal(r.assessment.verdict, 'actionable-short');
+      },
+    );
+  });
+});
+
+test('an unknown tool name is answered, not thrown', async () => {
+  await withIndex(async (idx) => {
+    await withAnthropic(
+      [
+        { content: [{ type: 'tool_use', id: 'tu_1', name: 'read_bloomberg', input: {} }] },
+        { content: [submitBlock()] },
+      ],
+      async () => {
+        const r = await synthesizeShortAssessment(BRIEF, idx, newCostTracker());
+        assert.equal(r.toolCalls[0]!.isError, true);
+        assert.match(r.toolCalls[0]!.result, /No such tool/);
+      },
+    );
+  });
+});
+
+test('a submission failing a Zod refinement is handed back for correction', async () => {
+  await withIndex(async (idx) => {
+    await withAnthropic(
+      [
+        // conviction 99 satisfies the JSON Schema type but violates .max(10),
+        // which JSON Schema cannot express and the API therefore accepts.
+        { content: [submitBlock({ ...ASSESSMENT, conviction: 99 })] },
+        { content: [submitBlock({ ...ASSESSMENT, conviction: 5 })] },
+      ],
+      async (seen) => {
+        const r = await synthesizeShortAssessment(BRIEF, idx, newCostTracker());
+        assert.equal(r.assessment.conviction, 5);
+        const retry = seen[1].messages.at(-1).content[0];
+        assert.equal(retry.is_error, true);
+        assert.match(retry.content, /conviction/);
+      },
+    );
+  });
+});
+
+test('prose instead of a submission is redirected to the submit tool', async () => {
+  await withIndex(async (idx) => {
+    await withAnthropic(
+      [
+        { content: [{ type: 'text', text: 'I think this is a short.' }], stop_reason: 'end_turn' },
+        { content: [submitBlock()] },
+      ],
+      async (seen) => {
+        const r = await synthesizeShortAssessment(BRIEF, idx, newCostTracker());
+        assert.equal(r.assessment.verdict, 'actionable-short');
+        assert.match(JSON.stringify(seen[1].messages.at(-1)), /must record your answer/);
+      },
+    );
+  });
+});
+
+test('a model that never submits fails loudly at the iteration cap', async () => {
+  await withIndex(async (idx) => {
+    await withAnthropic(
+      [{ content: [{ type: 'tool_use', id: 'tu_x', name: 'search_filings', input: { query: 'receivables' } }] }],
+      async (seen) => {
+        await assert.rejects(
+          synthesizeShortAssessment(BRIEF, idx, newCostTracker(), { maxIterations: 3 }),
+          /did not submit an answer within 3 iterations/,
+        );
+        // On the final turn only `submit` is offered, so an indecisive model is
+        // forced to answer with what it has rather than looping forever.
+        assert.deepEqual(seen.at(-1).tools.map((t: { name: string }) => t.name), ['submit_assessment']);
+      },
+    );
+  });
+});
+
+test('the rendered assessment distinguishes verified citations from unverified ones', async () => {
+  await withIndex(async (idx) => {
+    await withAnthropic([{ content: [submitBlock()] }], async () => {
+      const r = await synthesizeShortAssessment(BRIEF, idx, newCostTracker());
+      const md = renderAssessmentMarkdown(BRIEF, r);
+      assert.match(md, /verified against filing text/);
+      assert.match(md, /1\/1 citations verified/);
+    });
+  });
+});
