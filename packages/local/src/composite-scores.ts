@@ -19,22 +19,10 @@
 // SGI (sales growth) says "this is a fast-growing company", not "this is a
 // fraud", and that distinction is invisible in the headline number.
 
+import type { AltmanResult, BeneishResult, IndexBreakdown } from '@stock-vetter/schema';
 import type { AnnualFundamentals } from './ratios.js';
 
-export type IndexBreakdown = { name: string; value: number | null; note: string };
-
-export type BeneishResult = {
-  period: string;
-  mScore: number | null;
-  /** Beneish's own threshold. Above it, the model classifies as a manipulator. */
-  threshold: -1.78;
-  flagged: boolean;
-  indices: IndexBreakdown[];
-  /** Indices that couldn't be computed; each missing one biases the score. */
-  missing: string[];
-  /** The single largest positive contributor — what is actually driving it. */
-  dominantIndex: string | null;
-};
+export type { AltmanResult, BeneishResult, IndexBreakdown } from '@stock-vetter/schema';
 
 function ratio(a: number | null | undefined, b: number | null | undefined): number | null {
   if (a == null || b == null || b === 0 || !Number.isFinite(a) || !Number.isFinite(b)) return null;
@@ -168,19 +156,6 @@ export function beneishMScore(annual: AnnualFundamentals[]): BeneishResult | nul
     dominantIndex,
   };
 }
-
-export type AltmanResult = {
-  period: string;
-  zScore: number | null;
-  /** Z'' (1993), the non-manufacturer variant — needs no market cap. */
-  variant: 'Z-double-prime';
-  /** Below this, the model puts the company in the distress zone. */
-  distressThreshold: 1.1;
-  safeThreshold: 2.6;
-  zone: 'distress' | 'grey' | 'safe' | 'unknown';
-  components: IndexBreakdown[];
-  missing: string[];
-};
 
 /**
  * Altman Z''-score.

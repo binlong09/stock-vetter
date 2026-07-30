@@ -14,6 +14,7 @@
 import type {
   BriefFlag,
   ChunkExtractionRecord,
+  CrossFilingAnalysis,
   ExtractedMetric,
   FilingBrief,
   FlagSeverity,
@@ -29,6 +30,13 @@ export type BriefSource = {
   form: string;
   filingDate: string;
   eightKItems?: Array<{ number: string; label: string; severity: string }>;
+  /**
+   * Trends, composites, and recurrence computed across the company's filing
+   * history. Null means "not computed" (no usable XBRL history), never
+   * "nothing found" — the brief renders the distinction, because a reader
+   * seeing no trends section should know which of the two happened.
+   */
+  crossFiling?: CrossFilingAnalysis | null;
   chunksAttempted: number;
   chunksFailed: number;
   warnings?: string[];
@@ -181,6 +189,7 @@ export function buildFilingBrief(
     form: source.form,
     filingDate: source.filingDate,
     eightKItems: source.eightKItems ?? [],
+    crossFiling: source.crossFiling ?? null,
     summary: summary.slice(0, maxSummary),
     metrics: metrics.slice(0, maxMetrics),
     flags: flags.slice(0, maxFlags),
@@ -240,8 +249,71 @@ export function renderBriefMarkdown(brief: FilingBrief): string {
     for (const i of brief.eightKItems) L.push(`- **Item ${i.number}** ${i.label} — severity ${i.severity}`);
   }
 
+  const cf = brief.crossFiling;
+  if (cf) {
+    L.push('', '## Cross-filing analysis (computed from XBRL, not model-extracted)');
+    L.push(
+      `_${cf.periodsAvailable} quarters of comparable data through ${cf.latestPeriod ?? 'n/a'}. ` +
+        `Every figure below is arithmetic on values the filer tagged itself._`,
+    );
+    for (const w of cf.warnings) L.push(`- ⚠ ${w}`);
+
+    if (cf.trends.length) {
+      L.push('', '### Trends');
+      for (const t of cf.trends) {
+        L.push(`- **[${t.severity}] ${t.id}** — ${t.claim}`);
+        L.push(
+          `  - series: ${t.series.map((s) => `${s.period}=${Number(s.value.toFixed(2))}`).join(' → ')}`,
+        );
+        L.push(`  - source tags: ${t.sourceTags.join(', ') || 'n/a'}`);
+        if (t.usesRestatedData) L.push('  - ⚠ uses a period that was later restated');
+      }
+    } else {
+      L.push('', '### Trends', '_no multi-period deterioration detected_');
+    }
+
+    if (cf.recurrence.length) {
+      L.push('', '### Repetition across filings');
+      for (const r of cf.recurrence) {
+        L.push(`- **[${r.severity}] ${r.id}** — ${r.claim}`);
+        L.push(`  - this filing: "${r.quote.slice(0, 200)}"`);
+        L.push(`  - prior: ${r.priorOccurrences.map((p) => `${p.form} ${p.filingDate}`).join(', ')}`);
+      }
+    }
+
+    const composite: string[] = [];
+    if (cf.beneish?.mScore != null) {
+      composite.push(
+        `Beneish M-score ${cf.beneish.mScore} vs threshold ${cf.beneish.threshold} — ` +
+          `${cf.beneish.flagged ? 'FLAGGED' : 'not flagged'}` +
+          (cf.beneish.dominantIndex ? `, driven mainly by ${cf.beneish.dominantIndex}` : '') +
+          (cf.beneish.missing.length ? ` (unavailable: ${cf.beneish.missing.join(', ')})` : ''),
+      );
+    }
+    if (cf.altman?.zScore != null) {
+      composite.push(
+        `Altman Z''-score ${cf.altman.zScore} — ${cf.altman.zone} zone (distress below ${cf.altman.distressThreshold})`,
+      );
+    }
+    if (composite.length) {
+      L.push('', '### Composite scores');
+      for (const c of composite) L.push(`- ${c}`);
+      L.push(
+        '  - _These are screens, not verdicts. Beneish reports ~76% detection at a ~17.5% ' +
+          'false-positive rate; read the dominant index before treating a flag as meaningful._',
+      );
+    }
+  } else {
+    L.push(
+      '',
+      '## Cross-filing analysis',
+      '_Not computed — no usable XBRL history for this filer. This is an absence of analysis, ' +
+        'not an absence of findings._',
+    );
+  }
+
   if (brief.flags.length) {
-    L.push('', '## Flags');
+    L.push('', '## Flags (extracted by the local model from filing text)');
     for (const f of brief.flags) {
       L.push(
         `- **[${f.severity}] ${f.category}** — ${f.claim}` +
@@ -252,7 +324,7 @@ export function renderBriefMarkdown(brief: FilingBrief): string {
       L.push(`  - source: ${f.sourceChunkIds.join(', ')}`);
     }
   } else {
-    L.push('', '## Flags', '_none raised_');
+    L.push('', '## Flags (extracted by the local model from filing text)', '_none raised_');
   }
 
   if (brief.metrics.length) {

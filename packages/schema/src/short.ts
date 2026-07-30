@@ -139,6 +139,103 @@ export const ChunkExtractionRecord = z.object({
 export type ChunkExtractionRecord = z.infer<typeof ChunkExtractionRecord>;
 
 // ---------------------------------------------------------------------------
+// Cross-filing tier: trends, composites, recurrence
+//
+// These are computed, not extracted. Every value traces to a number the filer
+// tagged in XBRL or to text located in the indexed corpus — no model produced
+// any of it. The brief marks them as such, because the cloud model should
+// weight "DSO went from 61 to 78 days" (arithmetic) very differently from
+// "the local model read a sentence saying DSO rose" (transcription).
+// ---------------------------------------------------------------------------
+
+export const TrendChangeUnit = z.enum(['percent', 'days', 'bps', 'ratio']);
+export type TrendChangeUnit = z.infer<typeof TrendChangeUnit>;
+
+export const TrendFinding = z.object({
+  id: z.string(),
+  metric: z.string(),
+  category: ShortFlagCategory,
+  severity: FlagSeverity,
+  claim: z.string(),
+  direction: z.enum(['deteriorating', 'improving']),
+  /** Consecutive year-over-year periods moving the wrong way. */
+  consecutivePeriods: z.number(),
+  latestPeriod: z.string(),
+  latestValue: z.number(),
+  yearAgoValue: z.number(),
+  change: z.number(),
+  changeUnit: TrendChangeUnit,
+  /** The series behind the finding, oldest first — auditable end to end. */
+  series: z.array(z.object({ period: z.string(), value: z.number() })),
+  /** us-gaap tags that supplied the inputs. */
+  sourceTags: z.array(z.string()),
+  /** True when any period used was revised by a later filing. */
+  usesRestatedData: z.boolean(),
+});
+export type TrendFinding = z.infer<typeof TrendFinding>;
+
+export const IndexBreakdown = z.object({
+  name: z.string(),
+  value: z.number().nullable(),
+  note: z.string(),
+});
+export type IndexBreakdown = z.infer<typeof IndexBreakdown>;
+
+export const BeneishResult = z.object({
+  period: z.string(),
+  mScore: z.number().nullable(),
+  threshold: z.literal(-1.78),
+  flagged: z.boolean(),
+  indices: z.array(IndexBreakdown),
+  missing: z.array(z.string()),
+  /** Which index is actually driving the score. */
+  dominantIndex: z.string().nullable(),
+});
+export type BeneishResult = z.infer<typeof BeneishResult>;
+
+export const AltmanResult = z.object({
+  period: z.string(),
+  zScore: z.number().nullable(),
+  variant: z.literal('Z-double-prime'),
+  distressThreshold: z.literal(1.1),
+  safeThreshold: z.literal(2.6),
+  zone: z.enum(['distress', 'grey', 'safe', 'unknown']),
+  components: z.array(IndexBreakdown),
+  missing: z.array(z.string()),
+});
+export type AltmanResult = z.infer<typeof AltmanResult>;
+
+export const RecurrenceFinding = z.object({
+  id: z.enum(['repeated-explanation', 'recurring-one-time-charge']),
+  category: ShortFlagCategory,
+  severity: FlagSeverity,
+  claim: z.string(),
+  quote: z.string(),
+  priorOccurrences: z.array(
+    z.object({
+      accession: z.string(),
+      form: z.string(),
+      filingDate: z.string(),
+      excerpt: z.string(),
+    }),
+  ),
+  distinctPriorFilings: z.number(),
+});
+export type RecurrenceFinding = z.infer<typeof RecurrenceFinding>;
+
+export const CrossFilingAnalysis = z.object({
+  trends: z.array(TrendFinding),
+  recurrence: z.array(RecurrenceFinding),
+  beneish: BeneishResult.nullable(),
+  altman: AltmanResult.nullable(),
+  /** Quarters of comparable XBRL data available. Few quarters, weak claims. */
+  periodsAvailable: z.number(),
+  latestPeriod: z.string().nullable(),
+  warnings: z.array(z.string()),
+});
+export type CrossFilingAnalysis = z.infer<typeof CrossFilingAnalysis>;
+
+// ---------------------------------------------------------------------------
 // Aggregation tier: one brief per filing
 // ---------------------------------------------------------------------------
 
@@ -162,6 +259,12 @@ export const FilingBrief = z.object({
   flags: z.array(BriefFlag),
   managementClaims: z.array(ManagementClaim.extend({ sourceChunkId: z.string() })),
   /** Counts by category — what the triage gate scores. */
+  /**
+   * Cross-filing analysis. Null when the company has no usable XBRL history —
+   * a recent IPO, or a filer whose tagging we can't read. Null means "not
+   * computed", never "nothing found".
+   */
+  crossFiling: CrossFilingAnalysis.nullable(),
   flagCounts: z.record(z.string(), z.number()),
   chunksProcessed: z.number(),
   chunksFailed: z.number(),

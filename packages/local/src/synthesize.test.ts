@@ -51,6 +51,7 @@ const BRIEF: FilingBrief = {
   form: '10-K',
   filingDate: '2026-02-12',
   eightKItems: [],
+  crossFiling: null,
   summary: ['Receivables up 22% on 1.6% sales growth'],
   metrics: [],
   flags: [

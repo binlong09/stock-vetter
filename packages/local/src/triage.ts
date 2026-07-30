@@ -106,13 +106,57 @@ export function triage(brief: FilingBrief, opts: TriageOptions = {}): TriageDeci
     }
   }
 
+  // --- cross-filing evidence ----------------------------------------------
+  // Weighted 2x the equivalent single-filing flag, for two reasons. It is
+  // exact — arithmetic on numbers the filer tagged, with no transcription step
+  // that can go wrong — and it is multi-period, so it has already survived the
+  // "was that just one odd quarter?" test that single-filing flags have not.
+  const cf = brief.crossFiling;
+  if (cf) {
+    for (const t of cf.trends) {
+      const weight = CATEGORY_WEIGHT[t.category] ?? 1;
+      const points = weight * SEVERITY_MULTIPLIER[t.severity] * 2;
+      score += points;
+      reasons.push(
+        `TREND ${t.id} (${t.severity}, ${t.consecutivePeriods} consecutive quarters): ` +
+          `${t.claim.slice(0, 110)} [+${points.toFixed(1)}]`,
+      );
+    }
+
+    for (const r of cf.recurrence) {
+      const points = (CATEGORY_WEIGHT[r.category] ?? 1) * SEVERITY_MULTIPLIER[r.severity] * 1.5;
+      score += points;
+      reasons.push(
+        `RECURRENCE ${r.id} across ${r.distinctPriorFilings} prior filings [+${points.toFixed(1)}]`,
+      );
+    }
+
+    // Composites are screens, not verdicts. Beneish alone runs a ~17.5%
+    // false-positive rate, which across 2,000 companies is hundreds of false
+    // alarms a year — so a flag contributes, but never enough to escalate on
+    // its own.
+    if (cf.beneish?.flagged) {
+      score += 5;
+      reasons.push(
+        `Beneish M-score ${cf.beneish.mScore} above ${cf.beneish.threshold}` +
+          (cf.beneish.dominantIndex ? ` (driven by ${cf.beneish.dominantIndex})` : '') +
+          ' [+5]',
+      );
+    }
+    if (cf.altman?.zone === 'distress') {
+      score += 6;
+      reasons.push(`Altman Z''-score ${cf.altman.zScore} in the distress zone [+6]`);
+    }
+  }
+
   // --- combination bonus --------------------------------------------------
   // Several independent problem areas at once is qualitatively different from
   // one area shouting. Receivables AND inventory AND cash conversion is the
   // classic pattern; any one of them alone is usually just a quarter.
-  const distinctHighish = new Set(
-    brief.flags.filter((f) => f.severity !== 'low').map((f) => f.category),
-  ).size;
+  const distinctHighish = new Set([
+    ...brief.flags.filter((f) => f.severity !== 'low').map((f) => f.category),
+    ...(cf?.trends ?? []).filter((t) => t.severity !== 'low').map((t) => t.category),
+  ]).size;
   if (distinctHighish >= 3) {
     const bonus = distinctHighish * 2;
     score += bonus;
@@ -127,8 +171,14 @@ export function triage(brief: FilingBrief, opts: TriageOptions = {}): TriageDeci
     brief.chunksProcessed + brief.chunksFailed > 0
       ? brief.chunksFailed / (brief.chunksProcessed + brief.chunksFailed)
       : 0;
+  // Cross-filing findings do not come from the chunks, so a bad text parse
+  // says nothing about them. Holding a filing whose XBRL trends are damning
+  // because its HTML failed to chunk would suppress the strongest evidence in
+  // the brief for a reason unrelated to it.
+  const strongCrossFiling = (cf?.trends ?? []).some((t) => t.severity === 'high');
   const dataQualityHold =
-    failedFraction > 0.3 || brief.warnings.some((w) => /completeness as suspect/.test(w));
+    !strongCrossFiling &&
+    (failedFraction > 0.3 || brief.warnings.some((w) => /completeness as suspect/.test(w)));
   if (dataQualityHold) {
     reasons.push(
       `data quality hold: ${brief.chunksFailed}/${brief.chunksProcessed + brief.chunksFailed} chunks failed, ` +

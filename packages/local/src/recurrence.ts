@@ -20,7 +20,9 @@
 // excuse?" will find creative similarities everywhere, and this detector's
 // entire value depends on its false-positive rate being near zero.
 
-import type { FlagSeverity, ShortFlagCategory } from '@stock-vetter/schema';
+import type { RecurrenceFinding } from '@stock-vetter/schema';
+
+export type { RecurrenceFinding } from '@stock-vetter/schema';
 import type { LookbackIndex } from './lookback.js';
 
 // Words too common to distinguish one explanation from another. Deliberately
@@ -51,19 +53,6 @@ export function overlapRatio(claim: Set<string>, candidate: Set<string>): number
   for (const w of claim) if (candidate.has(w)) hits++;
   return hits / claim.size;
 }
-
-export type RecurrenceFinding = {
-  id: 'repeated-explanation' | 'recurring-one-time-charge';
-  category: ShortFlagCategory;
-  severity: FlagSeverity;
-  claim: string;
-  /** The wording in the filing under analysis. */
-  quote: string;
-  /** Prior filings where the same explanation appears, newest first. */
-  priorOccurrences: Array<{ accession: string; form: string; filingDate: string; excerpt: string }>;
-  /** Distinct prior filings, which is what the severity keys off. */
-  distinctPriorFilings: number;
-};
 
 export type RecurrenceOptions = {
   /** Prior filings required before reporting. Default 2 (so 3 total). */

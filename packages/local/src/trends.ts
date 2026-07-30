@@ -23,39 +23,13 @@
 // itself — and are marked as such so the cloud model can weight them above
 // anything a 30B model transcribed from a page.
 
-import type { FlagSeverity, ShortFlagCategory } from '@stock-vetter/schema';
+import type { FlagSeverity, ShortFlagCategory, TrendChangeUnit, TrendFinding } from '@stock-vetter/schema';
 import type { SeriesSet } from '@stock-vetter/core';
 import { computeRatios, type PeriodRatios, type RatioOptions } from './ratios.js';
 
-export type TrendDirection = 'deteriorating' | 'improving';
+export type { TrendFinding } from '@stock-vetter/schema';
 
-export type TrendFinding = {
-  /** Stable identifier, e.g. 'dso-lengthening'. */
-  id: string;
-  metric: string;
-  category: ShortFlagCategory;
-  severity: FlagSeverity;
-  /** A sentence with the numbers in it. */
-  claim: string;
-  direction: TrendDirection;
-  /** Consecutive year-over-year periods moving the wrong way. */
-  consecutivePeriods: number;
-  latestPeriod: string;
-  latestValue: number;
-  /** Same quarter, one year earlier. */
-  yearAgoValue: number;
-  /** Signed change, in the unit given by `changeUnit`. */
-  change: number;
-  changeUnit: 'percent' | 'days' | 'bps' | 'ratio';
-  /** The full series behind the finding, oldest first — auditable. */
-  series: Array<{ period: string; value: number }>;
-  /** us-gaap tags that supplied the inputs. */
-  sourceTags: string[];
-  /** True when any period used was restated by a later filing. */
-  usesRestatedData: boolean;
-};
-
-type ChangeUnit = TrendFinding['changeUnit'];
+type ChangeUnit = TrendChangeUnit;
 
 type Detector = {
   id: string;

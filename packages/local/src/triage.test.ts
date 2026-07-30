@@ -24,6 +24,7 @@ function brief(over: Partial<FilingBrief> = {}): FilingBrief {
     form: '10-K',
     filingDate: '2026-02-12',
     eightKItems: [],
+  crossFiling: null,
     summary: [],
     metrics: [],
     flags: [],
@@ -162,4 +163,152 @@ test('every scored contribution is attributed in reasons', () => {
     }),
   );
   assert.ok(d.reasons.some((r) => /auditor \(high\)/.test(r) && /\+\d/.test(r)));
+});
+
+// --- cross-filing evidence -------------------------------------------------
+
+function trend(over: Partial<import('@stock-vetter/schema').TrendFinding> = {}) {
+  return {
+    id: 'dso-lengthening',
+    metric: 'dso',
+    category: 'receivables-quality' as const,
+    severity: 'medium' as const,
+    claim: 'DSO lengthened to 78 days from 61 a year earlier over 4 consecutive quarters',
+    direction: 'deteriorating' as const,
+    consecutivePeriods: 4,
+    latestPeriod: '2025Q4',
+    latestValue: 78,
+    yearAgoValue: 61,
+    change: 17,
+    changeUnit: 'days' as const,
+    series: [{ period: '2025Q4', value: 78 }],
+    sourceTags: ['AccountsReceivableNetCurrent'],
+    usesRestatedData: false,
+    ...over,
+  };
+}
+
+function crossFiling(over: Partial<import('@stock-vetter/schema').CrossFilingAnalysis> = {}) {
+  return {
+    trends: [],
+    recurrence: [],
+    beneish: null,
+    altman: null,
+    periodsAvailable: 12,
+    latestPeriod: '2025Q4',
+    warnings: [],
+    ...over,
+  };
+}
+
+test('a multi-quarter trend outweighs the same finding seen in one filing', () => {
+  const single = triage(
+    brief({ flags: [flag({ category: 'receivables-quality', severity: 'medium' })] }),
+  );
+  const multi = triage(brief({ crossFiling: crossFiling({ trends: [trend()] }) }));
+  // The trend is exact and has already survived "was that just one odd
+  // quarter?"; the extracted flag has done neither.
+  assert.ok(multi.score > single.score, `trend ${multi.score} vs flag ${single.score}`);
+  assert.ok(multi.reasons.some((r) => r.startsWith('TREND ')));
+});
+
+test('a high-severity trend escalates on its own', () => {
+  const d = triage(brief({ crossFiling: crossFiling({ trends: [trend({ severity: 'high' })] }) }));
+  assert.equal(d.escalate, true);
+});
+
+test('a Beneish flag contributes but cannot escalate by itself', () => {
+  // ~17.5% false-positive rate: across 2,000 companies that is hundreds of
+  // false alarms a year if it is allowed to be decisive.
+  const d = triage(
+    brief({
+      crossFiling: crossFiling({
+        beneish: {
+          period: '2025FY',
+          mScore: -1.2,
+          threshold: -1.78,
+          flagged: true,
+          indices: [],
+          missing: [],
+          dominantIndex: 'SGI',
+        },
+      }),
+    }),
+  );
+  assert.equal(d.escalate, false);
+  assert.ok(d.reasons.some((r) => /Beneish/.test(r) && /driven by SGI/.test(r)));
+});
+
+test('a strong trend survives a data-quality hold caused by bad text parsing', () => {
+  const d = triage(
+    brief({
+      chunksProcessed: 2,
+      chunksFailed: 18,
+      crossFiling: crossFiling({ trends: [trend({ severity: 'high' })] }),
+    }),
+  );
+  // The trend came from XBRL, not from the chunks that failed. Suppressing it
+  // because the HTML wouldn't parse would bury the strongest evidence for a
+  // reason unrelated to it.
+  assert.equal(d.dataQualityHold, false);
+  assert.equal(d.escalate, true);
+});
+
+test('a bad text parse still holds a filing whose only evidence came from text', () => {
+  const d = triage(
+    brief({
+      chunksProcessed: 2,
+      chunksFailed: 18,
+      flags: [flag({ category: 'going-concern', severity: 'high' })],
+      crossFiling: crossFiling(),
+    }),
+  );
+  assert.equal(d.dataQualityHold, true);
+  assert.equal(d.escalate, false);
+});
+
+test('trends count toward the distinct-category combination bonus', () => {
+  const d = triage(
+    brief({
+      flags: [flag({ category: 'cash-conversion', severity: 'medium' })],
+      crossFiling: crossFiling({
+        trends: [
+          trend({ category: 'receivables-quality' }),
+          trend({ id: 'dio-lengthening', category: 'inventory-buildup' }),
+        ],
+      }),
+    }),
+  );
+  assert.ok(d.reasons.some((r) => /3 distinct non-trivial flag categories/.test(r)));
+});
+
+test('recurrence across prior filings is scored and attributed', () => {
+  const d = triage(
+    brief({
+      crossFiling: crossFiling({
+        recurrence: [
+          {
+            id: 'recurring-one-time-charge',
+            category: 'one-time-recurring',
+            severity: 'high',
+            claim: 'restructuring charge in 4 prior filings',
+            quote: 'restructuring charge of $42.0 million',
+            priorOccurrences: [],
+            distinctPriorFilings: 4,
+          },
+        ],
+      }),
+    }),
+  );
+  assert.ok(d.reasons.some((r) => /RECURRENCE recurring-one-time-charge across 4 prior filings/.test(r)));
+});
+
+test('an absent cross-filing analysis changes nothing about the score', () => {
+  const withNull = triage(brief({ flags: [flag({ category: 'auditor', severity: 'high' })] }));
+  const withEmpty = triage(
+    brief({ flags: [flag({ category: 'auditor', severity: 'high' })], crossFiling: crossFiling() }),
+  );
+  // "Not computed" and "computed, found nothing" must not be conflated, but
+  // neither should invent or remove points.
+  assert.equal(withNull.score, withEmpty.score);
 });
