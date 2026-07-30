@@ -49,6 +49,11 @@ export type RetrievedPassage = {
 export type SearchFilters = {
   ticker?: string;
   accession?: string;
+  /**
+   * Exclude one filing. Cross-filing detectors ask "has this company said this
+   * BEFORE?", and without this the current filing is always its own top hit.
+   */
+  excludeAccession?: string;
   /** Restrict to filings on or after this date, 'YYYY-MM-DD'. */
   since?: string;
   form?: string;
@@ -272,6 +277,10 @@ export class LookbackIndex {
     if (f.accession) {
       parts.push(`${alias}.accession = ?`);
       args.push(f.accession);
+    }
+    if (f.excludeAccession) {
+      parts.push(`${alias}.accession != ?`);
+      args.push(f.excludeAccession);
     }
     if (f.form) {
       parts.push(`${alias}.form = ?`);
