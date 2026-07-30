@@ -23,7 +23,8 @@
     "build-universe": "tsx scripts/build-universe.ts",
     "lookback": "tsx scripts/lookback.ts",
     "calibrate-tokens": "tsx scripts/calibrate-tokens.ts",
-    "test": "tsx --test 'packages/*/src/*.test.ts'"
+    "test": "tsx --test 'packages/*/src/*.test.ts'",
+    "trends": "tsx scripts/trends.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

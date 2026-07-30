@@ -4,7 +4,7 @@ Three research tools that share one codebase:
 
 - **Stock Vetter** — type a ticker, get one decision card. Fetches the latest 10-K, DEF 14A proxy, 10-Q, SEC companyfacts, and current price; runs a three-pass primary-source value-investing checklist; computes a reverse DCF and historical valuation context; optionally folds in analyst-video or earnings-call analysis; and produces a verdict + 1–10 weighted score.
 - **Signal Tracker** — write a one-line investment thesis with explicit tripwires, then let a daily cron watch SEC filings, consensus estimates, and earnings calls for the events that would confirm or break it. You get an email only when a tripwire actually flips.
-- **Short-Side Scanner** — point a local GPU at the top ~2,000 US companies and read every 10-K, 10-Q, and 8-K they file, looking for the quantitative tells that precede a repricing downward. A local Qwen model does the bulk reading under a rigid schema with every claim quote-verified; a deterministic gate decides which ~15% of filings are worth the Claude API and your attention. Requires Ollama on a machine with a decent GPU.
+- **Short-Side Scanner** — point a local GPU at the top ~2,000 US companies and read every 10-K, 10-Q, and 8-K they file, looking for the quantitative tells that precede a repricing downward. A local Qwen model does the bulk reading under a rigid schema with every claim quote-verified; a deterministic layer computes multi-quarter ratio trends straight from the companies' own XBRL; a gate then decides which ~15% of filings are worth the Claude API and your attention. Requires Ollama on a machine with a decent GPU.
 
 All three run as a CLI on your laptop (or a scheduled runner). A small read-only Next.js viewer (`apps/web/`, on Vercel free tier) reads the results on your phone. The pipelines are **not** deployed — only the viewer.
 
@@ -89,11 +89,20 @@ pnpm lookback verify "Days sales outstanding increased to 78 days"
 
 # Check the chunk-size estimator against your actual model's tokenizer
 pnpm calibrate-tokens
+
+# Cross-filing trends for one company — no GPU needed, just EDGAR and arithmetic
+pnpm trends NVDA
+pnpm trends NVDA --as-of=2024-01-31   # what a filing that date would have seen
+pnpm trends NVDA --metric=dso
 ```
 
 Results land in `fixtures/short/<TICKER>/<accession>/` as `brief.md` (what the
-local tier extracted), `triage.json` (why it did or didn't escalate), and
-`assessment.md` (the thesis, if it escalated).
+local tier extracted plus the cross-filing trends), `triage.json` (why it did or
+didn't escalate), and `assessment.md` (the thesis, if it escalated).
+
+The trend detectors are tuned to be quiet — a healthy large cap should produce
+few or no findings. If a name like KO lights up across six detectors, suspect a
+concept mapping rather than a fraud.
 
 ### Signal Tracker
 

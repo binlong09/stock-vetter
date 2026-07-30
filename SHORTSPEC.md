@@ -13,7 +13,7 @@ a deterministic triage gate.
 
 ---
 
-## The four tiers
+## The five tiers
 
 Each tier does only what it is best at, and nothing it is bad at.
 
@@ -21,14 +21,20 @@ Each tier does only what it is best at, and nothing it is bad at.
 |---|---|---|---|
 | 1. Parse | CPU | Section extraction, table rendering, boilerplate removal, chunking | Interpret anything |
 | 2. Extract | RTX 5090 | Per-chunk structured extraction under a rigid schema | Judge materiality |
-| 3. Aggregate | CPU | Dedupe, rank, score, decide what escalates | Call a model |
-| 4. Synthesize | Claude API | Judgment, with the corpus reachable via local retrieval | Read whole filings |
+| 3. Cross-filing | CPU | Ratio trends over quarters, composites, repetition across filings | Involve a model at all |
+| 4. Aggregate | CPU | Dedupe, rank, score, decide what escalates | Call a model |
+| 5. Synthesize | Claude API | Judgment, with the corpus reachable via local retrieval | Read whole filings |
 
 The boundary that matters most is between 2 and 3. The local model is asked only
 to *find and transcribe* — "what numbers are on this page, what does the text
 say about them" — and never to decide whether something matters. Deciding is the
 part small models are worst at and the part where a wrong answer is most
 expensive.
+
+**Tier 3 is where the actual short signals are.** A single filing showing
+receivables up 22% is a quarter. Receivables outgrowing revenue for six
+consecutive quarters while DSO lengthens 17 days is a thesis, and no amount of
+care in tiers 1 and 2 can see it, because they only ever look at one filing.
 
 ---
 
@@ -220,6 +226,125 @@ point, so the threshold can be tuned against outcomes rather than vibes.
 
 ---
 
+## Tier 3 — cross-filing analysis
+
+`packages/core/src/xbrl.ts`, `packages/local/src/{ratios,trends,composite-scores,recurrence}.ts`.
+
+### Why XBRL and not the extracted metrics
+
+The local model's figures are quote-verified, but they are still a
+transcription of a rendering of a number. Trend detection needs many periods
+lined up on one basis, and a single mis-attributed period turns "receivables
+rose four quarters running" into noise — or invents it.
+
+The filer already tagged all of this. `companyfacts` returns machine-readable
+values with explicit period boundaries, from XBRL the company certified. So
+trends are computed from that, and a trend finding can be labelled **exact** in
+a way nothing read off a page can be.
+
+Three things make quarterly XBRL genuinely hard, and each is handled explicitly:
+
+1. **Duration facts are often cumulative.** A Q3 10-Q reports both a 3-month and
+   a 9-month figure, both tagged `fp: "Q3"`. Only ~90-day spans are admitted;
+   admitting the cumulative one makes revenue appear to triple every Q3.
+2. **Q4 is almost never disclosed** — the 10-K gives the full year — so it is
+   derived as FY − (Q1+Q2+Q3) and labelled `derived: 'q4-residual'`, because
+   that is arithmetic rather than disclosure. It is never derived when a quarter
+   is missing, since the residual would just be wrong.
+3. **Every period is reported many times** as comparatives. The most recently
+   filed value wins, but when a later filing *changed* it, the prior value is
+   kept in `restatedFrom` — a company quietly revising a number it already
+   reported is itself a short signal.
+
+### The two rules every detector follows
+
+**Compare year over year, never sequentially.** A retailer's inventory always
+spikes into the holiday quarter and always drains after it. A sequential
+detector reports that as a finding every year for every retailer, which is
+worse than useless — it trains you to ignore the output. There is a test for
+exactly this: a business with a 2.5× Q4 produces zero findings.
+
+**Require a run.** One bad quarter is noise: an acquisition closing near period
+end inflates DSO once, an inventory build ahead of a launch is deliberate.
+Detectors need three to five consecutive year-over-year deteriorations *and* a
+material cumulative change before they say anything.
+
+Year-over-year pairing matches on `(fy−1, fp)` rather than "four rows back",
+which survives a missing quarter — common, since Q4 only exists once the 10-K
+lands. Changes are reported in each metric's natural unit: days for DSO, basis
+points for margins. Calling a 44.7%→43.7% gross-margin move "a 2.2% decline"
+understates it and invites confusion with a 2.2-point decline.
+
+Detectors: DSO, DIO, DPO and cash-conversion-cycle lengthening; gross-margin
+erosion; CFO diverging from net income; rising Sloan accruals; SG&A
+deleveraging; share-count growth; rising leverage; shrinking deferred revenue;
+capex falling below depreciation; and prior-period restatement.
+
+### Composite screens
+
+Beneish M-score and Altman Z''-score. Their value over the trend detectors is
+*calibration*: the detectors say "this got worse", while these thresholds were
+fitted against known outcomes — Beneish against SEC enforcement targets, Altman
+against companies that went bankrupt.
+
+Neither is a verdict. Beneish's own paper reports ~76% detection at a ~17.5%
+false-positive rate, which across 2,000 companies is roughly 350 false alarms a
+year if you read the headline as an answer. So both emit their full component
+breakdown, and the M-score reports **which index is driving it** — one pushed
+entirely by SGI describes a fast-growing company, not a fraudulent one, and
+that is invisible in the composite alone. In triage a composite flag
+contributes points but can never escalate a filing on its own.
+
+Altman uses the 1993 Z'' four-variable revision rather than the original 1968
+Z: Z'' uses book equity instead of market cap, generalizes beyond
+manufacturers, and keeps a market-data dependency out of a filing-analysis
+pipeline.
+
+### Repetition across filings
+
+The numeric detectors catch deterioration in the figures. `recurrence.ts`
+catches a different thing: an explanation that has stopped being an
+explanation.
+
+"The decline reflects the timing of distributor shipments" is reasonable once.
+In the fourth consecutive quarter it is describing a trend management declines
+to call a trend. Same with a "non-recurring" restructuring charge taken every
+year for five years — the charge recurs, the label does not, and any non-GAAP
+measure adding it back overstates run-rate earnings.
+
+Matching is deterministic token overlap, not a model, and that is deliberate: a
+model asked "is this the same excuse?" finds creative similarities everywhere,
+and these detectors are only worth having if their false-positive rate is near
+zero. The stopword list drops finance-generic vocabulary (revenue, increased,
+prior, quarter), since matching on those makes every filing look like a repeat
+of every other one. The one-time-charge detector requires the literal phrase in
+the retrieved passage, not merely a BM25 hit, and requires the *current* filing
+to use it — a company that restructured twice years ago and stopped is not a
+finding.
+
+### As-of correctness
+
+Every cross-filing computation takes the filing's own date as a cutoff. XBRL
+payloads and the lookback index both contain material filed later — a 2026
+10-Q restates 2025 comparatives — so computing a trend "as of" a 2025 filing
+against the full payload silently uses information that did not exist yet.
+That is invisible in the output and fatal to any backtest: it looks like a
+brilliant strategy and is not one.
+
+### How this changes triage
+
+Trends score at **2×** the equivalent single-filing flag and recurrence at 1.5×.
+Both are exact, with no transcription step to go wrong, and both are
+multi-period, so they have already survived the "was that just one odd quarter?"
+test a single-filing flag has not.
+
+A high-severity trend also **overrides the data-quality hold**. Cross-filing
+findings don't come from the chunks, so a filing whose HTML failed to parse
+says nothing about them; holding it would bury the strongest evidence in the
+brief for a reason unrelated to that evidence.
+
+---
+
 ## Tier 4 — cloud synthesis over a local index
 
 `packages/local/src/lookback.ts`, `synthesize.ts`.
@@ -290,6 +415,14 @@ is right.
 found for that exact string. An honest `false` is fine; an unearned `true`
 destroys the reason the pipeline exists.
 
+The prompt also opens by distinguishing the two kinds of evidence in the brief.
+Computed evidence (cross-filing) is arithmetic on filer-tagged values;
+transcribed evidence (flags, metrics) is a 30B model's reading of a page,
+quote-verified for existence but not for interpretation. Conflicts resolve
+toward the computed side. And an empty cross-filing section is explicitly *not*
+exoneration — it means either no XBRL history or genuinely stable numbers, and
+the brief says which.
+
 ---
 
 ## Operating it
@@ -317,7 +450,16 @@ pnpm short-scan NVDA --no-synthesis
 pnpm lookback search "days sales outstanding" --ticker=NVDA
 pnpm lookback verify "Days sales outstanding increased to 78 days"
 pnpm lookback stats
+
+# Cross-filing trends — no GPU, no Ollama, just EDGAR and arithmetic
+pnpm trends NVDA
+pnpm trends NVDA --as-of=2024-01-31    # what a filing that date would have seen
+pnpm trends NVDA --metric=dso          # one metric's full series
+pnpm trends --detectors                # list the detectors
 ```
+
+`pnpm trends` is the fastest way to sanity-check a name and the right place to
+calibrate detector thresholds before a universe sweep depends on them.
 
 ### Configuration
 
@@ -362,17 +504,26 @@ your budget.
   B-shares beats silently pricing the wrong security.
 - **`filings.recent` covers about a year.** Deep backfill needs the daily-index
   walk in `edgar-index.ts`, not `listFilings`.
-- **No cross-filing trend detection yet.** The index holds the history and the
-  model can query it, but nothing automatically computes "receivables have risen
-  four quarters running". That is the obvious next thing to build, and it is
-  where the real short signals live.
+- **No peer/industry comparison.** Every trend is measured against the company's
+  own history, never against its sector. A 300bps gross-margin decline is a very
+  different signal when the whole industry compressed 400bps, and the pipeline
+  currently cannot tell those apart. This is the largest remaining gap.
+- **No price or borrow data.** The pipeline cannot check whether a
+  deterioration is already priced in, which is one of the four conditions the
+  prompt requires for an actionable short — so that judgment rests entirely on
+  the cloud model's priors.
+- **Trend thresholds are hand-set, not fitted.** The consecutive-period and
+  magnitude requirements are judgments, not calibrations against outcomes. Once
+  the index holds a few years of history, they should be backtested — and the
+  as-of machinery exists specifically so that backtest can be honest.
 - **Not verified against live EDGAR.** See below.
 
 ## Verification status
 
-Everything in this document is covered by tests that run without a GPU: 115
-tests using a stand-in Ollama server, a stand-in Anthropic endpoint, and a
-deterministic fake embedder.
+Everything in this document is covered by tests that run without a GPU: 177
+tests using a stand-in Ollama server, a stand-in Anthropic endpoint, a
+deterministic fake embedder, and synthetic XBRL payloads reproducing the quirks
+real company-facts responses contain.
 
 The HTML-layer work — `sec-layout.ts`, `sec-8k.ts` — is tested against synthetic
 fixtures reproducing the conventions observed in this repo's committed filings,
@@ -384,7 +535,11 @@ trusting it on real data, run on a machine with EDGAR access:
 pnpm short-scan CHD --index-only     # does layout join cleanly?
 pnpm lookback search "net sales" --ticker=CHD
 pnpm calibrate-tokens                # is the estimator safe on your model?
+pnpm trends CHD                      # do the XBRL series look sane?
 ```
 
-and check that no section reports `layoutDegraded`, and that retrieved table
-snippets carry their period headers.
+Check that no section reports `layoutDegraded`, that retrieved table snippets
+carry their period headers, and — most importantly — that `pnpm trends` on a
+few known-healthy large caps returns **few or no findings**. The detectors are
+tuned to be quiet; a name like KO or CHD lighting up across six detectors means
+a concept mapping is wrong for that filer, not that the company is a fraud.
