@@ -91,6 +91,24 @@ export {
   type ItemSeverity,
 } from './sec-8k.js';
 
+// XBRL company-facts → per-concept quarterly/annual time series. Exact,
+// filer-tagged numbers — the basis for cross-filing trend detection.
+export {
+  fetchCompanyFacts,
+  fetchSeriesSet,
+  buildConceptSeries,
+  pointsAsOf,
+  recentQuarters,
+  recentYears,
+  valueAt,
+  type ConceptSpec,
+  type ConceptSeries,
+  type ConceptKind,
+  type FactPoint,
+  type FiscalPeriod,
+  type SeriesSet,
+} from './xbrl.js';
+
 // EDGAR daily-index sweep — one request covers the whole market for a day.
 export {
   sweepFilings,
