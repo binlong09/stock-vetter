@@ -118,7 +118,14 @@ export async function extractChunk(
 ): Promise<ChunkExtractionRecord> {
   const system = await loadPrompt('local-chunk-extract');
   const prompt = buildPrompt(chunk);
-  const maxOutputTokens = opts.maxOutputTokens ?? 3072;
+  // A dense financial-statement chunk yields 20+ quoted metrics plus flags and
+  // claims; on a verbose model (the Qwen3-30B MoE runs long) that pushes toward
+  // 6,000 output tokens, and a cap hit mid-JSON would fail the whole chunk.
+  // 7,168 clears every non-pathological chunk observed across CHD/KO/PG with
+  // margin, while still fitting an 8k chunk + this reserve inside the default
+  // 16k context window. (A true runaway exceeds any budget; `generateJson`
+  // retries it with a be-concise instruction rather than raising this.)
+  const maxOutputTokens = opts.maxOutputTokens ?? 7168;
 
   // Refuse rather than let Ollama truncate the front of the chunk silently.
   client.assertContextFits(estimateTokens(system) + estimateTokens(prompt), maxOutputTokens);

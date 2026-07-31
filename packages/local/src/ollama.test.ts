@@ -211,3 +211,163 @@ test('an unreachable server yields a diagnosable error, not a bare fetch failure
   assert.equal(h.ok, false);
   assert.match(h.detail!, /cannot reach Ollama at http:\/\/127\.0\.0\.1:1/);
 });
+
+// --- OpenAI-compatible backend (llama.cpp llama-server, vLLM, …) ------------
+
+// A stand-in llama-server: /v1/models for health, /v1/chat/completions for
+// generation. Records request bodies so the wire shape stays pinned.
+async function withOpenAiServer(
+  content: (call: number) => string,
+  fn: (host: string, seen: any[]) => Promise<void>,
+  modelsBody: unknown = { data: [{ id: 'unsloth/Qwen3.6-27B-MTP-GGUF:UD-Q4_K_XL' }] },
+): Promise<void> {
+  const seen: any[] = [];
+  let call = 0;
+  const server: Server = createServer((req, res) => {
+    if (req.url === '/v1/models') {
+      res.setHeader('content-type', 'application/json');
+      res.end(JSON.stringify(modelsBody));
+      return;
+    }
+    let raw = '';
+    req.on('data', (c) => (raw += c));
+    req.on('end', () => {
+      const body = JSON.parse(raw);
+      seen.push(body);
+      call++;
+      res.setHeader('content-type', 'application/json');
+      res.end(
+        JSON.stringify({
+          choices: [{ finish_reason: 'stop', message: { content: content(call) } }],
+          usage: { prompt_tokens: 300, completion_tokens: 40 },
+        }),
+      );
+    });
+  });
+  await new Promise<void>((r) => server.listen(0, '127.0.0.1', r));
+  const port = (server.address() as { port: number }).port;
+  try {
+    await fn(`http://127.0.0.1:${port}`, seen);
+  } finally {
+    await new Promise<void>((r) => server.close(() => r()));
+  }
+}
+
+const MODEL = 'unsloth/Qwen3.6-27B-MTP-GGUF:UD-Q4_K_XL';
+
+test('openai backend: health matches the served model via /v1/models', async () => {
+  await withOpenAiServer(
+    () => '{}',
+    async (host) => {
+      const c = new OllamaClient({ host, backend: 'openai', model: MODEL });
+      assert.equal((await c.health()).ok, true);
+      const miss = new OllamaClient({ host, backend: 'openai', model: 'something-else' });
+      const h = await miss.health();
+      assert.equal(h.ok, false);
+      assert.match(h.detail!, /not served/);
+    },
+  );
+});
+
+test('openai backend: schema goes in response_format and thinking is disabled', async () => {
+  await withOpenAiServer(
+    () => '{"label":"x","value":9}',
+    async (host, seen) => {
+      const c = new OllamaClient({ host, backend: 'openai', model: MODEL });
+      const r = await c.generateJson({ prompt: 'p', system: 's', schema: Simple });
+      assert.equal(r.value.value, 9);
+      const body = seen[0];
+      assert.equal(body.messages[0].role, 'system');
+      assert.equal(body.messages[1].content, 'p');
+      assert.equal(body.response_format.type, 'json_schema');
+      assert.ok(body.response_format.json_schema.schema.properties.value, 'schema lost its properties');
+      assert.doesNotMatch(JSON.stringify(body.response_format), /\$ref|\$defs|definitions/);
+      // Extraction is transcription; a reasoning model must not think.
+      assert.equal(body.chat_template_kwargs.enable_thinking, false);
+      // Ollama-only knobs must not leak onto the OpenAI wire.
+      assert.equal(body.options, undefined);
+      assert.equal(body.keep_alive, undefined);
+    },
+  );
+});
+
+test('openai backend: a length finish_reason is reported as a budget overflow', async () => {
+  // A server that always reports truncation, mirroring the Ollama-path test.
+  const srv = createServer((req, res) => {
+    if (req.url === '/v1/models') {
+      res.end(JSON.stringify({ data: [{ id: MODEL }] }));
+      return;
+    }
+    req.on('data', () => undefined);
+    req.on('end', () => {
+      res.end(
+        JSON.stringify({ choices: [{ finish_reason: 'length', message: { content: '{"label":"x' } }], usage: {} }),
+      );
+    });
+  });
+  await new Promise<void>((r) => srv.listen(0, '127.0.0.1', r));
+  const port = (srv.address() as { port: number }).port;
+  try {
+    const c = new OllamaClient({ host: `http://127.0.0.1:${port}`, backend: 'openai', model: MODEL });
+    await assert.rejects(c.generateJson({ prompt: 'p', schema: Simple, attempts: 1 }), /output token limit/);
+  } finally {
+    await new Promise<void>((r) => srv.close(() => r()));
+  }
+});
+
+test('a truncated answer is retried with a be-concise instruction, not lost', async () => {
+  // A verbose model can hit the output cap mid-JSON. That is recoverable — ask
+  // it to be terser and try again — rather than dropping the chunk outright.
+  let call = 0;
+  const seen: any[] = [];
+  const srv = createServer((req, res) => {
+    if (req.url === '/v1/models') {
+      res.end(JSON.stringify({ data: [{ id: MODEL }] }));
+      return;
+    }
+    let raw = '';
+    req.on('data', (c) => (raw += c));
+    req.on('end', () => {
+      seen.push(JSON.parse(raw));
+      call++;
+      const truncated = call === 1;
+      res.end(
+        JSON.stringify({
+          choices: [
+            {
+              finish_reason: truncated ? 'length' : 'stop',
+              message: { content: truncated ? '{"label":"x","val' : '{"label":"x","value":3}' },
+            },
+          ],
+          usage: {},
+        }),
+      );
+    });
+  });
+  await new Promise<void>((r) => srv.listen(0, '127.0.0.1', r));
+  const port = (srv.address() as { port: number }).port;
+  try {
+    const c = new OllamaClient({ host: `http://127.0.0.1:${port}`, backend: 'openai', model: MODEL });
+    const r = await c.generateJson({ prompt: 'p', schema: Simple });
+    assert.equal(r.value.value, 3, 'recovered on the second attempt');
+    assert.equal(seen.length, 2);
+    assert.match(seen[1].messages.at(-1).content, /cut off|too long|concise|shorter/i);
+    assert.equal(c.stats.retries, 1);
+  } finally {
+    await new Promise<void>((r) => srv.close(() => r()));
+  }
+});
+
+test('openai backend: schema-invalid output still triggers a repair retry', async () => {
+  await withOpenAiServer(
+    (call) => (call === 1 ? '{"label":"x"}' : '{"label":"x","value":5}'),
+    async (host, seen) => {
+      const c = new OllamaClient({ host, backend: 'openai', model: MODEL });
+      const r = await c.generateJson({ prompt: 'original', schema: Simple });
+      assert.equal(r.value.value, 5);
+      assert.equal(seen.length, 2);
+      assert.match(seen[1].messages.at(-1).content, /failed validation/);
+      assert.equal(c.stats.retries, 1);
+    },
+  );
+});

@@ -18,6 +18,7 @@
  *   --limit=N             cap the number of filings processed
  *   --index-only          fetch, chunk, and index; no model calls at all
  *   --no-synthesis        run the local tier only; never call the cloud model
+ *   --keyword-only        index without embeddings (BM25 only); no embed server needed
  *   --force-synthesis     escalate every filing, ignoring triage
  *   --always=10-K         forms to escalate regardless of score (repeatable)
  *   --threshold=N         triage threshold (default 12)
@@ -140,7 +141,12 @@ async function main(): Promise<void> {
     log(`local model: ${ollama.model} (num_ctx ${ollama.numCtx})`);
   }
 
-  const index = await LookbackIndex.open({ embedder: new Embedder() });
+  // Keyword-only skips the embedder entirely — the vector arm of retrieval is
+  // dropped, but the run needs no embedding server. Useful when the local model
+  // is served by something without an embeddings endpoint (e.g. a single-model
+  // llama.cpp), or just to avoid GPU time when testing the local tier.
+  const keywordOnly = flag('keyword-only') != null;
+  const index = await LookbackIndex.open({ embedder: keywordOnly ? null : new Embedder() });
   const tracker = newCostTracker();
 
   const opts: ScanOptions = {

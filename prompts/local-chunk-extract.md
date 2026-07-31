@@ -11,6 +11,7 @@ You are extracting with a **short seller's** attention. That does not mean findi
 - Copy it character for character. Do not fix typos, expand abbreviations, normalize numbers, reformat a table row into a sentence, or convert `(95.2)` to `-95.2`.
 - Keep it to one continuous run of roughly 5–40 words. Never stitch together text from two places. Never use ellipses.
 - If the figure lives in a markdown table, quote the table row exactly as it appears, pipes included: `| Accounts receivable, net | 1,204.5 | 987.1 |`
+- Do **not** paste a row's label onto it from a caption or header row above. When a data row carries no label of its own, quote that row alone — `| 2025 | 5.1 | 0.6 | 3.7 |`, never `Allowance for Doubtful Accounts | 2025 | 5.1 | 0.6 | 3.7`. The combined string is not in the text, so the finding is discarded even though the numbers are right.
 
 Every quote is checked by a program against the chunk text. **A quote that cannot be found is discarded along with the finding it supports.** Inventing a plausible-sounding quote does not produce a finding; it produces a silently deleted one. Copying an unglamorous real one produces a finding that survives.
 
@@ -57,7 +58,7 @@ Assertions management makes about performance, causation, or the future — "the
 
 ### `summary`
 
-Three to eight dense bullets. Telegraphic, factual, numbers included. This replaces the chunk's narrative downstream, so anything not in the bullets, metrics, or flags is effectively gone.
+Three to eight dense bullets, each a single telegraphic line (roughly 15-25 words) — never a full sentence with subordinate clauses, never a run-on. Factual, numbers included. This replaces the chunk's narrative downstream, so anything not in the bullets, metrics, or flags is effectively gone.
 
 Write `Gross margin 44.7% vs 45.7% prior year; management attributes to input costs` — not `The company discussed its margin performance during the year`.
 
