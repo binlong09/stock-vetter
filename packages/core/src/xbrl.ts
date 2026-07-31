@@ -167,48 +167,122 @@ function collectRawValues(
 ): { values: SecFactValue[]; matchedTags: string[]; unit: string } {
   const ns = facts.facts?.['us-gaap'] ?? facts.facts?.ifrs ?? {};
   const unit = spec.unit ?? 'USD';
+
+  // The tags are listed in PRIORITY order. Usually they cover different eras —
+  // a filer migrates from one to another (ASC 606 moved the market off
+  // `Revenues`) — so concatenating them stitches one continuous series. But
+  // some filers report more than one at once: InventoryNet alongside
+  // InventoryFinishedGoodsNetOfReserves, which is a component of it. Blindly
+  // concatenating then puts two different values on the same period, and the
+  // gap between them reads as a restatement every quarter. So each period is
+  // claimed by the highest-priority tag that reports it; a lower-priority tag
+  // only supplies periods no higher one covers.
+  const tagPoints = spec.tags.map((tag) => ns[tag]?.units?.[unit] ?? []);
+  const claimedBy = new Map<string, number>();
+  tagPoints.forEach((points, idx) => {
+    for (const p of points) {
+      const key = `${p.start ?? ''}|${p.end}`;
+      const cur = claimedBy.get(key);
+      if (cur === undefined || idx < cur) claimedBy.set(key, idx);
+    }
+  });
+
   const values: SecFactValue[] = [];
-  const matchedTags: string[] = [];
-  for (const tag of spec.tags) {
-    const points = ns[tag]?.units?.[unit];
-    if (!points?.length) continue;
-    matchedTags.push(tag);
-    values.push(...points);
-  }
-  return { values, matchedTags, unit };
+  const contributed = new Set<number>();
+  tagPoints.forEach((points, idx) => {
+    for (const p of points) {
+      if (claimedBy.get(`${p.start ?? ''}|${p.end}`) === idx) {
+        values.push(p);
+        contributed.add(idx);
+      }
+    }
+  });
+  const matchedTags = spec.tags.filter((_, idx) => contributed.has(idx));
+  return { values: normalizeScale(values), matchedTags, unit };
 }
 
-// Reduce many reports of the same period to one point, preferring the most
-// recently filed. Records the prior value when a restatement changed it.
-function dedupeByPeriod(
+// Reconcile a fact tagged at the wrong scale in one filing. CHD's 2026 10-K
+// reports intangibles in millions (1838.7) while its 10-Qs use dollars
+// (1,838,700,000); left alone the gap reads as a $1.8B → $1,838 restatement and
+// corrupts the series. Within one concept a value never legitimately moves by a
+// factor of 1000 between reports of nearby periods, so a point whose magnitude
+// is off by >=1000x from the series consensus is a units error — rescale it by
+// the power of ten that reconciles it. Needs enough points to establish that
+// consensus, and only ever moves an outlier onto the majority's scale.
+function normalizeScale(values: SecFactValue[]): SecFactValue[] {
+  const exps = values
+    .filter((v) => Number.isFinite(v.val) && v.val !== 0)
+    .map((v) => Math.round(Math.log10(Math.abs(v.val))));
+  if (exps.length < 4) return values;
+  const sorted = [...exps].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  const consensus = Math.round(
+    sorted.length % 2 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2,
+  );
+  return values.map((v) => {
+    if (!Number.isFinite(v.val) || v.val === 0) return v;
+    const diff = consensus - Math.round(Math.log10(Math.abs(v.val)));
+    return Math.abs(diff) >= 3 ? { ...v, val: v.val * 10 ** diff } : v;
+  });
+}
+
+// Two reports of one period differ for two reasons: a genuine restatement, or
+// mere precision drift — a figure disclosed to the dollar, then re-reported to
+// the nearest hundred thousand in a later comparative. Only a material move is
+// a revision; a sub-0.5% wobble is rounding and must not read as one, or every
+// filer that rounds its comparatives looks like it quietly restates.
+function isMaterialChange(a: number, b: number): boolean {
+  const scale = Math.max(Math.abs(a), Math.abs(b), 1);
+  return Math.abs(a - b) / scale > 0.005;
+}
+
+// Collapse many reports of one period into a single point.
+//
+// The period's IDENTITY is its own dates (the `key`), never the reporting
+// filing's fy/fp. Those two fields belong to the filing that carried the value,
+// not to the period it covers: a Q2-2018 figure re-reported as the comparative
+// in the 2019 Q2 10-Q is tagged fy=2019/fp=Q2, and a 2018 year-end balance
+// re-reported in the 2019 Q1 10-Q is tagged fy=2019/fp=Q1. Keying on them
+// collides two genuinely different periods and reads the value gap between them
+// as a restatement — which fired on 100% of real filers before this was keyed
+// by date.
+//
+// The LABEL (fy, fp, period, dates) therefore comes from the earliest-filed
+// report — the native disclosure, where the period is the current one and its
+// fy/fp are its own. The VALUE comes from the most recent report, and a
+// materially different later value is preserved as `restatedFrom`, because a
+// company quietly revising a period it already reported is itself a short signal.
+function collapsePeriods(
   candidates: Array<{ key: string; point: FactPoint; filed: string }>,
 ): FactPoint[] {
-  const byPeriod = new Map<string, { point: FactPoint; filed: string }>();
+  const byKey = new Map<string, Array<{ point: FactPoint; filed: string }>>();
   for (const c of candidates) {
-    const existing = byPeriod.get(c.key);
-    if (!existing) {
-      byPeriod.set(c.key, { point: c.point, filed: c.filed });
-      continue;
-    }
-    if (c.filed > existing.filed) {
-      // Later filing wins. If it changed the number, that IS the finding —
-      // a company quietly revising a prior period is a short signal, and
-      // discarding the old value throws it away.
-      const changed = Math.abs(c.point.value - existing.point.value) > 1e-6;
-      byPeriod.set(c.key, {
-        point: changed
-          ? { ...c.point, restatedFrom: existing.point.restatedFrom ?? existing.point.value }
-          : { ...c.point, restatedFrom: existing.point.restatedFrom },
-        filed: c.filed,
-      });
-    } else if (existing.point.restatedFrom === undefined && Math.abs(c.point.value - existing.point.value) > 1e-6) {
-      byPeriod.set(c.key, {
-        point: { ...existing.point, restatedFrom: c.point.value },
-        filed: existing.filed,
-      });
-    }
+    const list = byKey.get(c.key) ?? [];
+    list.push({ point: c.point, filed: c.filed });
+    byKey.set(c.key, list);
   }
-  return [...byPeriod.values()].map((v) => v.point).sort((a, b) => a.end.localeCompare(b.end));
+  const out: FactPoint[] = [];
+  for (const group of byKey.values()) {
+    group.sort((a, b) => a.filed.localeCompare(b.filed));
+    const native = group[0]!.point;
+    let value = native.value;
+    let restatedFrom: number | undefined;
+    for (const g of group.slice(1)) {
+      if (isMaterialChange(g.point.value, value)) {
+        // Preserve the value as ORIGINALLY disclosed across a chain of
+        // restatements — "was 100, now 80" is the signal, not "was 90, now 80".
+        if (restatedFrom === undefined) restatedFrom = value;
+        value = g.point.value;
+      }
+    }
+    out.push({
+      ...native,
+      value,
+      form: group[group.length - 1]!.point.form,
+      ...(restatedFrom !== undefined ? { restatedFrom } : {}),
+    });
+  }
+  return out.sort((a, b) => a.end.localeCompare(b.end));
 }
 
 function quarterOfPeriod(fp?: string): FiscalPeriod | null {
@@ -236,7 +310,7 @@ function buildDurationSeries(
       const fpResolved = fp === 'FY' ? null : fp;
       if (!fpResolved) continue;
       qCandidates.push({
-        key: `${v.fy}${fpResolved}`,
+        key: `${v.start}|${v.end}`,
         point: {
           period: `${v.fy}${fpResolved}`,
           fy: v.fy,
@@ -250,7 +324,7 @@ function buildDurationSeries(
       });
     } else if (isFullYear(span) && fp === 'FY') {
       yCandidates.push({
-        key: `${v.fy}FY`,
+        key: `${v.start}|${v.end}`,
         point: {
           period: `${v.fy}FY`,
           fy: v.fy,
@@ -268,8 +342,8 @@ function buildDurationSeries(
     // most common way to fabricate a revenue spike every Q3.
   }
 
-  const quarterly = dedupeByPeriod(qCandidates);
-  const annual = dedupeByPeriod(yCandidates);
+  const quarterly = collapsePeriods(qCandidates);
+  const annual = collapsePeriods(yCandidates);
 
   // Derive Q4. Filers report the full year on the 10-K and rarely disclose a
   // discrete Q4, so without this every company looks like it stops reporting
@@ -316,7 +390,7 @@ function buildInstantSeries(values: SecFactValue[]): { quarterly: FactPoint[]; a
     const fp = quarterOfPeriod(v.fp);
     if (!fp) continue;
     candidates.push({
-      key: `${v.fy}${fp}`,
+      key: v.end,
       point: {
         period: `${v.fy}${fp}`,
         fy: v.fy,
@@ -329,7 +403,7 @@ function buildInstantSeries(values: SecFactValue[]): { quarterly: FactPoint[]; a
       filed: v.filed ?? v.end,
     });
   }
-  const all = dedupeByPeriod(candidates);
+  const all = collapsePeriods(candidates);
   // A fiscal-year-end balance IS the Q4 balance. Publishing it under both
   // labels lets ratio code join balance-sheet and income-statement series on
   // one period key without special-casing year ends.
