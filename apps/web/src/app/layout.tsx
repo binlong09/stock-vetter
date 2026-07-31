@@ -21,6 +21,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <a href="/theses" className="text-xs text-slate-500 hover:text-slate-800">
                 Theses
               </a>
+              <a href="/radar" className="text-xs text-slate-500 hover:text-slate-800">
+                Radar
+              </a>
             </div>
             {session?.user?.email ? (
               <form
