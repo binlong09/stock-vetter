@@ -39,10 +39,11 @@ import { fetchFinancialSnapshot } from '@stock-vetter/core';
 import { buildReverseDcf, renderReverseDcfMarkdown } from '@stock-vetter/core';
 import { buildMetaCard } from '../packages/pipeline/src/meta-card.js';
 import { renderMetaCardMarkdown } from '../packages/pipeline/src/meta-card-render.js';
-import { DecisionCard, type FinancialSnapshot, type MetaCard, type PrimarySourceChecklist, type PrimarySourceJudgment, type PrimarySourceSkeptic, type ReverseDcfReport } from '@stock-vetter/schema';
-import { isTursoConfigured, pushTickerFromFixtures, fetchEarningsTranscriptBundle, runTenqDelta, type TenqDeltaSourceText, type SectionConfidence } from '@stock-vetter/pipeline';
+import { DecisionCard, type CrossFilingAnalysis, type FinancialSnapshot, type MetaCard, type PrimarySourceChecklist, type PrimarySourceJudgment, type PrimarySourceSkeptic, type ReverseDcfReport } from '@stock-vetter/schema';
+import { isTursoConfigured, pushTickerFromFixtures, fetchEarningsTranscriptBundle, runTenqDelta, renderCrossFilingMarkdown, type TenqDeltaSourceText, type SectionConfidence } from '@stock-vetter/pipeline';
 import { mostRecentQuarter } from '@stock-vetter/signals';
-import { getSecSection } from '@stock-vetter/core';
+import { getSecSection, resolveCik, fetchSeriesSet } from '@stock-vetter/core';
+import { FORENSIC_CONCEPTS, detectTrends, computeAnnualFundamentals, beneishMScore, altmanZScore } from '@stock-vetter/local';
 
 // Defaults to 'fixtures' (production). Override with FIXTURES_ROOT to run an
 // isolated experiment (e.g. a different model, or the prompt-cache A/B) without
@@ -305,6 +306,47 @@ async function processFinancialContext(
   }
 }
 
+// ADDITIVE forensic cross-filing pass, straight from the filer's own XBRL — no
+// GPU, no model, no cloud spend. Mirrors the short-scanner's cross-filing tier
+// (DSO/DIO/margin trends, Beneish M, Altman Z''), minus the recurrence detectors
+// which need a corpus index this pipeline doesn't build. Like the 10-Q delta it
+// never feeds the verdict or any dimension score — it is attached to the card
+// after synthesis as computed context. Returns null when the filer has no usable
+// XBRL history (recent IPO, foreign filer).
+async function processForensics(ticker: string): Promise<CrossFilingAnalysis | null> {
+  console.error('[ticker] computing forensic cross-filing signals from XBRL...');
+  try {
+    const cik = await resolveCik(ticker);
+    const series = await fetchSeriesSet(cik, FORENSIC_CONCEPTS);
+    if (!series) {
+      console.error('[ticker] forensics skipped: no XBRL history (recent IPO or foreign filer?)');
+      return null;
+    }
+    const trends = detectTrends(series);
+    const annual = computeAnnualFundamentals(series);
+    const analysis: CrossFilingAnalysis = {
+      trends: trends.findings,
+      recurrence: [], // needs a corpus index this pipeline doesn't build
+      beneish: beneishMScore(annual),
+      altman: altmanZScore(annual),
+      periodsAvailable: trends.periodsAvailable,
+      latestPeriod: trends.latestPeriod,
+      warnings: trends.warnings,
+    };
+    const dir = join(FIXTURES_ROOT, ticker.toUpperCase());
+    await writeText(join(dir, 'forensics.md'), renderCrossFilingMarkdown(analysis));
+    await writeJson(join(dir, 'forensics.json'), analysis);
+    console.error(
+      `[ticker] forensics: ${analysis.trends.length} trend(s) over ${analysis.periodsAvailable} quarters ` +
+        `through ${analysis.latestPeriod ?? 'n/a'}`,
+    );
+    return analysis;
+  } catch (e) {
+    console.error(`[ticker] forensics failed: ${(e as Error).message}`);
+    return null;
+  }
+}
+
 // Load all DecisionCards previously written for this ticker from fixtures/.
 // These are the per-video analyst pipeline outputs. Returns empty array
 // when none configured.
@@ -338,6 +380,7 @@ async function processMetaCard(
   dcf: ReverseDcfReport | null,
   tracker: CostTracker,
   totalLlmCost: number,
+  forensic: CrossFilingAnalysis | null,
 ): Promise<MetaCard | null> {
   console.error('[ticker] synthesizing meta-card...');
   try {
@@ -356,6 +399,9 @@ async function processMetaCard(
           process.stderr.write(`[meta-card:${stage}] cost so far $${cost.toFixed(3)}\n`),
       },
     });
+    // Attach the forensic tier before rendering so it appears in the card. Like
+    // tenqDelta it is context, not a score input — buildMetaCard never saw it.
+    if (forensic) card.forensic = forensic;
     const mdTarget = join(FIXTURES_ROOT, ticker.toUpperCase(), 'decision-card.md');
     await writeText(mdTarget, renderMetaCardMarkdown(card));
     const jsonTarget = join(FIXTURES_ROOT, ticker.toUpperCase(), 'decision-card.json');
@@ -470,6 +516,7 @@ async function main() {
     primaryChecklist: null as Awaited<ReturnType<typeof processPrimaryChecklist>>,
     snapshot: null as FinancialSnapshot | null,
     reverseDcf: null as ReverseDcfReport | null,
+    forensic: null as CrossFilingAnalysis | null,
     metaCard: null as MetaCard | null,
   };
 
@@ -489,6 +536,9 @@ async function main() {
   const fc = await processFinancialContext(upper);
   results.snapshot = fc.snapshot;
   results.reverseDcf = fc.dcf;
+  // Forensic cross-filing signals — XBRL-only, no LLM. Computed here so it's
+  // ready to attach to the card at synthesis time.
+  results.forensic = await processForensics(upper);
   if (!skipLlm && results.tenK) {
     results.primaryChecklist = await processPrimaryChecklist(
       upper,
@@ -516,6 +566,7 @@ async function main() {
       results.reverseDcf,
       sharedTracker,
       preMetaCardCost,
+      results.forensic,
     );
   }
 
