@@ -26,6 +26,7 @@ export {
   migrate,
   pushTicker,
   pushTickerFromFixtures,
+  upsertRadarSignals,
   addAllowedEmail,
   removeAllowedEmail,
   listAllowedEmails,

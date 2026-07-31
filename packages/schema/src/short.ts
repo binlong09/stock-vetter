@@ -223,6 +223,31 @@ export const RecurrenceFinding = z.object({
 });
 export type RecurrenceFinding = z.infer<typeof RecurrenceFinding>;
 
+// A single "radar" signal: one deterministic short-side tell surfaced by the
+// always-on watchlist sweep (no GPU, no model). Reacted to same-day for 8-Ks,
+// within a few days for XBRL-derived trends (companyfacts lags the filing). The
+// `key` dedups a signal to a single surfacing across daily runs.
+export const RadarSignalKind = z.enum(['8k-item', 'trend', 'restatement', 'composite']);
+export type RadarSignalKind = z.infer<typeof RadarSignalKind>;
+
+export const RadarSignal = z.object({
+  /** Stable dedup key — a signal with this key is surfaced once. */
+  key: z.string(),
+  ticker: z.string(),
+  cik: z.string(),
+  /** Accession of the filing that triggered detection. */
+  accession: z.string(),
+  form: z.string(),
+  filingDate: z.string(),
+  kind: RadarSignalKind,
+  severity: z.enum(['critical', 'high', 'medium', 'low']),
+  /** One-line headline for the digest row. */
+  headline: z.string(),
+  /** Longer context — the claim, the series, the item note. */
+  detail: z.string(),
+});
+export type RadarSignal = z.infer<typeof RadarSignal>;
+
 export const CrossFilingAnalysis = z.object({
   trends: z.array(TrendFinding),
   recurrence: z.array(RecurrenceFinding),

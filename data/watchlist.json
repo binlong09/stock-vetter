@@ -1,0 +1,70 @@
+{
+  "_doc": "Radar watchlist. Regenerate with: pnpm build-watchlist TICKER...",
+  "count": 16,
+  "tickers": [
+    {
+      "ticker": "AAPL",
+      "cik": "0000320193"
+    },
+    {
+      "ticker": "MSFT",
+      "cik": "0000789019"
+    },
+    {
+      "ticker": "MU",
+      "cik": "0000723125"
+    },
+    {
+      "ticker": "WDC",
+      "cik": "0000106040"
+    },
+    {
+      "ticker": "INTU",
+      "cik": "0000896878"
+    },
+    {
+      "ticker": "NVDA",
+      "cik": "0001045810"
+    },
+    {
+      "ticker": "WMT",
+      "cik": "0000104169"
+    },
+    {
+      "ticker": "AMZN",
+      "cik": "0001018724"
+    },
+    {
+      "ticker": "INTC",
+      "cik": "0000050863"
+    },
+    {
+      "ticker": "RDDT",
+      "cik": "0001713445"
+    },
+    {
+      "ticker": "META",
+      "cik": "0001326801"
+    },
+    {
+      "ticker": "GOOGL",
+      "cik": "0001652044"
+    },
+    {
+      "ticker": "CRM",
+      "cik": "0001108524"
+    },
+    {
+      "ticker": "NFLX",
+      "cik": "0001065280"
+    },
+    {
+      "ticker": "CDNS",
+      "cik": "0000813672"
+    },
+    {
+      "ticker": "FICO",
+      "cik": "0000814547"
+    }
+  ]
+}

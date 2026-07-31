@@ -19,12 +19,40 @@ import type {
   DecisionCard,
   FinancialSnapshot,
   MetaCard,
+  RadarSignal,
   ReverseDcfReport,
 } from '@stock-vetter/schema';
 import { getTursoClient, isTursoConfigured, migrate } from '@stock-vetter/core';
 import { loadTickerFixtures } from './fixture-loader.js';
 
 export { isTursoConfigured, getTursoClient, migrate } from '@stock-vetter/core';
+
+// ---- short-side radar ---------------------------------------------------
+
+/**
+ * Persist radar signals, deduped by `key` (INSERT OR IGNORE). Returns the
+ * genuinely NEW signals — the "what's new since last run" delta the digest
+ * reports, since an already-seen key is silently ignored. No-op returning [] when
+ * Turso isn't configured. `first_seen_at` is stamped only on first insertion.
+ */
+export async function upsertRadarSignals(signals: RadarSignal[]): Promise<RadarSignal[]> {
+  if (!signals.length || !isTursoConfigured()) return [];
+  await migrate();
+  const client = getTursoClient();
+  if (!client) return [];
+  const now = new Date().toISOString();
+  const inserted: RadarSignal[] = [];
+  for (const s of signals) {
+    const res = await client.execute({
+      sql: `INSERT OR IGNORE INTO short_radar
+            (key, ticker, cik, accession, form, filing_date, kind, severity, headline, detail, first_seen_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [s.key, s.ticker, s.cik, s.accession, s.form, s.filingDate, s.kind, s.severity, s.headline, s.detail, now],
+    });
+    if (res.rowsAffected > 0) inserted.push(s);
+  }
+  return inserted;
+}
 
 // ---- sign-in allowlist --------------------------------------------------
 //

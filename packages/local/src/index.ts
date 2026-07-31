@@ -122,3 +122,4 @@ export {
   type ScanDeps,
   type PreparedFiling,
 } from './pipeline.js';
+export { computeRadarSignals, type WatchlistEntry, type RadarOptions } from './radar.js';
