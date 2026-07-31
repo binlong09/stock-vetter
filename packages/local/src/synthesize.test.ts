@@ -250,6 +250,17 @@ test('the model verifies through the local index before submitting', async () =>
         assert.equal(toolResult.tool_use_id, 'tu_1');
         assert.ok(tracker.total > 0, 'tool-loop turns were not costed');
         assert.equal(tracker.byCall.length, 2);
+        // The brief is cached on the first turn and the growing conversation on
+        // each subsequent turn, so re-reads are billed at the cache rate rather
+        // than full input price — the dominant synthesis cost otherwise.
+        assert.ok(
+          seen[0].messages.at(-1).content.at(-1).cache_control,
+          'the brief was not marked cacheable on the first turn',
+        );
+        assert.ok(
+          toolResult.cache_control,
+          'the conversation prefix was not cached on the follow-up turn',
+        );
       },
     );
   });

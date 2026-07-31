@@ -405,6 +405,31 @@ function toAnthropicTools(tools: LLMTool[]): Tool[] {
  * one more thing to check will otherwise run until the context fills, on every
  * company in the universe.
  */
+// Roll a single ephemeral cache breakpoint onto the newest message before each
+// turn. The system prompt is already cached once, but without this the brief
+// and every accumulated tool result are re-read at full input price on all ~9
+// turns of an agent loop — the dominant synthesis cost. Marking the last block
+// of the last message caches the entire prior conversation, so each turn reads
+// it as a cache hit (0.1x input) and writes only the delta. Old breakpoints are
+// cleared first so they don't accumulate past Anthropic's cap of four; moving
+// the point forward still extends the previously written prefix, because the
+// API matches the longest cached prefix regardless of where the marker sits now.
+function rollConversationCache(messages: MessageParam[]): void {
+  for (const m of messages) {
+    if (!Array.isArray(m.content)) continue;
+    for (const block of m.content) {
+      if (block && typeof block === 'object') delete (block as { cache_control?: unknown }).cache_control;
+    }
+  }
+  const last = messages[messages.length - 1];
+  if (last && Array.isArray(last.content) && last.content.length > 0) {
+    const block = last.content[last.content.length - 1];
+    if (block && typeof block === 'object') {
+      (block as { cache_control?: CacheControl }).cache_control = { type: 'ephemeral' };
+    }
+  }
+}
+
 export async function llmCallWithToolsJson<T>(opts: {
   stage: string;
   systemPrompt: string | CacheableSegment[];
@@ -445,6 +470,7 @@ export async function llmCallWithToolsJson<T>(opts: {
     // model is forced to answer with what it has rather than being cut off
     // mid-investigation with nothing to show.
     const lastChance = iteration === maxIterations - 1;
+    rollConversationCache(messages);
     const resp = await callWithRetry(
       {
         model,

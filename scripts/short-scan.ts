@@ -240,7 +240,14 @@ async function main(): Promise<void> {
     );
     log(summarizeLocalStats(ollama.stats));
     const cost = summarizeCost(tracker);
-    log(`cloud cost: $${cost.total.toFixed(4)}`);
+    const stages = Object.values(cost.byStage);
+    const fresh = stages.reduce((n, s) => n + s.inputTokens, 0);
+    const out = stages.reduce((n, s) => n + s.outputTokens, 0);
+    log(
+      `cloud cost: $${cost.total.toFixed(4)} · ` +
+        `${fresh.toLocaleString()} input · ${out.toLocaleString()} output · ` +
+        `${cost.totalCacheReadTokens.toLocaleString()} cache-read · ${cost.totalCacheWriteTokens.toLocaleString()} cache-write`,
+    );
     if (results.some((r) => r.brief)) log(`written to ${outDir}/`);
   } finally {
     await index.close();
