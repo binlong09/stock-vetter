@@ -28,6 +28,7 @@ import {
   isTursoConfigured,
   claimNextRadarJob,
   completeRadarJob,
+  requeueRadarJob,
   failRadarJob,
   type ClaimedRadarJob,
 } from '@stock-vetter/pipeline';
@@ -60,9 +61,22 @@ async function runJob(
   // Triage gates the cloud tier (no force-synthesis); force re-processes even if
   // the filing was indexed by an earlier scan.
   const opts = { noSynthesis: false, force: true, onProgress: (m: string) => err(`    ${m}`) };
-  const result: ScanResult = job.form.startsWith('8-K')
-    ? await scanEightK(ref, deps, opts)
-    : await scanPeriodicByRef(ref, deps, opts);
+  let result: ScanResult;
+  try {
+    result = job.form.startsWith('8-K')
+      ? await scanEightK(ref, deps, opts)
+      : await scanPeriodicByRef(ref, deps, opts);
+  } catch (e) {
+    // If the model box went offline mid-job, this is transient — return the job
+    // to the queue so it's retried when the box is back, rather than marking it
+    // failed. A genuine analysis error (bad parse, schema) is a real failure.
+    if (!(await ollama.health()).ok) {
+      await requeueRadarJob(job.accession);
+      err(`  … box unreachable mid-job; requeued ${job.accession}`);
+      return;
+    }
+    throw e;
+  }
 
   const escalated = Boolean(result.assessment);
   await completeRadarJob(job.accession, {
@@ -88,11 +102,6 @@ async function main(): Promise<void> {
     process.exit(1);
   }
   const ollama = new OllamaClient({ numCtx: Number(process.env.OLLAMA_NUM_CTX ?? 16384) });
-  const health = await ollama.health();
-  if (!health.ok) {
-    err(`local model not ready: ${health.detail}`);
-    process.exit(1);
-  }
   const watch = arg('watch') != null;
   const pollMs = Number(arg('poll') ?? 60) * 1000;
   err(`radar-worker: ${ollama.model} · ${watch ? `watching (poll ${pollMs / 1000}s)` : 'draining once'}`);
@@ -101,6 +110,19 @@ async function main(): Promise<void> {
   const index = await LookbackIndex.open({ embedder: null });
   try {
     for (;;) {
+      // Only claim work when the box is reachable. If it's offline, jobs stay
+      // pending — in --watch we wait for it to come back; a one-shot exits.
+      const health = await ollama.health();
+      if (!health.ok) {
+        if (!watch) {
+          err(`box not reachable — nothing drained, jobs stay queued (${health.detail})`);
+          return;
+        }
+        err(`waiting for the box… (${health.detail})`);
+        await sleep(pollMs);
+        continue;
+      }
+
       let processed = 0;
       let job: ClaimedRadarJob | null;
       while ((job = await claimNextRadarJob())) {

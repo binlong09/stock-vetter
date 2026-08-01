@@ -31,6 +31,7 @@ export {
   enqueueMissingRadarJobs,
   claimNextRadarJob,
   completeRadarJob,
+  requeueRadarJob,
   failRadarJob,
   type RadarJobInput,
   type ClaimedRadarJob,

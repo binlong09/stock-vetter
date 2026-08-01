@@ -172,6 +172,17 @@ export async function completeRadarJob(accession: string, r: RadarJobResult): Pr
   });
 }
 
+/** Return a claimed job to the queue (pending) — for a transient failure like
+ *  the box going offline mid-job, so it retries rather than being marked failed. */
+export async function requeueRadarJob(accession: string): Promise<void> {
+  const client = getTursoClient();
+  if (!client) return;
+  await client.execute({
+    sql: `UPDATE radar_jobs SET status='pending', started_at=NULL WHERE accession=?`,
+    args: [accession],
+  });
+}
+
 /** Mark a claimed job failed with an error message. */
 export async function failRadarJob(accession: string, error: string): Promise<void> {
   const client = getTursoClient();
