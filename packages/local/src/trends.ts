@@ -23,7 +23,7 @@
 // itself — and are marked as such so the cloud model can weight them above
 // anything a 30B model transcribed from a page.
 
-import type { FlagSeverity, ShortFlagCategory, TrendChangeUnit, TrendFinding } from '@stock-vetter/schema';
+import type { FlagSeverity, FlagCategory, TrendChangeUnit, TrendFinding } from '@stock-vetter/schema';
 import type { SeriesSet } from '@stock-vetter/core';
 import { computeRatios, type PeriodRatios, type RatioOptions } from './ratios.js';
 
@@ -34,7 +34,7 @@ type ChangeUnit = TrendChangeUnit;
 type Detector = {
   id: string;
   metric: string;
-  category: ShortFlagCategory;
+  category: FlagCategory;
   worseWhen: 'higher' | 'lower';
   changeUnit: ChangeUnit;
   /** Consecutive YoY deteriorations required before reporting. */
@@ -73,7 +73,7 @@ const DETECTORS: Detector[] = [
   {
     id: 'dso-lengthening',
     metric: 'dso',
-    category: 'receivables-quality',
+    category: 'receivables',
     worseWhen: 'higher',
     changeUnit: 'days',
     minConsecutive: 3,
@@ -87,7 +87,7 @@ const DETECTORS: Detector[] = [
   {
     id: 'dio-lengthening',
     metric: 'dio',
-    category: 'inventory-buildup',
+    category: 'inventory',
     worseWhen: 'higher',
     changeUnit: 'days',
     minConsecutive: 3,
@@ -129,7 +129,7 @@ const DETECTORS: Detector[] = [
   {
     id: 'gross-margin-eroding',
     metric: 'grossMargin',
-    category: 'margin-compression',
+    category: 'margin',
     worseWhen: 'lower',
     changeUnit: 'bps',
     minConsecutive: 3,
@@ -171,7 +171,7 @@ const DETECTORS: Detector[] = [
   {
     id: 'sga-deleveraging',
     metric: 'sgaToRevenue',
-    category: 'margin-compression',
+    category: 'margin',
     worseWhen: 'higher',
     changeUnit: 'bps',
     minConsecutive: 3,

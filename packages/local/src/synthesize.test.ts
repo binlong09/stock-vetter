@@ -15,7 +15,7 @@ import { join } from 'node:path';
 import { newCostTracker } from '@stock-vetter/core';
 import type { FilingBrief } from '@stock-vetter/schema';
 import { LookbackIndex } from './lookback.js';
-import { buildVerificationTools, synthesizeShortAssessment, renderAssessmentMarkdown } from './synthesize.js';
+import { buildVerificationTools, synthesizeAssessment, renderAssessmentMarkdown } from './synthesize.js';
 import type { FilingChunk } from './chunk.js';
 
 const AR_TEXT =
@@ -56,7 +56,7 @@ const BRIEF: FilingBrief = {
   metrics: [],
   flags: [
     {
-      category: 'receivables-quality',
+      category: 'receivables',
       severity: 'high',
       claim: 'DSO rose to 78 days from 61 days',
       quote: 'Days sales outstanding increased to 78 days from 61 days in the prior year.',
@@ -66,7 +66,7 @@ const BRIEF: FilingBrief = {
     },
   ],
   managementClaims: [],
-  flagCounts: { 'receivables-quality': 1 },
+  flagCounts: { 'receivables': 1 },
   chunksProcessed: 1,
   chunksFailed: 0,
   quotesDropped: 0,
@@ -186,14 +186,15 @@ async function withAnthropic(turns: Turn[], fn: (seen: any[]) => Promise<void>):
 }
 
 const ASSESSMENT = {
-  verdict: 'actionable-short',
+  verdict: 'mispriced-short',
   thesis: 'Revenue is being pulled forward through distributor terms concessions.',
+  direction: 'short',
   conviction: 6,
   catalysts: [{ event: 'Next 10-Q receivables disclosure', expectedWindow: 'Q1 2026' }],
   evidence: [
     {
       point: 'DSO rose to 78 days from 61 days',
-      category: 'receivables-quality',
+      category: 'receivables',
       severity: 'high',
       citation: {
         claim: 'DSO rose',
@@ -204,9 +205,9 @@ const ASSESSMENT = {
       },
     },
   ],
-  bullCase: 'Terms concessions were a one-time competitive response and normalize next quarter.',
+  counterThesis: 'Terms concessions were a one-time competitive response and normalize next quarter.',
   whatWouldKillThis: ['Receivables decline sequentially while revenue holds'],
-  mechanicalRisks: ['High short interest'],
+  executionRisks: ['High short interest'],
   unverifiedClaims: [],
 };
 
@@ -236,8 +237,8 @@ test('the model verifies through the local index before submitting', async () =>
       ],
       async (seen) => {
         const tracker = newCostTracker();
-        const r = await synthesizeShortAssessment(BRIEF, idx, tracker);
-        assert.equal(r.assessment.verdict, 'actionable-short');
+        const r = await synthesizeAssessment(BRIEF, idx, tracker);
+        assert.equal(r.assessment.verdict, 'mispriced-short');
         assert.equal(r.iterations, 2);
         assert.equal(r.toolCalls.length, 1);
         assert.equal(r.toolCalls[0]!.name, 'verify_quote');
@@ -269,7 +270,7 @@ test('the model verifies through the local index before submitting', async () =>
 test('both verification tools plus submit are offered to the model', async () => {
   await withIndex(async (idx) => {
     await withAnthropic([{ content: [submitBlock()] }], async (seen) => {
-      await synthesizeShortAssessment(BRIEF, idx, newCostTracker());
+      await synthesizeAssessment(BRIEF, idx, newCostTracker());
       const names = seen[0].tools.map((t: { name: string }) => t.name);
       assert.deepEqual(names.sort(), ['search_filings', 'submit_assessment', 'verify_quote']);
       assert.ok(seen[0].system[0].cache_control, 'system prompt was not marked cacheable');
@@ -287,11 +288,11 @@ test('a throwing tool is reported to the model instead of aborting the analysis'
         { content: [submitBlock()] },
       ],
       async () => {
-        const r = await synthesizeShortAssessment(BRIEF, idx, newCostTracker());
+        const r = await synthesizeAssessment(BRIEF, idx, newCostTracker());
         // A malformed tool call costs one turn, not the whole run.
         assert.equal(r.toolCalls[0]!.isError, false);
         assert.match(r.toolCalls[0]!.result, /query is required/);
-        assert.equal(r.assessment.verdict, 'actionable-short');
+        assert.equal(r.assessment.verdict, 'mispriced-short');
       },
     );
   });
@@ -305,7 +306,7 @@ test('an unknown tool name is answered, not thrown', async () => {
         { content: [submitBlock()] },
       ],
       async () => {
-        const r = await synthesizeShortAssessment(BRIEF, idx, newCostTracker());
+        const r = await synthesizeAssessment(BRIEF, idx, newCostTracker());
         assert.equal(r.toolCalls[0]!.isError, true);
         assert.match(r.toolCalls[0]!.result, /No such tool/);
       },
@@ -323,7 +324,7 @@ test('a submission failing a Zod refinement is handed back for correction', asyn
         { content: [submitBlock({ ...ASSESSMENT, conviction: 5 })] },
       ],
       async (seen) => {
-        const r = await synthesizeShortAssessment(BRIEF, idx, newCostTracker());
+        const r = await synthesizeAssessment(BRIEF, idx, newCostTracker());
         assert.equal(r.assessment.conviction, 5);
         const retry = seen[1].messages.at(-1).content[0];
         assert.equal(retry.is_error, true);
@@ -341,8 +342,8 @@ test('prose instead of a submission is redirected to the submit tool', async () 
         { content: [submitBlock()] },
       ],
       async (seen) => {
-        const r = await synthesizeShortAssessment(BRIEF, idx, newCostTracker());
-        assert.equal(r.assessment.verdict, 'actionable-short');
+        const r = await synthesizeAssessment(BRIEF, idx, newCostTracker());
+        assert.equal(r.assessment.verdict, 'mispriced-short');
         assert.match(JSON.stringify(seen[1].messages.at(-1)), /must record your answer/);
       },
     );
@@ -355,7 +356,7 @@ test('a model that never submits fails loudly at the iteration cap', async () =>
       [{ content: [{ type: 'tool_use', id: 'tu_x', name: 'search_filings', input: { query: 'receivables' } }] }],
       async (seen) => {
         await assert.rejects(
-          synthesizeShortAssessment(BRIEF, idx, newCostTracker(), { maxIterations: 3 }),
+          synthesizeAssessment(BRIEF, idx, newCostTracker(), { maxIterations: 3 }),
           /did not submit an answer within 3 iterations/,
         );
         // On the final turn only `submit` is offered, so an indecisive model is
@@ -369,7 +370,7 @@ test('a model that never submits fails loudly at the iteration cap', async () =>
 test('the rendered assessment distinguishes verified citations from unverified ones', async () => {
   await withIndex(async (idx) => {
     await withAnthropic([{ content: [submitBlock()] }], async () => {
-      const r = await synthesizeShortAssessment(BRIEF, idx, newCostTracker());
+      const r = await synthesizeAssessment(BRIEF, idx, newCostTracker());
       const md = renderAssessmentMarkdown(BRIEF, r);
       assert.match(md, /verified against filing text/);
       assert.match(md, /1\/1 citations verified/);

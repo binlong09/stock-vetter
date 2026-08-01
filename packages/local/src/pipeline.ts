@@ -38,7 +38,7 @@ import {
   type FilingRef,
   type ToolCallRecord,
 } from '@stock-vetter/core';
-import type { CrossFilingAnalysis, FilingBrief, ShortAssessment } from '@stock-vetter/schema';
+import type { CrossFilingAnalysis, FilingBrief, MispricingAssessment } from '@stock-vetter/schema';
 import type { SeriesSet } from '@stock-vetter/core';
 import { FORENSIC_CONCEPTS } from './concepts.js';
 import { detectTrends } from './trends.js';
@@ -50,7 +50,7 @@ import { chunkBlocks, type ChunkOptions, type FilingChunk } from './chunk.js';
 import { extractChunks } from './extract.js';
 import { buildFilingBrief } from './brief.js';
 import { triage, type TriageDecision, type TriageOptions } from './triage.js';
-import { synthesizeShortAssessment, type SynthesisOptions } from './synthesize.js';
+import { synthesizeAssessment, type SynthesisOptions } from './synthesize.js';
 import type { OllamaClient } from './ollama.js';
 import type { LookbackIndex } from './lookback.js';
 
@@ -80,7 +80,7 @@ export type ScanResult = {
   stripReports: StripReport[];
   brief: FilingBrief | null;
   decision: TriageDecision | null;
-  assessment: ShortAssessment | null;
+  assessment: MispricingAssessment | null;
   crossFiling: CrossFilingAnalysis | null;
   toolCalls: ToolCallRecord[];
   /** Cloud-model turns spent. 0 when synthesis didn't run. */
@@ -368,7 +368,7 @@ export async function scanPrepared(
   }
 
   log('synthesizing with the cloud model');
-  const result = await synthesizeShortAssessment(brief, deps.index, deps.tracker, {
+  const result = await synthesizeAssessment(brief, deps.index, deps.tracker, {
     ...opts.synthesis,
     series,
     // Cap the metric history at the filing's own date. Without this, analyzing

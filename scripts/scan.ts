@@ -1,15 +1,15 @@
 #!/usr/bin/env tsx
 /**
- * scripts/short-scan.ts
+ * scripts/scan.ts
  *
  * The short-side scanner CLI. Runs the local-GPU pipeline over one ticker or
  * over a universe swept from EDGAR's daily index.
  *
  * Usage:
- *   pnpm short-scan NVDA                          # latest 10-K
- *   pnpm short-scan NVDA --form=10-Q
- *   pnpm short-scan NVDA --8k --since=2026-06-01  # every 8-K since a date
- *   pnpm short-scan --universe=data/universe.json --since=2026-07-01
+ *   pnpm scan NVDA                          # latest 10-K
+ *   pnpm scan NVDA --form=10-Q
+ *   pnpm scan NVDA --8k --since=2026-06-01  # every 8-K since a date
+ *   pnpm scan --universe=data/universe.json --since=2026-07-01
  *
  * Flags:
  *   --form=10-K|10-Q      periodic form to scan (default 10-K)
@@ -117,7 +117,7 @@ async function main(): Promise<void> {
   // Validate arguments before touching Ollama, so a typo'd invocation reports
   // the typo rather than "cannot reach Ollama".
   if (!universePathArg && !positional[0]) {
-    process.stderr.write('Usage: pnpm short-scan <TICKER> [flags]  |  --universe=<path> --since=<date>\n');
+    process.stderr.write('Usage: pnpm scan <TICKER> [flags]  |  --universe=<path> --since=<date>\n');
     process.exit(1);
   }
   if (universePathArg && !flag('since')) {

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { listRadarSignals } from '@/short-queries';
+import { listRadarSignals } from '@/radar-queries';
 import { isoDate } from '@/lib/format';
 
 // The deep-dive job status → a compact chip. `done` shows the verdict.
@@ -10,11 +10,13 @@ function analysisChip(jobStatus: string | null, verdict: string | null, convicti
   if (jobStatus === 'done') {
     const v = verdict ?? 'analyzed';
     const cls =
-      v === 'actionable-short'
+      v === 'mispriced-short'
         ? 'border-rose-300 bg-rose-50 text-rose-700'
-        : v === 'watchlist'
-          ? 'border-amber-300 bg-amber-50 text-amber-700'
-          : 'border-slate-300 bg-slate-100 text-slate-600';
+        : v === 'mispriced-long'
+          ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
+          : v === 'watchlist'
+            ? 'border-amber-300 bg-amber-50 text-amber-700'
+            : 'border-slate-300 bg-slate-100 text-slate-600';
     return { label: conviction != null && verdict ? `${v} ${conviction}/10` : v, cls };
   }
   if (jobStatus === 'running') return { label: 'analyzing…', cls: 'border-sky-300 bg-sky-50 text-sky-700' };
@@ -56,9 +58,10 @@ export default async function RadarPage() {
         <span className="text-xs text-slate-400">{rows.length} signals</span>
       </div>
       <p className="mt-1 text-xs text-slate-400">
-        Deterministic short-side tells across the watchlist — material 8-K items and multi-period
-        XBRL deterioration (trends, restatements, distress screens). No model; computed from the
-        filers&rsquo; own data. Reflects the last daily sweep.
+        Material filing changes across the watchlist — 8-K events and multi-period XBRL moves
+        (trends, restatements, distress screens). No model; computed from the filers&rsquo; own
+        data. Each is a candidate for a deep-dive that judges whether it&rsquo;s mispriced, which
+        way, and on what catalyst. Reflects the last daily sweep.
       </p>
 
       <div className="mt-3 space-y-2">

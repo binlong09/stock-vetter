@@ -17,6 +17,7 @@
  */
 import 'dotenv/config';
 import {
+  Embedder,
   LookbackIndex,
   OllamaClient,
   scanEightK,
@@ -29,6 +30,8 @@ import {
   claimNextRadarJob,
   completeRadarJob,
   requeueRadarJob,
+  requeueFailedRadarJobs,
+  reanalyzeDoneRadarJobs,
   failRadarJob,
   type ClaimedRadarJob,
 } from '@stock-vetter/pipeline';
@@ -44,6 +47,19 @@ const arg = (n: string): string | undefined => {
 const err = (m: string): void => void process.stderr.write(`${m}\n`);
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
 
+// A cloud-availability failure — out of credits, rate limit, overload, a network
+// blip — is transient: the job should be requeued and retried once the cloud is
+// usable again, not marked permanently failed. A schema/parse error is a real
+// failure. Match by status where present and by message otherwise.
+function isTransientCloudError(e: unknown): boolean {
+  const status = (e as { status?: number })?.status;
+  if (typeof status === 'number' && [429, 500, 502, 503, 529].includes(status)) return true;
+  const msg = ((e as Error)?.message ?? String(e)).toLowerCase();
+  return /credit|billing|quota|insufficient|too low|rate.?limit|overloaded|econnref|etimedout|fetch failed|socket hang|network|econnreset/.test(
+    msg,
+  );
+}
+
 async function runJob(
   job: ClaimedRadarJob,
   ollama: OllamaClient,
@@ -52,31 +68,15 @@ async function runJob(
   const tracker = newCostTracker();
   const refs: FilingRef[] = await listFilings(job.ticker, { forms: [job.form] });
   const ref = refs.find((r) => r.accession === job.accession);
-  if (!ref) {
-    await failRadarJob(job.accession, 'could not resolve the filing ref from EDGAR');
-    err(`  ✗ ${job.accession}: filing ref not found`);
-    return;
-  }
+  if (!ref) throw new Error('could not resolve the filing ref from EDGAR');
   const deps = { ollama, index, tracker };
   // Triage gates the cloud tier (no force-synthesis); force re-processes even if
-  // the filing was indexed by an earlier scan.
+  // the filing was indexed by an earlier scan. Errors propagate — the caller
+  // classifies them (transient cloud/box → requeue; real error → fail).
   const opts = { noSynthesis: false, force: true, onProgress: (m: string) => err(`    ${m}`) };
-  let result: ScanResult;
-  try {
-    result = job.form.startsWith('8-K')
-      ? await scanEightK(ref, deps, opts)
-      : await scanPeriodicByRef(ref, deps, opts);
-  } catch (e) {
-    // If the model box went offline mid-job, this is transient — return the job
-    // to the queue so it's retried when the box is back, rather than marking it
-    // failed. A genuine analysis error (bad parse, schema) is a real failure.
-    if (!(await ollama.health()).ok) {
-      await requeueRadarJob(job.accession);
-      err(`  … box unreachable mid-job; requeued ${job.accession}`);
-      return;
-    }
-    throw e;
-  }
+  const result: ScanResult = job.form.startsWith('8-K')
+    ? await scanEightK(ref, deps, opts)
+    : await scanPeriodicByRef(ref, deps, opts);
 
   const escalated = Boolean(result.assessment);
   await completeRadarJob(job.accession, {
@@ -104,10 +104,37 @@ async function main(): Promise<void> {
   const ollama = new OllamaClient({ numCtx: Number(process.env.OLLAMA_NUM_CTX ?? 16384) });
   const watch = arg('watch') != null;
   const pollMs = Number(arg('poll') ?? 60) * 1000;
+  // A transient failure (out of credits, rate limit, box blip) backs off longer
+  // so we don't hammer the failing dependency while it's down.
+  const backoffMs = Math.max(pollMs, 5 * 60_000);
+
+  if (arg('requeue-failed') != null) {
+    const n = await requeueFailedRadarJobs();
+    err(`requeued ${n} failed job(s)`);
+  }
+  // Re-run already-completed jobs under the current pipeline. `--reanalyze`
+  // resets every done job; `--reanalyze=ACC1,ACC2` only those accessions.
+  const reanalyze = arg('reanalyze');
+  if (reanalyze != null) {
+    const accs = reanalyze === 'true' ? undefined : reanalyze.split(',').map((s) => s.trim()).filter(Boolean);
+    const n = await reanalyzeDoneRadarJobs(accs);
+    err(`reset ${n} done job(s) to pending for re-analysis`);
+  }
   err(`radar-worker: ${ollama.model} · ${watch ? `watching (poll ${pollMs / 1000}s)` : 'draining once'}`);
 
-  // Keyword-only index — this box serves one (chat) model, no embeddings.
-  const index = await LookbackIndex.open({ embedder: null });
+  // Embeddings improve retrieval — the model finds evidence in fewer, better-
+  // targeted lookups, which means fewer synthesis turns (lower cost) with no
+  // quality loss. Use them when the embed server is reachable; fall back to
+  // keyword-only (BM25) so the worker still runs without one.
+  let embedder: Embedder | null = new Embedder();
+  try {
+    await embedder.embedOne('radar embedder health check');
+    err(`embeddings: ${embedder.model} (${embedder.dimension ?? '?'}d) via ${process.env.OLLAMA_EMBED_HOST ?? process.env.OLLAMA_HOST ?? 'default'}`);
+  } catch (e) {
+    err(`embeddings unavailable (${(e as Error).message.slice(0, 90)}) — keyword-only retrieval`);
+    embedder = null;
+  }
+  const index = await LookbackIndex.open({ embedder });
   try {
     for (;;) {
       // Only claim work when the box is reachable. If it's offline, jobs stay
@@ -124,22 +151,36 @@ async function main(): Promise<void> {
       }
 
       let processed = 0;
+      let backoff = false;
       let job: ClaimedRadarJob | null;
       while ((job = await claimNextRadarJob())) {
         err(`\nclaim ${job.ticker} ${job.form} ${job.accession}`);
         try {
           await runJob(job, ollama, index);
+          processed += 1;
         } catch (e) {
+          const boxDown = !(await ollama.health()).ok;
+          if (boxDown || isTransientCloudError(e)) {
+            // Transient — put it back and stop draining so we don't spin the rest
+            // of the queue into the same failure; back off before retrying.
+            await requeueRadarJob(job.accession);
+            err(
+              `  … ${boxDown ? 'box offline' : 'cloud unavailable (credits/rate/overload?)'} — requeued, ` +
+                `backing off ${backoffMs / 60_000}m: ${(e as Error).message.slice(0, 90)}`,
+            );
+            backoff = true;
+            break;
+          }
           await failRadarJob(job.accession, (e as Error).message);
           err(`  ✗ FAILED: ${(e as Error).message}`);
+          processed += 1;
         }
-        processed += 1;
       }
       if (!watch) {
-        err(`\ndrained ${processed} job(s)`);
+        err(`\ndrained ${processed} job(s)${backoff ? ' (stopped early on a transient error — re-run to continue)' : ''}`);
         return;
       }
-      await sleep(pollMs);
+      await sleep(backoff ? backoffMs : pollMs);
     }
   } finally {
     await index.close();

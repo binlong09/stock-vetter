@@ -203,7 +203,7 @@ export async function detectRecurringOneTimeCharges(
 
     out.push({
       id: 'recurring-one-time-charge',
-      category: 'one-time-recurring',
+      category: 'one-time-items',
       severity: byFiling.size >= 4 ? 'high' : 'medium',
       claim:
         `"${phrase}" appears in this filing and in ${byFiling.size} prior filings ` +

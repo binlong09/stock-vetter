@@ -12,37 +12,37 @@
 // to talk out of its answer. `reasons` records exactly what earned each point
 // so a threshold can be tuned against outcomes instead of vibes.
 
-import type { FilingBrief, ShortFlagCategory } from '@stock-vetter/schema';
+import type { FilingBrief, FlagCategory } from '@stock-vetter/schema';
 
 // How predictive is a category, before severity? These are judgments about
 // which disclosures actually precede repricings, not about which sound
 // alarming. Weight 5 means "this alone is usually worth a human's attention";
 // weight 1 means "only interesting alongside something else".
-const CATEGORY_WEIGHT: Record<ShortFlagCategory, number> = {
+const CATEGORY_WEIGHT: Record<FlagCategory, number> = {
   'going-concern': 5,
   auditor: 5,
   'internal-control': 5,
   'revenue-recognition': 4,
-  'reserve-release': 4,
+  'reserves': 4,
   'cash-conversion': 4,
   'related-party': 4,
   'cost-capitalization': 3,
-  'receivables-quality': 3,
+  'receivables': 3,
   'leverage-covenant': 3,
   liquidity: 3,
   'accounting-estimate-change': 3,
   'segment-reclassification': 3,
-  'management-turnover': 3,
-  'non-gaap-aggression': 2,
-  'one-time-recurring': 2,
-  'inventory-buildup': 2,
+  'management': 3,
+  'non-gaap': 2,
+  'one-time-items': 2,
+  'inventory': 2,
   dilution: 2,
-  'goodwill-impairment': 2,
+  'goodwill': 2,
   guidance: 2,
   'litigation-regulatory': 2,
   'customer-concentration': 1,
   'supplier-concentration': 1,
-  'margin-compression': 1,
+  'margin': 1,
   other: 1,
 };
 

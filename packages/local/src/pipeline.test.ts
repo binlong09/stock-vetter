@@ -40,7 +40,7 @@ const EXTRACTION = {
   ],
   flags: [
     {
-      category: 'receivables-quality',
+      category: 'receivables',
       severity: 'high',
       claim: 'DSO rose to 78 days from 61 days',
       quote: 'Days sales outstanding increased to 78 days from 61 days in the prior year',
@@ -60,14 +60,15 @@ const EMPTY_EXTRACTION = {
 };
 
 const ASSESSMENT = {
-  verdict: 'actionable-short',
+  verdict: 'mispriced-short',
   thesis: 'Revenue pulled forward through distributor terms.',
+  direction: 'short',
   conviction: 6,
   catalysts: [{ event: 'Next 10-Q', expectedWindow: 'Q1 2026' }],
   evidence: [
     {
       point: 'DSO rose to 78 days',
-      category: 'receivables-quality',
+      category: 'receivables',
       severity: 'high',
       citation: {
         claim: 'DSO rose',
@@ -78,9 +79,9 @@ const ASSESSMENT = {
       },
     },
   ],
-  bullCase: 'One-time competitive response.',
+  counterThesis: 'One-time competitive response.',
   whatWouldKillThis: ['Receivables decline sequentially'],
-  mechanicalRisks: ['High short interest'],
+  executionRisks: ['High short interest'],
   unverifiedClaims: [],
 };
 
@@ -248,7 +249,7 @@ test('a scored filing escalates and the cloud model can verify against the index
   await withDeps(async (deps) => {
     const r = await scanPrepared(prepared(), META, deps, {});
     assert.equal(r.decision!.escalate, true);
-    assert.equal(r.assessment!.verdict, 'actionable-short');
+    assert.equal(r.assessment!.verdict, 'mispriced-short');
     // The verification must succeed, which it only can if indexing ran first.
     assert.equal(r.toolCalls.length, 1);
     assert.match(r.toolCalls[0]!.result, /^VERIFIED/);

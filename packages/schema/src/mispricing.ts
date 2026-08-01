@@ -1,9 +1,9 @@
-// Schemas for the local-GPU short-side scanner.
+// Schemas for the local-GPU filing mispricing scanner.
 //
 // These are the contract between the three tiers: the local model fills
 // `ChunkExtraction` per chunk, deterministic code aggregates those into a
 // `FilingBrief`, and the cloud model reads the brief and emits a
-// `ShortAssessment`.
+// `MispricingAssessment`.
 //
 // Two design rules run through all of them:
 //
@@ -31,16 +31,16 @@ import { z } from 'zod';
  * the categories are what the aggregation and triage stages count, and free
  * text produces forty spellings of "receivables problem" across one filing.
  */
-export const ShortFlagCategory = z.enum([
-  'receivables-quality', // AR or DSO growing faster than revenue
-  'inventory-buildup', // inventory or DIO outpacing COGS
-  'margin-compression',
+export const FlagCategory = z.enum([
+  'receivables', // AR or DSO growing faster than revenue
+  'inventory', // inventory or DIO outpacing COGS
+  'margin',
   'cash-conversion', // CFO diverging from net income
   'revenue-recognition', // policy, timing, channel stuffing, bill-and-hold
   'cost-capitalization', // costs capitalized rather than expensed
-  'reserve-release', // allowance/reserve movements flattering earnings
-  'non-gaap-aggression', // add-backs that grow or become permanent
-  'one-time-recurring', // "non-recurring" charges that recur
+  'reserves', // allowance/reserve movements flattering earnings
+  'non-gaap', // add-backs that grow or become permanent
+  'one-time-items', // "non-recurring" charges that recur
   'segment-reclassification', // reporting changes that break comparability
   'related-party',
   'customer-concentration',
@@ -48,17 +48,17 @@ export const ShortFlagCategory = z.enum([
   'dilution', // share count growth, ATM programs, convertibles
   'leverage-covenant', // debt terms, covenant headroom, maturities
   'liquidity', // cash runway, revolver draw, factoring
-  'goodwill-impairment',
+  'goodwill',
   'litigation-regulatory',
   'going-concern',
   'internal-control', // material weakness, remediation
   'auditor', // change, disagreement, adverse ICFR opinion
-  'management-turnover', // CFO/CAO/controller departures
+  'management', // CFO/CAO/controller departures
   'guidance', // withdrawn, cut, or conspicuously absent
   'accounting-estimate-change', // useful lives, discount rates, assumptions
   'other',
 ]);
-export type ShortFlagCategory = z.infer<typeof ShortFlagCategory>;
+export type FlagCategory = z.infer<typeof FlagCategory>;
 
 export const FlagSeverity = z.enum(['low', 'medium', 'high']);
 export type FlagSeverity = z.infer<typeof FlagSeverity>;
@@ -84,13 +84,13 @@ export const ExtractedMetric = z.object({
 export type ExtractedMetric = z.infer<typeof ExtractedMetric>;
 
 export const ExtractedFlag = z.object({
-  category: ShortFlagCategory,
+  category: FlagCategory,
   severity: FlagSeverity,
   /** One sentence, specific and falsifiable. */
   claim: z.string(),
   /** Verbatim span from the chunk that supports the claim. */
   quote: z.string(),
-  /** Why this bears on a short thesis. One sentence. */
+  /** Why this bears on the mispricing. One sentence. */
   whyItMatters: z.string(),
 });
 export type ExtractedFlag = z.infer<typeof ExtractedFlag>;
@@ -119,7 +119,7 @@ export const ChunkExtraction = z.object({
   /**
    * True when the chunk is genuinely routine. An explicit "nothing here" is a
    * real answer and far better than inventing findings to look useful — most
-   * chunks of most filings say nothing a short seller cares about.
+   * chunks of most filings say nothing worth a second look.
    */
   nothingMaterial: z.boolean(),
 });
@@ -154,7 +154,7 @@ export type TrendChangeUnit = z.infer<typeof TrendChangeUnit>;
 export const TrendFinding = z.object({
   id: z.string(),
   metric: z.string(),
-  category: ShortFlagCategory,
+  category: FlagCategory,
   severity: FlagSeverity,
   claim: z.string(),
   direction: z.enum(['deteriorating', 'improving']),
@@ -207,7 +207,7 @@ export type AltmanResult = z.infer<typeof AltmanResult>;
 
 export const RecurrenceFinding = z.object({
   id: z.enum(['repeated-explanation', 'recurring-one-time-charge']),
-  category: ShortFlagCategory,
+  category: FlagCategory,
   severity: FlagSeverity,
   claim: z.string(),
   quote: z.string(),
@@ -223,7 +223,7 @@ export const RecurrenceFinding = z.object({
 });
 export type RecurrenceFinding = z.infer<typeof RecurrenceFinding>;
 
-// A single "radar" signal: one deterministic short-side tell surfaced by the
+// A single "radar" signal: one deterministic tell surfaced by the
 // always-on watchlist sweep (no GPU, no model). Reacted to same-day for 8-Ks,
 // within a few days for XBRL-derived trends (companyfacts lags the filing). The
 // `key` dedups a signal to a single surfacing across daily runs.
@@ -303,13 +303,14 @@ export type FilingBrief = z.infer<typeof FilingBrief>;
 // Cloud tier: the synthesized assessment
 // ---------------------------------------------------------------------------
 
-export const ShortVerdict = z.enum([
-  'actionable-short', // a specific, falsifiable thesis with a catalyst
-  'watchlist', // deterioration visible, no catalyst or no edge yet
-  'no-edge', // nothing here, or everything here is already consensus
+export const MispricingVerdict = z.enum([
+  'mispriced-long', // filing reveals the market is too bearish — a catalyzed long
+  'mispriced-short', // filing reveals the market is too bullish — a catalyzed short
+  'watchlist', // a material change is visible, but no catalyst or no edge yet
+  'no-edge', // nothing here, or everything here is already in the price
   'insufficient-data', // the filing didn't parse well enough to judge
 ]);
-export type ShortVerdict = z.infer<typeof ShortVerdict>;
+export type MispricingVerdict = z.infer<typeof MispricingVerdict>;
 
 export const VerifiedCitation = z.object({
   claim: z.string(),
@@ -321,11 +322,13 @@ export const VerifiedCitation = z.object({
 });
 export type VerifiedCitation = z.infer<typeof VerifiedCitation>;
 
-export const ShortAssessment = z.object({
-  verdict: ShortVerdict,
+export const MispricingAssessment = z.object({
+  verdict: MispricingVerdict,
   /** The thesis in one or two sentences, or why there isn't one. */
   thesis: z.string(),
-  /** 1-10. Only meaningful when the verdict is actionable-short or watchlist. */
+  /** long | short | none. The trade direction the thesis implies. */
+  direction: z.enum(['long', 'short', 'none']),
+  /** 1-10. Only meaningful when the verdict is mispriced-long/short or watchlist. */
   conviction: z.number().min(1).max(10),
   /** Specific, dated things that would force the market to reprice. */
   catalysts: z.array(z.object({ event: z.string(), expectedWindow: z.string() })),
@@ -333,21 +336,22 @@ export const ShortAssessment = z.object({
   evidence: z.array(
     z.object({
       point: z.string(),
-      category: ShortFlagCategory,
+      category: FlagCategory,
       severity: FlagSeverity,
       citation: VerifiedCitation,
     }),
   ),
   /**
-   * The bull case, stated in its strongest form. A short assessment that
-   * can't state the other side hasn't done the work.
+   * The strongest case AGAINST the thesis, in its best form — the bear case for
+   * a long, the bull case for a short. An assessment that can't state the other
+   * side hasn't done the work.
    */
-  bullCase: z.string(),
-  /** What would falsify the thesis. Required — an unfalsifiable short is a hope. */
+  counterThesis: z.string(),
+  /** What would falsify the thesis. Required — an unfalsifiable thesis is a hope. */
   whatWouldKillThis: z.array(z.string()),
-  /** Risks specific to shorting THIS name: borrow, squeeze potential, M&A. */
-  mechanicalRisks: z.array(z.string()),
+  /** Risks specific to putting on THIS trade: borrow/squeeze on a short; liquidity, dilution, or M&A on a long. */
+  executionRisks: z.array(z.string()),
   /** Claims the model could not verify against the filing text. */
   unverifiedClaims: z.array(z.string()),
 });
-export type ShortAssessment = z.infer<typeof ShortAssessment>;
+export type MispricingAssessment = z.infer<typeof MispricingAssessment>;

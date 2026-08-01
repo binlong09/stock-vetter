@@ -19,7 +19,7 @@
     "evaluate-signals": "tsx scripts/evaluate-signals.ts",
     "test-coldstart-widen": "tsx scripts/test-coldstart-widen.ts",
     "eval": "tsx scripts/eval.ts",
-    "short-scan": "tsx scripts/short-scan.ts",
+    "scan": "tsx scripts/scan.ts",
     "build-universe": "tsx scripts/build-universe.ts",
     "lookback": "tsx scripts/lookback.ts",
     "calibrate-tokens": "tsx scripts/calibrate-tokens.ts",

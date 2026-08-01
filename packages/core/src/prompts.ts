@@ -27,7 +27,7 @@ export type PromptName =
   | 'signal-judge'
   // Local-GPU short-side scanner (packages/local).
   | 'local-chunk-extract'
-  | 'short-synthesis';
+  | 'synthesis';
 
 const cache = new Map<PromptName, string>();
 
