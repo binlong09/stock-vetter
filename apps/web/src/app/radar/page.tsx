@@ -1,5 +1,27 @@
-import { listRadarSignals, edgarFilingUrl } from '@/short-queries';
+import Link from 'next/link';
+import { listRadarSignals } from '@/short-queries';
 import { isoDate } from '@/lib/format';
+
+// The deep-dive job status → a compact chip. `done` shows the verdict.
+function analysisChip(jobStatus: string | null, verdict: string | null, conviction: number | null): {
+  label: string;
+  cls: string;
+} {
+  if (jobStatus === 'done') {
+    const v = verdict ?? 'analyzed';
+    const cls =
+      v === 'actionable-short'
+        ? 'border-rose-300 bg-rose-50 text-rose-700'
+        : v === 'watchlist'
+          ? 'border-amber-300 bg-amber-50 text-amber-700'
+          : 'border-slate-300 bg-slate-100 text-slate-600';
+    return { label: conviction != null && verdict ? `${v} ${conviction}/10` : v, cls };
+  }
+  if (jobStatus === 'running') return { label: 'analyzing…', cls: 'border-sky-300 bg-sky-50 text-sky-700' };
+  if (jobStatus === 'pending') return { label: 'queued', cls: 'border-amber-300 bg-amber-50 text-amber-700' };
+  if (jobStatus === 'failed') return { label: 'analysis failed', cls: 'border-rose-300 bg-rose-50 text-rose-700' };
+  return { label: 'not queued', cls: 'border-slate-200 bg-slate-50 text-slate-400' };
+}
 
 // Reflects whatever the last daily sweep wrote to Turso.
 export const revalidate = 300;
@@ -46,31 +68,33 @@ export default async function RadarPage() {
             <code className="font-mono">pnpm radar</code>).
           </p>
         ) : (
-          sorted.map((s) => (
-            <a
-              key={s.key}
-              href={edgarFilingUrl(s.cik, s.accession)}
-              target="_blank"
-              rel="noreferrer"
-              className="block rounded-lg border border-slate-200 bg-white px-3.5 py-3 hover:border-slate-300"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <span className="font-mono text-sm font-medium text-slate-900">{s.ticker}</span>
-                <span
-                  className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium ${SEV_PILL[s.severity] ?? SEV_PILL.low}`}
-                >
-                  {s.severity}
-                </span>
-              </div>
-              <p className="mt-1 text-sm text-slate-700">{s.headline}</p>
-              <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-400">
-                <span>{s.form}</span>
-                <span>{KIND_LABEL[s.kind] ?? s.kind}</span>
-                <span>filed {isoDate(s.filingDate)}</span>
-                <span>seen {isoDate(s.firstSeenAt)}</span>
-              </div>
-            </a>
-          ))
+          sorted.map((s) => {
+            const chip = analysisChip(s.jobStatus, s.verdict, s.conviction);
+            return (
+              <Link
+                key={s.key}
+                href={`/radar/${encodeURIComponent(s.accession)}`}
+                className="block rounded-lg border border-slate-200 bg-white px-3.5 py-3 hover:border-slate-300"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-mono text-sm font-medium text-slate-900">{s.ticker}</span>
+                  <span
+                    className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium ${SEV_PILL[s.severity] ?? SEV_PILL.low}`}
+                  >
+                    {s.severity}
+                  </span>
+                </div>
+                <p className="mt-1 text-sm text-slate-700">{s.headline}</p>
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-400">
+                  <span>{s.form}</span>
+                  <span>{KIND_LABEL[s.kind] ?? s.kind}</span>
+                  <span>filed {isoDate(s.filingDate)}</span>
+                  <span>seen {isoDate(s.firstSeenAt)}</span>
+                  <span className={`rounded-full border px-1.5 py-0.5 font-medium ${chip.cls}`}>{chip.label}</span>
+                </div>
+              </Link>
+            );
+          })
         )}
       </div>
     </div>

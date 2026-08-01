@@ -16,7 +16,7 @@ import 'dotenv/config';
 import { readFile } from 'node:fs/promises';
 import { computeRadarSignals, type WatchlistEntry } from '@stock-vetter/local';
 import { isTursoConfigured, isMailerConfigured, sendEmail } from '@stock-vetter/core';
-import { upsertRadarSignals } from '@stock-vetter/pipeline';
+import { upsertRadarSignals, enqueueMissingRadarJobs } from '@stock-vetter/pipeline';
 import type { RadarSignal } from '@stock-vetter/schema';
 
 const arg = (n: string): string | undefined => {
@@ -98,6 +98,11 @@ async function main(): Promise<void> {
     newCount = newSignals.length;
     process.stderr.write(`persisted: ${newCount} new of ${signals.length} to Turso\n`);
     if (newSignals.length) await emailDigest(newSignals);
+    // Auto-queue a deep-dive per flagged filing that doesn't already have one
+    // (deduped per accession; backfills anything surfaced before the queue). A
+    // worker on the GPU box drains it; triage gates the cloud spend.
+    const queued = await enqueueMissingRadarJobs();
+    if (queued) process.stderr.write(`queued: ${queued} new deep-dive job(s)\n`);
   } else if (persist) {
     process.stderr.write('Turso not configured — printing only (set TURSO_DATABASE_URL to persist)\n');
   }

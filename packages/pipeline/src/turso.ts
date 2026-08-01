@@ -54,6 +54,145 @@ export async function upsertRadarSignals(signals: RadarSignal[]): Promise<RadarS
   return inserted;
 }
 
+// ---- deep-dive job queue ------------------------------------------------
+
+export type RadarJobInput = { ticker: string; form: string; accession: string; filingDate: string };
+export type ClaimedRadarJob = RadarJobInput & { attempts: number };
+export type RadarJobResult = {
+  triageScore: number | null;
+  escalated: boolean;
+  verdict: string;
+  conviction: number | null;
+  assessmentJson: string | null;
+};
+
+/**
+ * Enqueue one deep-dive job per filing, deduped by accession (INSERT OR IGNORE).
+ * Returns the count of genuinely new jobs. No-op when Turso isn't configured.
+ */
+export async function enqueueRadarJobs(jobs: RadarJobInput[]): Promise<number> {
+  if (!jobs.length || !isTursoConfigured()) return 0;
+  await migrate();
+  const client = getTursoClient();
+  if (!client) return 0;
+  const now = new Date().toISOString();
+  let inserted = 0;
+  for (const j of jobs) {
+    const res = await client.execute({
+      sql: `INSERT OR IGNORE INTO radar_jobs (accession, ticker, form, filing_date, status, enqueued_at)
+            VALUES (?, ?, ?, ?, 'pending', ?)`,
+      args: [j.accession, j.ticker, j.form, j.filingDate, now],
+    });
+    if (res.rowsAffected > 0) inserted += 1;
+  }
+  return inserted;
+}
+
+/**
+ * Enqueue a pending job for every radar signal's filing that doesn't already
+ * have one (deduped per accession). Self-healing and idempotent: it backfills
+ * signals surfaced before the queue existed and closes any gap where a signal
+ * was stored but its job enqueue failed. Returns the count of new jobs.
+ */
+export async function enqueueMissingRadarJobs(): Promise<number> {
+  if (!isTursoConfigured()) return 0;
+  await migrate();
+  const client = getTursoClient();
+  if (!client) return 0;
+  const res = await client.execute({
+    sql: `INSERT OR IGNORE INTO radar_jobs (accession, ticker, form, filing_date, status, enqueued_at)
+          SELECT DISTINCT sr.accession, sr.ticker, sr.form, sr.filing_date, 'pending', ?
+          FROM short_radar sr
+          LEFT JOIN radar_jobs j ON j.accession = sr.accession
+          WHERE j.accession IS NULL`,
+    args: [new Date().toISOString()],
+  });
+  return res.rowsAffected;
+}
+
+/**
+ * Atomically claim the oldest pending job. The guarded UPDATE (…WHERE
+ * status='pending') is what actually claims it, so even a second worker can't
+ * double-process; we retry a few candidates if we lose a race. Returns null
+ * when the queue is empty.
+ */
+export async function claimNextRadarJob(): Promise<ClaimedRadarJob | null> {
+  if (!isTursoConfigured()) return null;
+  await migrate();
+  const client = getTursoClient();
+  if (!client) return null;
+  // A job left 'running' for over 30 minutes is from a worker that died mid-job
+  // (deep-dives take ~5-10 min); reclaim it so a crash/reboot doesn't strand it.
+  const staleBefore = new Date(Date.now() - 30 * 60_000).toISOString();
+  for (let i = 0; i < 5; i++) {
+    const pending = await client.execute({
+      sql: `SELECT accession, ticker, form, filing_date, attempts FROM radar_jobs
+            WHERE status = 'pending' OR (status = 'running' AND started_at < ?)
+            ORDER BY enqueued_at LIMIT 1`,
+      args: [staleBefore],
+    });
+    const row = pending.rows[0];
+    if (!row) return null;
+    const accession = String(row.accession);
+    const claim = await client.execute({
+      sql: `UPDATE radar_jobs SET status='running', started_at=?, attempts=attempts+1
+            WHERE accession=? AND (status='pending' OR (status='running' AND started_at < ?))`,
+      args: [new Date().toISOString(), accession, staleBefore],
+    });
+    if (claim.rowsAffected > 0) {
+      return {
+        accession,
+        ticker: String(row.ticker),
+        form: String(row.form),
+        filingDate: String(row.filing_date),
+        attempts: Number(row.attempts) + 1,
+      };
+    }
+    // Lost the race for this candidate — try the next.
+  }
+  return null;
+}
+
+/** Mark a claimed job done and record the deep-dive result. */
+export async function completeRadarJob(accession: string, r: RadarJobResult): Promise<void> {
+  const client = getTursoClient();
+  if (!client) return;
+  await client.execute({
+    sql: `UPDATE radar_jobs SET status='done', finished_at=?, triage_score=?, escalated=?,
+          verdict=?, conviction=?, assessment_json=?, error=NULL WHERE accession=?`,
+    args: [
+      new Date().toISOString(),
+      r.triageScore,
+      r.escalated ? 1 : 0,
+      r.verdict,
+      r.conviction,
+      r.assessmentJson,
+      accession,
+    ],
+  });
+}
+
+/** Return a claimed job to the queue (pending) — for a transient failure like
+ *  the box going offline mid-job, so it retries rather than being marked failed. */
+export async function requeueRadarJob(accession: string): Promise<void> {
+  const client = getTursoClient();
+  if (!client) return;
+  await client.execute({
+    sql: `UPDATE radar_jobs SET status='pending', started_at=NULL WHERE accession=?`,
+    args: [accession],
+  });
+}
+
+/** Mark a claimed job failed with an error message. */
+export async function failRadarJob(accession: string, error: string): Promise<void> {
+  const client = getTursoClient();
+  if (!client) return;
+  await client.execute({
+    sql: `UPDATE radar_jobs SET status='failed', finished_at=?, error=? WHERE accession=?`,
+    args: [new Date().toISOString(), error.slice(0, 500), accession],
+  });
+}
+
 // ---- sign-in allowlist --------------------------------------------------
 //
 // The web viewer's allowlist lives in the `allowed_emails` table (migration
