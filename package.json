@@ -26,7 +26,8 @@
     "test": "tsx --test 'packages/*/src/*.test.ts'",
     "trends": "tsx scripts/trends.ts",
     "build-watchlist": "tsx scripts/build-watchlist.ts",
-    "radar": "tsx scripts/radar.ts"
+    "radar": "tsx scripts/radar.ts",
+    "radar-worker": "tsx scripts/radar-worker.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
