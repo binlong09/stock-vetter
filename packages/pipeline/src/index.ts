@@ -1,6 +1,7 @@
 export { runPipeline } from './orchestrate.js';
 export type { PipelineOptions, PipelineStage } from './orchestrate.js';
 export { renderMarkdown } from './render.js';
+export { renderCrossFilingMarkdown } from './forensic-render.js';
 export { fetchEarningsTranscriptBundle } from './transcript.js';
 export {
   runTenqDelta,
@@ -25,6 +26,7 @@ export {
   migrate,
   pushTicker,
   pushTickerFromFixtures,
+  upsertRadarSignals,
   addAllowedEmail,
   removeAllowedEmail,
   listAllowedEmails,

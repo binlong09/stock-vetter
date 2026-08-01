@@ -11,6 +11,9 @@ importers:
       '@stock-vetter/core':
         specifier: workspace:*
         version: link:packages/core
+      '@stock-vetter/local':
+        specifier: workspace:*
+        version: link:packages/local
       '@stock-vetter/pipeline':
         specifier: workspace:*
         version: link:packages/pipeline
@@ -23,6 +26,12 @@ importers:
       dotenv:
         specifier: ^16.4.7
         version: 16.6.1
+      yahoo-finance2:
+        specifier: ^3.14.0
+        version: 3.14.0
+      zod-to-json-schema:
+        specifier: ^3.25.2
+        version: 3.25.2(zod@3.25.76)
     devDependencies:
       '@types/node':
         specifier: ^22.10.0
@@ -47,10 +56,10 @@ importers:
         version: link:../../packages/schema
       next:
         specifier: 15.5.18
-        version: 15.5.18(react-dom@19.2.6)(react@19.2.6)
+        version: 15.5.18(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       next-auth:
         specifier: 5.0.0-beta.25
-        version: 5.0.0-beta.25(next@15.5.18)(react@19.2.6)
+        version: 5.0.0-beta.25(next@15.5.18(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)
       react:
         specifier: 19.2.6
         version: 19.2.6
@@ -106,6 +115,30 @@ importers:
       zod:
         specifier: ^3.23.8
         version: 3.25.76
+      zod-to-json-schema:
+        specifier: ^3.25.2
+        version: 3.25.2(zod@3.25.76)
+
+  packages/local:
+    dependencies:
+      '@anthropic-ai/sdk':
+        specifier: ^0.32.1
+        version: 0.32.1
+      '@libsql/client':
+        specifier: ^0.17.3
+        version: 0.17.3
+      '@stock-vetter/core':
+        specifier: workspace:*
+        version: link:../core
+      '@stock-vetter/schema':
+        specifier: workspace:*
+        version: link:../schema
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
+      zod-to-json-schema:
+        specifier: ^3.25.2
+        version: 3.25.2(zod@3.25.76)
 
   packages/pipeline:
     dependencies:
@@ -1323,6 +1356,11 @@ packages:
   youtubei.js@17.0.1:
     resolution: {integrity: sha512-1lO4b8UqMDzE0oh2qEGzbBOd4UYRdxn/4PdpRM7BGTHxM6ddsEsKZTu90jp8V9FHVgC2h1UirQyqoqLiKwl+Zg==}
 
+  zod-to-json-schema@3.25.2:
+    resolution: {integrity: sha512-O/PgfnpT1xKSDeQYSCfRI5Gy3hPf91mKVDuYLUHZJMiDFptvP41MSnWofm8dnCm0256ZNfZIM7DSzuSMAFnjHA==}
+    peerDependencies:
+      zod: ^3.25.28 || ^4
+
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
@@ -2097,13 +2135,13 @@ snapshots:
 
   nanoid@3.3.12: {}
 
-  next-auth@5.0.0-beta.25(next@15.5.18)(react@19.2.6):
+  next-auth@5.0.0-beta.25(next@15.5.18(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6):
     dependencies:
       '@auth/core': 0.37.2
-      next: 15.5.18(react-dom@19.2.6)(react@19.2.6)
+      next: 15.5.18(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react: 19.2.6
 
-  next@15.5.18(react-dom@19.2.6)(react@19.2.6):
+  next@15.5.18(react-dom@19.2.6(react@19.2.6))(react@19.2.6):
     dependencies:
       '@next/env': 15.5.18
       '@swc/helpers': 0.5.15
@@ -2337,5 +2375,9 @@ snapshots:
     dependencies:
       '@bufbuild/protobuf': 2.12.0
       meriyah: 6.1.4
+
+  zod-to-json-schema@3.25.2(zod@3.25.76):
+    dependencies:
+      zod: 3.25.76
 
   zod@3.25.76: {}

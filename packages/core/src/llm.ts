@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { Message, MessageCreateParamsNonStreaming } from '@anthropic-ai/sdk/resources/messages';
 import { z } from 'zod';
-import { LLMValidationError } from './errors.js';
+import { LLMValidationError, PipelineError } from './errors.js';
 
 const DEFAULT_MODEL = 'claude-sonnet-4-6';
 
@@ -339,4 +339,244 @@ export async function llmCallJson<T>(opts: {
       .join('\n');
   }
   throw new LLMValidationError(opts.stage, lastError ?? 'unknown', lastRaw);
+}
+
+// ---------------------------------------------------------------------------
+// Tool-use loop
+//
+// Added for the short-side scanner's synthesis stage, where the model reads a
+// ~5,000-token brief and needs to check specific figures against the filing.
+// The alternative — putting the whole filing in the prompt — costs 300,000+
+// tokens per company, most of which the model never looks at. With tools, it
+// asks for the paragraph it wants and a LOCAL index answers, so verification
+// costs a few hundred tokens instead of a few hundred thousand.
+//
+// Structured output comes from a "submit" tool whose input schema is the
+// output schema, rather than from asking for JSON in the final message. In a
+// tool-use conversation the model has to decide each turn between calling a
+// tool and answering; making the answer itself a tool call removes that
+// ambiguity, and the API validates the shape on the way in.
+// ---------------------------------------------------------------------------
+
+import { zodToJsonSchema } from 'zod-to-json-schema';
+import type { MessageParam, Tool, ToolUseBlock } from '@anthropic-ai/sdk/resources/messages';
+
+export type LLMTool = {
+  name: string;
+  description: string;
+  /** JSON Schema for the tool's input. */
+  inputSchema: Record<string, unknown>;
+  /** Returns the tool result as text. Throwing is reported to the model, not fatal. */
+  handler: (input: Record<string, unknown>) => Promise<string>;
+};
+
+export type ToolCallRecord = {
+  name: string;
+  input: Record<string, unknown>;
+  result: string;
+  isError: boolean;
+  durationMs: number;
+};
+
+export class ToolLoopError extends PipelineError {
+  constructor(
+    stage: string,
+    message: string,
+    readonly toolCalls: ToolCallRecord[],
+  ) {
+    super(`[${stage}] ${message}`);
+    this.name = 'ToolLoopError';
+  }
+}
+
+function toAnthropicTools(tools: LLMTool[]): Tool[] {
+  return tools.map((t) => ({
+    name: t.name,
+    description: t.description,
+    input_schema: t.inputSchema as Tool['input_schema'],
+  }));
+}
+
+/**
+ * Run a tool-use conversation and return the value the model passes to its
+ * `submit` tool, validated against `schema`.
+ *
+ * `maxIterations` is a real guard, not a formality: a model that keeps finding
+ * one more thing to check will otherwise run until the context fills, on every
+ * company in the universe.
+ */
+// Roll a single ephemeral cache breakpoint onto the newest message before each
+// turn. The system prompt is already cached once, but without this the brief
+// and every accumulated tool result are re-read at full input price on all ~9
+// turns of an agent loop — the dominant synthesis cost. Marking the last block
+// of the last message caches the entire prior conversation, so each turn reads
+// it as a cache hit (0.1x input) and writes only the delta. Old breakpoints are
+// cleared first so they don't accumulate past Anthropic's cap of four; moving
+// the point forward still extends the previously written prefix, because the
+// API matches the longest cached prefix regardless of where the marker sits now.
+function rollConversationCache(messages: MessageParam[]): void {
+  for (const m of messages) {
+    if (!Array.isArray(m.content)) continue;
+    for (const block of m.content) {
+      if (block && typeof block === 'object') delete (block as { cache_control?: unknown }).cache_control;
+    }
+  }
+  const last = messages[messages.length - 1];
+  if (last && Array.isArray(last.content) && last.content.length > 0) {
+    const block = last.content[last.content.length - 1];
+    if (block && typeof block === 'object') {
+      (block as { cache_control?: CacheControl }).cache_control = { type: 'ephemeral' };
+    }
+  }
+}
+
+export async function llmCallWithToolsJson<T>(opts: {
+  stage: string;
+  systemPrompt: string | CacheableSegment[];
+  userMessage: string | CacheableSegment[];
+  tools: LLMTool[];
+  schema: z.ZodType<T>;
+  submitToolName?: string;
+  submitToolDescription?: string;
+  maxTokens?: number;
+  maxIterations?: number;
+  tracker: CostTracker;
+  model?: string;
+  onToolCall?: (record: ToolCallRecord) => void;
+}): Promise<{ value: T; toolCalls: ToolCallRecord[]; iterations: number }> {
+  const model = opts.model ?? process.env.ANTHROPIC_MODEL ?? DEFAULT_MODEL;
+  const maxIterations = opts.maxIterations ?? 12;
+  const submitName = opts.submitToolName ?? 'submit';
+
+  const submitTool: Tool = {
+    name: submitName,
+    description:
+      opts.submitToolDescription ??
+      'Submit your final answer. Call this exactly once, when you have finished checking whatever you need to check.',
+    input_schema: zodToJsonSchema(opts.schema, {
+      $refStrategy: 'none',
+      target: 'jsonSchema7',
+    }) as Tool['input_schema'],
+  };
+
+  const byName = new Map(opts.tools.map((t) => [t.name, t]));
+  const messages: MessageParam[] = [
+    { role: 'user', content: buildContentBlocks(opts.userMessage) },
+  ];
+  const toolCalls: ToolCallRecord[] = [];
+
+  for (let iteration = 0; iteration < maxIterations; iteration++) {
+    // On the last permitted iteration, withhold every tool but `submit` so the
+    // model is forced to answer with what it has rather than being cut off
+    // mid-investigation with nothing to show.
+    const lastChance = iteration === maxIterations - 1;
+    rollConversationCache(messages);
+    const resp = await callWithRetry(
+      {
+        model,
+        max_tokens: opts.maxTokens ?? 8192,
+        system: buildContentBlocks(opts.systemPrompt),
+        messages,
+        tools: lastChance ? [submitTool] : [...toAnthropicTools(opts.tools), submitTool],
+      },
+      `${opts.stage}-i${iteration}`,
+    );
+
+    const u = resp.usage as {
+      cache_creation_input_tokens?: number;
+      cache_read_input_tokens?: number;
+      cache_creation?: { ephemeral_5m_input_tokens?: number; ephemeral_1h_input_tokens?: number };
+    };
+    const write1h = u.cache_creation?.ephemeral_1h_input_tokens ?? 0;
+    const write5m = u.cache_creation
+      ? (u.cache_creation.ephemeral_5m_input_tokens ?? 0)
+      : (u.cache_creation_input_tokens ?? 0);
+    const cacheRead = u.cache_read_input_tokens ?? 0;
+    const cost = priceCall(model, resp.usage.input_tokens, resp.usage.output_tokens, write5m, cacheRead, write1h);
+    opts.tracker.total += cost;
+    opts.tracker.byCall.push({
+      stage: `${opts.stage}-i${iteration}`,
+      inputTokens: resp.usage.input_tokens,
+      outputTokens: resp.usage.output_tokens,
+      cacheWriteTokens: write5m + write1h,
+      cacheReadTokens: cacheRead,
+      cost,
+    });
+    opts.tracker.onAfterCall?.(opts.tracker.total);
+
+    const toolUses = resp.content.filter((b): b is ToolUseBlock => b.type === 'tool_use');
+
+    const submit = toolUses.find((t) => t.name === submitName);
+    if (submit) {
+      const parsed = opts.schema.safeParse(submit.input);
+      if (parsed.success) return { value: parsed.data, toolCalls, iterations: iteration + 1 };
+      // The API validates against the schema we gave it, so this is rare — but
+      // Zod refinements (min/max, custom checks) aren't expressible in JSON
+      // Schema and can still fail. Hand it back and let the model correct.
+      messages.push({ role: 'assistant', content: resp.content });
+      messages.push({
+        role: 'user',
+        content: [
+          {
+            type: 'tool_result',
+            tool_use_id: submit.id,
+            is_error: true,
+            content: `Submission failed validation:\n${parsed.error.issues
+              .map((i) => `${i.path.join('.')}: ${i.message}`)
+              .join('\n')}\nCall ${submitName} again with corrected values.`,
+          },
+        ],
+      });
+      continue;
+    }
+
+    if (!toolUses.length) {
+      // The model answered in prose instead of submitting. Ask once, plainly.
+      messages.push({ role: 'assistant', content: resp.content });
+      messages.push({
+        role: 'user',
+        content: `You must record your answer by calling the ${submitName} tool. Do that now.`,
+      });
+      continue;
+    }
+
+    messages.push({ role: 'assistant', content: resp.content });
+    const results: MessageParam['content'] = [];
+    for (const use of toolUses) {
+      const tool = byName.get(use.name);
+      const started = Date.now();
+      let result: string;
+      let isError = false;
+      if (!tool) {
+        result = `No such tool: ${use.name}`;
+        isError = true;
+      } else {
+        try {
+          result = await tool.handler(use.input as Record<string, unknown>);
+        } catch (e) {
+          // A failing tool is information, not a crash: the model can try a
+          // different query. Aborting the run would throw away the analysis.
+          result = `Tool error: ${(e as Error).message}`;
+          isError = true;
+        }
+      }
+      const record: ToolCallRecord = {
+        name: use.name,
+        input: use.input as Record<string, unknown>,
+        result,
+        isError,
+        durationMs: Date.now() - started,
+      };
+      toolCalls.push(record);
+      opts.onToolCall?.(record);
+      results.push({ type: 'tool_result', tool_use_id: use.id, is_error: isError, content: result });
+    }
+    messages.push({ role: 'user', content: results });
+  }
+
+  throw new ToolLoopError(
+    opts.stage,
+    `model did not submit an answer within ${maxIterations} iterations`,
+    toolCalls,
+  );
 }

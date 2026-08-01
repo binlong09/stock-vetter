@@ -18,7 +18,15 @@
     "fetch-dram-price": "tsx scripts/fetch-dram-price.ts",
     "evaluate-signals": "tsx scripts/evaluate-signals.ts",
     "test-coldstart-widen": "tsx scripts/test-coldstart-widen.ts",
-    "eval": "tsx scripts/eval.ts"
+    "eval": "tsx scripts/eval.ts",
+    "short-scan": "tsx scripts/short-scan.ts",
+    "build-universe": "tsx scripts/build-universe.ts",
+    "lookback": "tsx scripts/lookback.ts",
+    "calibrate-tokens": "tsx scripts/calibrate-tokens.ts",
+    "test": "tsx --test 'packages/*/src/*.test.ts'",
+    "trends": "tsx scripts/trends.ts",
+    "build-watchlist": "tsx scripts/build-watchlist.ts",
+    "radar": "tsx scripts/radar.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
@@ -28,9 +36,12 @@
   },
   "dependencies": {
     "@stock-vetter/core": "workspace:*",
+    "@stock-vetter/local": "workspace:*",
     "@stock-vetter/pipeline": "workspace:*",
     "@stock-vetter/schema": "workspace:*",
     "@stock-vetter/signals": "workspace:*",
-    "dotenv": "^16.4.7"
+    "dotenv": "^16.4.7",
+    "yahoo-finance2": "^3.14.0",
+    "zod-to-json-schema": "^3.25.2"
   }
 }

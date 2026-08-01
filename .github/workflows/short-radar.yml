@@ -1,0 +1,73 @@
+name: Short Radar
+
+# Always-on "lite" radar: a daily deterministic sweep of the watchlist for
+# material 8-K items and multi-period XBRL deterioration (trends, restatements,
+# distress screens). NO GPU and NO model — it runs on a plain runner over EDGAR
+# + arithmetic, so it costs ~nothing and doesn't depend on the local box being
+# on. New signals are deduped into Turso; the web viewer's /radar page reads
+# them, and (optionally) a digest email is sent for the delta.
+
+on:
+  schedule:
+    # 07:00 UTC daily — after US market close and overnight filing settle.
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+    inputs:
+      since:
+        description: 'Sweep start (YYYY-MM-DD). Blank = last 3 days (overlap self-heals a missed/throttled day).'
+        required: false
+        type: string
+
+concurrency:
+  group: short-radar
+  cancel-in-progress: false
+
+jobs:
+  radar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 9.15.0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Sweep the watchlist and persist new signals
+        env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+          # SEC requires an identifying UA: "Your Name your@email.com".
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+          # Optional digest email of the NEW signals (reuses the web app's Resend
+          # key / from-address). Unset any of these → no email, run still works.
+          AUTH_RESEND_KEY: ${{ secrets.AUTH_RESEND_KEY }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          RADAR_DIGEST_TO: ${{ secrets.RADAR_DIGEST_TO }}
+          RADAR_BASE_URL: ${{ secrets.SIGNAL_TRACKER_BASE_URL }}
+        run: |
+          # A 3-day window is the safety margin against a missed/throttled run:
+          # a day that couldn't be fetched is re-swept tomorrow, and the Turso
+          # dedup makes the overlap free.
+          if [ -n "${{ inputs.since }}" ]; then
+            ARGS="--since ${{ inputs.since }}"
+          else
+            ARGS="--days 3"
+          fi
+          echo "Running: pnpm radar $ARGS"
+          set +e
+          pnpm radar $ARGS
+          code=$?
+          set -e
+          # Exit 2 = one or more days couldn't be fetched (SEC throttling). Not a
+          # failure — tomorrow's overlapping window retries it — so warn, don't
+          # fail the job. Any other non-zero is a real error.
+          if [ "$code" = "2" ]; then
+            echo "::warning::radar could not fetch some days (throttling); the next run's overlap will retry them"
+          elif [ "$code" != "0" ]; then
+            exit $code
+          fi

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CrossFilingAnalysis } from './short.js';
 
 export const Citation = z.object({
   startSec: z.number(),
@@ -556,6 +557,12 @@ export const MetaCard = z.object({
   // is attached after synthesis. Absent when no 10-Q was available or the pass
   // was skipped (backward-compatible with cards generated before this field).
   tenqDelta: TenqDelta.optional(),
+  // ADDITIVE: forensic cross-filing analysis computed from the filer's own XBRL
+  // (DSO/DIO/margin trends, Beneish M, Altman Z''). Like tenqDelta it is
+  // attached after synthesis and NEVER influences the verdict, weightedScore, or
+  // dimensions. Absent when the filer has no usable XBRL history or the pass was
+  // skipped (backward-compatible with cards generated before this field).
+  forensic: CrossFilingAnalysis.optional(),
 });
 export type MetaCard = z.infer<typeof MetaCard>;
 

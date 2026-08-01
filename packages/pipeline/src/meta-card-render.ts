@@ -6,6 +6,7 @@ import {
   type MetaCard,
   type PrimaryDimensionKey,
 } from '@stock-vetter/schema';
+import { renderCrossFilingMarkdown } from './forensic-render.js';
 
 const DIMENSION_LABELS: Record<PrimaryDimensionKey, string> = {
   moatDurability: 'Moat durability',
@@ -160,6 +161,13 @@ export function renderMetaCardMarkdown(c: MetaCard): string {
         lines.push('');
       }
     }
+  }
+  // Forensic cross-filing signals (XBRL trends + composites). ADDITIVE — the
+  // computed counterweight to the model-read checklist; does not affect the
+  // verdict or any dimension score.
+  if (c.forensic) {
+    lines.push(renderCrossFilingMarkdown(c.forensic));
+    lines.push('');
   }
   // Things to verify.
   lines.push('## Things to verify before acting');
