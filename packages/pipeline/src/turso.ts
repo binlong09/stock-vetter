@@ -183,6 +183,19 @@ export async function requeueRadarJob(accession: string): Promise<void> {
   });
 }
 
+/** Return every `failed` job to the queue (pending) — e.g. after topping up
+ *  Claude credits so credit-lapse failures re-run. Returns the count reset. */
+export async function requeueFailedRadarJobs(): Promise<number> {
+  if (!isTursoConfigured()) return 0;
+  await migrate();
+  const client = getTursoClient();
+  if (!client) return 0;
+  const res = await client.execute(
+    `UPDATE radar_jobs SET status='pending', started_at=NULL, error=NULL WHERE status='failed'`,
+  );
+  return res.rowsAffected;
+}
+
 /** Mark a claimed job failed with an error message. */
 export async function failRadarJob(accession: string, error: string): Promise<void> {
   const client = getTursoClient();
