@@ -95,7 +95,7 @@ test('receivables lengthening for several quarters is detected', () => {
   );
   const f = detectTrends(set).findings.find((x) => x.id === 'dso-lengthening');
   assert.ok(f, 'DSO lengthening not detected');
-  assert.equal(f.category, 'receivables-quality');
+  assert.equal(f.category, 'receivables');
   assert.ok(f.consecutivePeriods >= 3);
   assert.match(f.claim, /Days sales outstanding lengthened/);
   // The finding must carry its own audit trail.

@@ -5,7 +5,7 @@ import { triage } from './triage.js';
 
 function flag(over: Partial<BriefFlag> = {}): BriefFlag {
   return {
-    category: 'margin-compression',
+    category: 'margin',
     severity: 'low',
     claim: 'Gross margin fell 100bps',
     quote: 'Gross margin was 44.7% compared with 45.7%',
@@ -41,7 +41,7 @@ function brief(over: Partial<FilingBrief> = {}): FilingBrief {
 
 test('an ordinary filing with routine variance does not escalate', () => {
   // The default answer. Most filings from most companies are this.
-  const d = triage(brief({ flags: [flag(), flag({ category: 'inventory-buildup' })] }));
+  const d = triage(brief({ flags: [flag(), flag({ category: 'inventory' })] }));
   assert.equal(d.escalate, false);
   assert.ok(d.reasons.some((r) => /below threshold/.test(r)));
 });
@@ -98,7 +98,7 @@ test('corroboration across chunks helps, sub-linearly', () => {
 });
 
 test('several independent problem areas escalate where any one would not', () => {
-  const categories = ['receivables-quality', 'inventory-buildup', 'cash-conversion'] as const;
+  const categories = ['receivables', 'inventory', 'cash-conversion'] as const;
   for (const c of categories) {
     assert.equal(triage(brief({ flags: [flag({ category: c, severity: 'medium' })] })).escalate, false);
   }
@@ -139,7 +139,7 @@ test('force overrides both the threshold and the data-quality hold', () => {
 });
 
 test('the threshold is tunable and the score is reported either way', () => {
-  const b = brief({ flags: [flag({ category: 'receivables-quality', severity: 'medium' })] });
+  const b = brief({ flags: [flag({ category: 'receivables', severity: 'medium' })] });
   assert.equal(triage(b, { threshold: 100 }).escalate, false);
   assert.equal(triage(b, { threshold: 1 }).escalate, true);
   assert.equal(triage(b, { threshold: 1 }).score, triage(b, { threshold: 100 }).score);
@@ -171,7 +171,7 @@ function trend(over: Partial<import('@stock-vetter/schema').TrendFinding> = {}) 
   return {
     id: 'dso-lengthening',
     metric: 'dso',
-    category: 'receivables-quality' as const,
+    category: 'receivables' as const,
     severity: 'medium' as const,
     claim: 'DSO lengthened to 78 days from 61 a year earlier over 4 consecutive quarters',
     direction: 'deteriorating' as const,
@@ -203,7 +203,7 @@ function crossFiling(over: Partial<import('@stock-vetter/schema').CrossFilingAna
 
 test('a multi-quarter trend outweighs the same finding seen in one filing', () => {
   const single = triage(
-    brief({ flags: [flag({ category: 'receivables-quality', severity: 'medium' })] }),
+    brief({ flags: [flag({ category: 'receivables', severity: 'medium' })] }),
   );
   const multi = triage(brief({ crossFiling: crossFiling({ trends: [trend()] }) }));
   // The trend is exact and has already survived "was that just one odd
@@ -273,8 +273,8 @@ test('trends count toward the distinct-category combination bonus', () => {
       flags: [flag({ category: 'cash-conversion', severity: 'medium' })],
       crossFiling: crossFiling({
         trends: [
-          trend({ category: 'receivables-quality' }),
-          trend({ id: 'dio-lengthening', category: 'inventory-buildup' }),
+          trend({ category: 'receivables' }),
+          trend({ id: 'dio-lengthening', category: 'inventory' }),
         ],
       }),
     }),
@@ -289,7 +289,7 @@ test('recurrence across prior filings is scored and attributed', () => {
         recurrence: [
           {
             id: 'recurring-one-time-charge',
-            category: 'one-time-recurring',
+            category: 'one-time-items',
             severity: 'high',
             claim: 'restructuring charge in 4 prior filings',
             quote: 'restructuring charge of $42.0 million',

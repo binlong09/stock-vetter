@@ -226,7 +226,7 @@ function rec(id: string, e: Partial<ChunkExtraction>): ChunkExtractionRecord {
 }
 
 const FLAG = {
-  category: 'receivables-quality' as const,
+  category: 'receivables' as const,
   severity: 'medium' as const,
   claim: 'Receivables grew 22.0% against 1.6% sales growth',
   quote: 'Accounts receivable increased 22.0% while net sales increased 1.6%',

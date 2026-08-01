@@ -40,7 +40,7 @@ const EXTRACTION = {
   ],
   flags: [
     {
-      category: 'receivables-quality',
+      category: 'receivables',
       severity: 'high',
       claim: 'DSO rose to 78 days from 61 days',
       quote: 'Days sales outstanding increased to 78 days from 61 days in the prior year',
@@ -68,7 +68,7 @@ const ASSESSMENT = {
   evidence: [
     {
       point: 'DSO rose to 78 days',
-      category: 'receivables-quality',
+      category: 'receivables',
       severity: 'high',
       citation: {
         claim: 'DSO rose',

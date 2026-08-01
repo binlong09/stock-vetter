@@ -32,15 +32,15 @@ import { z } from 'zod';
  * text produces forty spellings of "receivables problem" across one filing.
  */
 export const ShortFlagCategory = z.enum([
-  'receivables-quality', // AR or DSO growing faster than revenue
-  'inventory-buildup', // inventory or DIO outpacing COGS
-  'margin-compression',
+  'receivables', // AR or DSO growing faster than revenue
+  'inventory', // inventory or DIO outpacing COGS
+  'margin',
   'cash-conversion', // CFO diverging from net income
   'revenue-recognition', // policy, timing, channel stuffing, bill-and-hold
   'cost-capitalization', // costs capitalized rather than expensed
-  'reserve-release', // allowance/reserve movements flattering earnings
-  'non-gaap-aggression', // add-backs that grow or become permanent
-  'one-time-recurring', // "non-recurring" charges that recur
+  'reserves', // allowance/reserve movements flattering earnings
+  'non-gaap', // add-backs that grow or become permanent
+  'one-time-items', // "non-recurring" charges that recur
   'segment-reclassification', // reporting changes that break comparability
   'related-party',
   'customer-concentration',
@@ -48,12 +48,12 @@ export const ShortFlagCategory = z.enum([
   'dilution', // share count growth, ATM programs, convertibles
   'leverage-covenant', // debt terms, covenant headroom, maturities
   'liquidity', // cash runway, revolver draw, factoring
-  'goodwill-impairment',
+  'goodwill',
   'litigation-regulatory',
   'going-concern',
   'internal-control', // material weakness, remediation
   'auditor', // change, disagreement, adverse ICFR opinion
-  'management-turnover', // CFO/CAO/controller departures
+  'management', // CFO/CAO/controller departures
   'guidance', // withdrawn, cut, or conspicuously absent
   'accounting-estimate-change', // useful lives, discount rates, assumptions
   'other',

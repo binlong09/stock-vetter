@@ -56,7 +56,7 @@ const BRIEF: FilingBrief = {
   metrics: [],
   flags: [
     {
-      category: 'receivables-quality',
+      category: 'receivables',
       severity: 'high',
       claim: 'DSO rose to 78 days from 61 days',
       quote: 'Days sales outstanding increased to 78 days from 61 days in the prior year.',
@@ -66,7 +66,7 @@ const BRIEF: FilingBrief = {
     },
   ],
   managementClaims: [],
-  flagCounts: { 'receivables-quality': 1 },
+  flagCounts: { 'receivables': 1 },
   chunksProcessed: 1,
   chunksFailed: 0,
   quotesDropped: 0,
@@ -194,7 +194,7 @@ const ASSESSMENT = {
   evidence: [
     {
       point: 'DSO rose to 78 days from 61 days',
-      category: 'receivables-quality',
+      category: 'receivables',
       severity: 'high',
       citation: {
         claim: 'DSO rose',
