@@ -20,8 +20,15 @@ import { upsertRadarSignals } from '@stock-vetter/pipeline';
 import type { RadarSignal } from '@stock-vetter/schema';
 
 const arg = (n: string): string | undefined => {
-  const hit = process.argv.find((a) => a === `--${n}` || a.startsWith(`--${n}=`));
-  return hit ? (hit.includes('=') ? hit.slice(hit.indexOf('=') + 1) : 'true') : undefined;
+  const i = process.argv.findIndex((a) => a === `--${n}` || a.startsWith(`--${n}=`));
+  if (i === -1) return undefined;
+  const a = process.argv[i]!;
+  if (a.includes('=')) return a.slice(a.indexOf('=') + 1);
+  // Accept a space-separated value (`--since 2026-07-01`), which is what the
+  // GitHub Action passes — not just the `--since=2026-07-01` form. A trailing
+  // flag with no value (e.g. `--no-persist`) returns 'true'.
+  const next = process.argv[i + 1];
+  return next && !next.startsWith('--') ? next : 'true';
 };
 
 const SEV_ORDER: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };

@@ -54,9 +54,9 @@ jobs:
           # a day that couldn't be fetched is re-swept tomorrow, and the Turso
           # dedup makes the overlap free.
           if [ -n "${{ inputs.since }}" ]; then
-            ARGS="--since ${{ inputs.since }}"
+            ARGS="--since=${{ inputs.since }}"
           else
-            ARGS="--days 3"
+            ARGS="--days=3"
           fi
           echo "Running: pnpm radar $ARGS"
           set +e
