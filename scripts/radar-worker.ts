@@ -17,6 +17,7 @@
  */
 import 'dotenv/config';
 import {
+  Embedder,
   LookbackIndex,
   OllamaClient,
   scanEightK,
@@ -112,8 +113,19 @@ async function main(): Promise<void> {
   }
   err(`radar-worker: ${ollama.model} · ${watch ? `watching (poll ${pollMs / 1000}s)` : 'draining once'}`);
 
-  // Keyword-only index — this box serves one (chat) model, no embeddings.
-  const index = await LookbackIndex.open({ embedder: null });
+  // Embeddings improve retrieval — the model finds evidence in fewer, better-
+  // targeted lookups, which means fewer synthesis turns (lower cost) with no
+  // quality loss. Use them when the embed server is reachable; fall back to
+  // keyword-only (BM25) so the worker still runs without one.
+  let embedder: Embedder | null = new Embedder();
+  try {
+    await embedder.embedOne('radar embedder health check');
+    err(`embeddings: ${embedder.model} (${embedder.dimension ?? '?'}d) via ${process.env.OLLAMA_EMBED_HOST ?? process.env.OLLAMA_HOST ?? 'default'}`);
+  } catch (e) {
+    err(`embeddings unavailable (${(e as Error).message.slice(0, 90)}) — keyword-only retrieval`);
+    embedder = null;
+  }
+  const index = await LookbackIndex.open({ embedder });
   try {
     for (;;) {
       // Only claim work when the box is reachable. If it's offline, jobs stay

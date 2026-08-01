@@ -16,7 +16,11 @@ export type EmbedOptions = {
 };
 
 const DEFAULTS = {
-  host: process.env.OLLAMA_HOST ?? 'http://127.0.0.1:11434',
+  // Embeddings need their own endpoint: the chat model (OLLAMA_HOST) may be a
+  // llama.cpp server that serves one model, while embeddings run on a separate
+  // Ollama/llama.cpp instance. OLLAMA_EMBED_HOST points at it; it falls back to
+  // OLLAMA_HOST for a single-server (all-Ollama) setup.
+  host: process.env.OLLAMA_EMBED_HOST ?? process.env.OLLAMA_HOST ?? 'http://127.0.0.1:11434',
   // nomic-embed-text is the most commonly pulled embedding model and handles
   // 8k contexts. bge-m3 (1024d) scores better on financial retrieval if you
   // have it; set OLLAMA_EMBED_MODEL to switch. Changing it requires a reindex.
