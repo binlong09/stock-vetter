@@ -186,8 +186,9 @@ async function withAnthropic(turns: Turn[], fn: (seen: any[]) => Promise<void>):
 }
 
 const ASSESSMENT = {
-  verdict: 'actionable-short',
+  verdict: 'mispriced-short',
   thesis: 'Revenue is being pulled forward through distributor terms concessions.',
+  direction: 'short',
   conviction: 6,
   catalysts: [{ event: 'Next 10-Q receivables disclosure', expectedWindow: 'Q1 2026' }],
   evidence: [
@@ -204,9 +205,9 @@ const ASSESSMENT = {
       },
     },
   ],
-  bullCase: 'Terms concessions were a one-time competitive response and normalize next quarter.',
+  counterThesis: 'Terms concessions were a one-time competitive response and normalize next quarter.',
   whatWouldKillThis: ['Receivables decline sequentially while revenue holds'],
-  mechanicalRisks: ['High short interest'],
+  executionRisks: ['High short interest'],
   unverifiedClaims: [],
 };
 
@@ -237,7 +238,7 @@ test('the model verifies through the local index before submitting', async () =>
       async (seen) => {
         const tracker = newCostTracker();
         const r = await synthesizeShortAssessment(BRIEF, idx, tracker);
-        assert.equal(r.assessment.verdict, 'actionable-short');
+        assert.equal(r.assessment.verdict, 'mispriced-short');
         assert.equal(r.iterations, 2);
         assert.equal(r.toolCalls.length, 1);
         assert.equal(r.toolCalls[0]!.name, 'verify_quote');
@@ -291,7 +292,7 @@ test('a throwing tool is reported to the model instead of aborting the analysis'
         // A malformed tool call costs one turn, not the whole run.
         assert.equal(r.toolCalls[0]!.isError, false);
         assert.match(r.toolCalls[0]!.result, /query is required/);
-        assert.equal(r.assessment.verdict, 'actionable-short');
+        assert.equal(r.assessment.verdict, 'mispriced-short');
       },
     );
   });
@@ -342,7 +343,7 @@ test('prose instead of a submission is redirected to the submit tool', async () 
       ],
       async (seen) => {
         const r = await synthesizeShortAssessment(BRIEF, idx, newCostTracker());
-        assert.equal(r.assessment.verdict, 'actionable-short');
+        assert.equal(r.assessment.verdict, 'mispriced-short');
         assert.match(JSON.stringify(seen[1].messages.at(-1)), /must record your answer/);
       },
     );

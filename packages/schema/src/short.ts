@@ -304,9 +304,10 @@ export type FilingBrief = z.infer<typeof FilingBrief>;
 // ---------------------------------------------------------------------------
 
 export const ShortVerdict = z.enum([
-  'actionable-short', // a specific, falsifiable thesis with a catalyst
-  'watchlist', // deterioration visible, no catalyst or no edge yet
-  'no-edge', // nothing here, or everything here is already consensus
+  'mispriced-long', // filing reveals the market is too bearish — a catalyzed long
+  'mispriced-short', // filing reveals the market is too bullish — a catalyzed short
+  'watchlist', // a material change is visible, but no catalyst or no edge yet
+  'no-edge', // nothing here, or everything here is already in the price
   'insufficient-data', // the filing didn't parse well enough to judge
 ]);
 export type ShortVerdict = z.infer<typeof ShortVerdict>;
@@ -325,7 +326,9 @@ export const ShortAssessment = z.object({
   verdict: ShortVerdict,
   /** The thesis in one or two sentences, or why there isn't one. */
   thesis: z.string(),
-  /** 1-10. Only meaningful when the verdict is actionable-short or watchlist. */
+  /** long | short | none. The trade direction the thesis implies. */
+  direction: z.enum(['long', 'short', 'none']),
+  /** 1-10. Only meaningful when the verdict is mispriced-long/short or watchlist. */
   conviction: z.number().min(1).max(10),
   /** Specific, dated things that would force the market to reprice. */
   catalysts: z.array(z.object({ event: z.string(), expectedWindow: z.string() })),
@@ -339,14 +342,15 @@ export const ShortAssessment = z.object({
     }),
   ),
   /**
-   * The bull case, stated in its strongest form. A short assessment that
-   * can't state the other side hasn't done the work.
+   * The strongest case AGAINST the thesis, in its best form — the bear case for
+   * a long, the bull case for a short. An assessment that can't state the other
+   * side hasn't done the work.
    */
-  bullCase: z.string(),
-  /** What would falsify the thesis. Required — an unfalsifiable short is a hope. */
+  counterThesis: z.string(),
+  /** What would falsify the thesis. Required — an unfalsifiable thesis is a hope. */
   whatWouldKillThis: z.array(z.string()),
-  /** Risks specific to shorting THIS name: borrow, squeeze potential, M&A. */
-  mechanicalRisks: z.array(z.string()),
+  /** Risks specific to putting on THIS trade: borrow/squeeze on a short; liquidity, dilution, or M&A on a long. */
+  executionRisks: z.array(z.string()),
   /** Claims the model could not verify against the filing text. */
   unverifiedClaims: z.array(z.string()),
 });

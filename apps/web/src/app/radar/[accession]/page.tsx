@@ -6,7 +6,8 @@ import { isoDate } from '@/lib/format';
 export const revalidate = 60;
 
 const VERDICT_CLS: Record<string, string> = {
-  'actionable-short': 'border-rose-300 bg-rose-50 text-rose-700',
+  'mispriced-long': 'border-emerald-300 bg-emerald-50 text-emerald-700',
+  'mispriced-short': 'border-rose-300 bg-rose-50 text-rose-700',
   watchlist: 'border-amber-300 bg-amber-50 text-amber-700',
   'no-edge': 'border-slate-300 bg-slate-100 text-slate-600',
   'insufficient-data': 'border-slate-300 bg-slate-100 text-slate-600',
@@ -113,14 +114,14 @@ export default async function RadarDetailPage({ params }: { params: Promise<{ ac
           {a.catalysts.length > 0 ? (
             <Bullets title="Catalysts" items={a.catalysts.map((c) => `${c.event} (${c.expectedWindow})`)} />
           ) : null}
-          {a.bullCase ? (
+          {a.counterThesis ? (
             <section>
-              <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-400">Bull case</h2>
-              <p className="mt-1 text-sm text-slate-700">{a.bullCase}</p>
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-400">The other side</h2>
+              <p className="mt-1 text-sm text-slate-700">{a.counterThesis}</p>
             </section>
           ) : null}
           {a.whatWouldKillThis.length > 0 ? <Bullets title="What would kill this" items={a.whatWouldKillThis} /> : null}
-          {a.mechanicalRisks.length > 0 ? <Bullets title="Mechanical risks of the short" items={a.mechanicalRisks} /> : null}
+          {a.executionRisks.length > 0 ? <Bullets title="Execution risks" items={a.executionRisks} /> : null}
           {a.unverifiedClaims.length > 0 ? <Bullets title="Could not verify" items={a.unverifiedClaims} /> : null}
         </div>
       ) : (

@@ -268,8 +268,8 @@ export async function synthesizeShortAssessment(
     schema: ShortAssessment,
     submitToolName: 'submit_assessment',
     submitToolDescription:
-      'Record your final short-side assessment. Call this exactly once, after you have verified whatever ' +
-      'figures the thesis depends on. Returning verdict "no-edge" is a complete and often correct answer.',
+      'Record your final mispricing assessment (long, short, or no-edge). Call this exactly once, after you ' +
+      'have verified whatever figures the thesis depends on. Returning verdict "no-edge" is a complete and often correct answer.',
     maxIterations: opts.maxIterations ?? 12,
     maxTokens: opts.maxTokens ?? 8192,
     tracker,
@@ -284,7 +284,11 @@ export async function synthesizeShortAssessment(
 export function renderAssessmentMarkdown(brief: FilingBrief, r: SynthesisResult): string {
   const a = r.assessment;
   const L: string[] = [];
-  L.push(`# ${brief.ticker} — ${a.verdict.toUpperCase()} (conviction ${a.conviction}/10)`);
+  L.push(
+    `# ${brief.ticker} — ${a.verdict.toUpperCase()}` +
+      (a.direction !== 'none' ? ` (${a.direction})` : '') +
+      ` (conviction ${a.conviction}/10)`,
+  );
   L.push(`${brief.form} filed ${brief.filingDate} · accession ${brief.accession}`);
   L.push('', '## Thesis', a.thesis);
 
@@ -305,15 +309,15 @@ export function renderAssessmentMarkdown(brief: FilingBrief, r: SynthesisResult)
     }
   }
 
-  L.push('', '## Bull case', a.bullCase);
+  L.push('', '## The other side', a.counterThesis);
 
   if (a.whatWouldKillThis.length) {
     L.push('', '## What would kill this');
     for (const x of a.whatWouldKillThis) L.push(`- ${x}`);
   }
-  if (a.mechanicalRisks.length) {
-    L.push('', '## Mechanical risks of the short');
-    for (const x of a.mechanicalRisks) L.push(`- ${x}`);
+  if (a.executionRisks.length) {
+    L.push('', '## Execution risks');
+    for (const x of a.executionRisks) L.push(`- ${x}`);
   }
   if (a.unverifiedClaims.length) {
     L.push('', '## Could not verify');

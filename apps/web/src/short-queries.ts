@@ -74,6 +74,23 @@ export interface RadarAssessment {
   assessment: ShortAssessment | null; // parsed; null when the job didn't escalate
 }
 
+// Assessments written before the direction-agnostic reframe used short-only
+// field names (bullCase, mechanicalRisks) and no `direction`. Map them to the
+// current shape at read time so the detail page renders old rows without
+// crashing and without per-field defensive checks. For a legacy short call the
+// old bull case IS the counter-thesis, so the mapping is faithful.
+function normalizeAssessment(raw: unknown): ShortAssessment | null {
+  if (raw == null || typeof raw !== 'object') return null;
+  const a = raw as Record<string, unknown>;
+  const legacy = a as { bullCase?: unknown; mechanicalRisks?: unknown };
+  return {
+    ...(a as object),
+    counterThesis: a.counterThesis ?? legacy.bullCase ?? '',
+    executionRisks: a.executionRisks ?? legacy.mechanicalRisks ?? [],
+    direction: a.direction ?? 'none',
+  } as ShortAssessment;
+}
+
 /** The deep-dive result for one filing (accession), for the detail page. */
 export async function getRadarAssessment(accession: string): Promise<RadarAssessment | null> {
   try {
@@ -89,7 +106,7 @@ export async function getRadarAssessment(accession: string): Promise<RadarAssess
     let assessment: ShortAssessment | null = null;
     if (r.assessment_json != null) {
       try {
-        assessment = JSON.parse(String(r.assessment_json)) as ShortAssessment;
+        assessment = normalizeAssessment(JSON.parse(String(r.assessment_json)));
       } catch {
         assessment = null;
       }
