@@ -31,6 +31,7 @@ import {
   completeRadarJob,
   requeueRadarJob,
   requeueFailedRadarJobs,
+  reanalyzeDoneRadarJobs,
   failRadarJob,
   type ClaimedRadarJob,
 } from '@stock-vetter/pipeline';
@@ -110,6 +111,14 @@ async function main(): Promise<void> {
   if (arg('requeue-failed') != null) {
     const n = await requeueFailedRadarJobs();
     err(`requeued ${n} failed job(s)`);
+  }
+  // Re-run already-completed jobs under the current pipeline. `--reanalyze`
+  // resets every done job; `--reanalyze=ACC1,ACC2` only those accessions.
+  const reanalyze = arg('reanalyze');
+  if (reanalyze != null) {
+    const accs = reanalyze === 'true' ? undefined : reanalyze.split(',').map((s) => s.trim()).filter(Boolean);
+    const n = await reanalyzeDoneRadarJobs(accs);
+    err(`reset ${n} done job(s) to pending for re-analysis`);
   }
   err(`radar-worker: ${ollama.model} · ${watch ? `watching (poll ${pollMs / 1000}s)` : 'draining once'}`);
 

@@ -33,6 +33,7 @@ export {
   completeRadarJob,
   requeueRadarJob,
   requeueFailedRadarJobs,
+  reanalyzeDoneRadarJobs,
   failRadarJob,
   type RadarJobInput,
   type ClaimedRadarJob,
