@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CrossFilingAnalysis } from './short.js';
+import { CrossFilingAnalysis } from './mispricing.js';
 
 export const Citation = z.object({
   startSec: z.number(),

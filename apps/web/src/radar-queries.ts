@@ -1,5 +1,5 @@
 import 'server-only';
-import type { ShortAssessment } from '@stock-vetter/schema';
+import type { MispricingAssessment } from '@stock-vetter/schema';
 import { db } from './db';
 
 // One short-side radar signal, with the status of its filing's deep-dive job.
@@ -71,7 +71,7 @@ export interface RadarAssessment {
   verdict: string | null;
   conviction: number | null;
   error: string | null;
-  assessment: ShortAssessment | null; // parsed; null when the job didn't escalate
+  assessment: MispricingAssessment | null; // parsed; null when the job didn't escalate
 }
 
 // Assessments written before the direction-agnostic reframe used short-only
@@ -79,7 +79,7 @@ export interface RadarAssessment {
 // current shape at read time so the detail page renders old rows without
 // crashing and without per-field defensive checks. For a legacy short call the
 // old bull case IS the counter-thesis, so the mapping is faithful.
-function normalizeAssessment(raw: unknown): ShortAssessment | null {
+function normalizeAssessment(raw: unknown): MispricingAssessment | null {
   if (raw == null || typeof raw !== 'object') return null;
   const a = raw as Record<string, unknown>;
   const legacy = a as { bullCase?: unknown; mechanicalRisks?: unknown };
@@ -88,7 +88,7 @@ function normalizeAssessment(raw: unknown): ShortAssessment | null {
     counterThesis: a.counterThesis ?? legacy.bullCase ?? '',
     executionRisks: a.executionRisks ?? legacy.mechanicalRisks ?? [],
     direction: a.direction ?? 'none',
-  } as ShortAssessment;
+  } as MispricingAssessment;
 }
 
 /** The deep-dive result for one filing (accession), for the detail page. */
@@ -103,7 +103,7 @@ export async function getRadarAssessment(accession: string): Promise<RadarAssess
     });
     const r = res.rows[0];
     if (!r) return null;
-    let assessment: ShortAssessment | null = null;
+    let assessment: MispricingAssessment | null = null;
     if (r.assessment_json != null) {
       try {
         assessment = normalizeAssessment(JSON.parse(String(r.assessment_json)));

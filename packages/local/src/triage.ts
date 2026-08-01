@@ -12,13 +12,13 @@
 // to talk out of its answer. `reasons` records exactly what earned each point
 // so a threshold can be tuned against outcomes instead of vibes.
 
-import type { FilingBrief, ShortFlagCategory } from '@stock-vetter/schema';
+import type { FilingBrief, FlagCategory } from '@stock-vetter/schema';
 
 // How predictive is a category, before severity? These are judgments about
 // which disclosures actually precede repricings, not about which sound
 // alarming. Weight 5 means "this alone is usually worth a human's attention";
 // weight 1 means "only interesting alongside something else".
-const CATEGORY_WEIGHT: Record<ShortFlagCategory, number> = {
+const CATEGORY_WEIGHT: Record<FlagCategory, number> = {
   'going-concern': 5,
   auditor: 5,
   'internal-control': 5,

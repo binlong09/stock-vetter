@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { listRadarSignals } from '@/short-queries';
+import { listRadarSignals } from '@/radar-queries';
 import { isoDate } from '@/lib/format';
 
 // The deep-dive job status → a compact chip. `done` shows the verdict.

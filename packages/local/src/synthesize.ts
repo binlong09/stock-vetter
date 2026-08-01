@@ -19,7 +19,7 @@ import {
   type LLMTool,
   type ToolCallRecord,
 } from '@stock-vetter/core';
-import { ShortAssessment, type FilingBrief } from '@stock-vetter/schema';
+import { MispricingAssessment, type FilingBrief } from '@stock-vetter/schema';
 import type { LookbackIndex } from './lookback.js';
 import { renderBriefMarkdown } from './brief.js';
 import { computeRatios, type PeriodRatios } from './ratios.js';
@@ -228,7 +228,7 @@ const METRIC_KEYS = [
 ] as const;
 
 export type SynthesisResult = {
-  assessment: ShortAssessment;
+  assessment: MispricingAssessment;
   toolCalls: ToolCallRecord[];
   iterations: number;
 };
@@ -240,13 +240,13 @@ export type SynthesisResult = {
  * company are synthesized in one run, or a run is retried, the system prompt
  * is a cache hit.
  */
-export async function synthesizeShortAssessment(
+export async function synthesizeAssessment(
   brief: FilingBrief,
   index: LookbackIndex,
   tracker: CostTracker,
   opts: SynthesisOptions = {},
 ): Promise<SynthesisResult> {
-  const system = await loadPrompt('short-synthesis');
+  const system = await loadPrompt('synthesis');
   const tools = buildVerificationTools(
     index,
     { ticker: brief.ticker, accession: brief.accession },
@@ -259,13 +259,13 @@ export async function synthesizeShortAssessment(
   );
 
   const { value, toolCalls, iterations } = await llmCallWithToolsJson({
-    stage: `short-synthesis-${brief.ticker}`,
+    stage: `synthesis-${brief.ticker}`,
     // The prompt is identical for every company in a run, so caching it turns
     // ~1,500 tokens of instructions into a cache read after the first filing.
     systemPrompt: [{ text: system, cache: true, ttl: '1h' }],
     userMessage: renderBriefMarkdown(brief),
     tools,
-    schema: ShortAssessment,
+    schema: MispricingAssessment,
     submitToolName: 'submit_assessment',
     submitToolDescription:
       'Record your final mispricing assessment (long, short, or no-edge). Call this exactly once, after you ' +

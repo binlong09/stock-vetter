@@ -23,7 +23,7 @@
 // itself — and are marked as such so the cloud model can weight them above
 // anything a 30B model transcribed from a page.
 
-import type { FlagSeverity, ShortFlagCategory, TrendChangeUnit, TrendFinding } from '@stock-vetter/schema';
+import type { FlagSeverity, FlagCategory, TrendChangeUnit, TrendFinding } from '@stock-vetter/schema';
 import type { SeriesSet } from '@stock-vetter/core';
 import { computeRatios, type PeriodRatios, type RatioOptions } from './ratios.js';
 
@@ -34,7 +34,7 @@ type ChangeUnit = TrendChangeUnit;
 type Detector = {
   id: string;
   metric: string;
-  category: ShortFlagCategory;
+  category: FlagCategory;
   worseWhen: 'higher' | 'lower';
   changeUnit: ChangeUnit;
   /** Consecutive YoY deteriorations required before reporting. */

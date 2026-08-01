@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getRadarAssessment, edgarFilingUrl } from '@/short-queries';
+import { getRadarAssessment, edgarFilingUrl } from '@/radar-queries';
 import { isoDate } from '@/lib/format';
 
 export const revalidate = 60;

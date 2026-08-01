@@ -99,7 +99,7 @@ export {
 } from './recurrence.js';
 
 export {
-  synthesizeShortAssessment,
+  synthesizeAssessment,
   buildVerificationTools,
   renderAssessmentMarkdown,
   type SynthesisOptions,
