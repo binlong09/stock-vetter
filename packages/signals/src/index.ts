@@ -42,6 +42,8 @@ export {
   type EvaluationOutcome,
 } from './evaluate.js';
 
+export { parseDxi, cdxTimestamps, pickClosestSnapshot, momDirection } from './dram-dxi.js';
+
 export { renderThesisCard, provisionalStatus } from './render.js';
 
 export { computeThesisStatus } from './theses.js';

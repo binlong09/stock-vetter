@@ -2,21 +2,24 @@
 /**
  * scripts/fetch-dram-price.ts
  *
- * Best-effort automation for the DRAM-memory-growth thesis's manual
- * `dram-spot-contract-price` watch-item. TrendForce gates the actual price
- * NUMBERS behind paid membership and renders them client-side, so we can't
- * scrape the index value for free. What IS free and server-rendered is their
- * press center, whose article headlines carry the DIRECTION of the move — which
- * is exactly what a `weakens` tripwire needs (rolling over ⇒ exit).
+ * Automation for the DRAM-memory-growth thesis's manual
+ * `dram-spot-contract-price` watch-item: record this month's DRAM price
+ * direction as a manual Event in data/manual-events.json (idempotent per
+ * month), so the next `pnpm track` run evaluates it like any other event.
  *
- * Flow:
- *   1. Scrape the TrendForce press center for a RECENT (default ≤40 days) article
- *      about DRAM contract/spot pricing.
- *   2. If found, infer direction (up/down/unclear) from the headline + lede and
- *      upsert a manual Event into data/manual-events.json (idempotent by month),
- *      so the next `pnpm track` run evaluates it like any other event.
- *   3. If nothing usable is found (no recent article, fetch failure, or an
- *      ambiguous headline), EMAIL a reminder to input the monthly print by hand.
+ * Source chain, most reliable first:
+ *   1. DXI month-over-month (numeric). dramexchange.com — a TrendForce
+ *      property — server-renders the DXI spot index on its homepage every
+ *      trading day. The ~30-day-ago baseline comes from the Wayback Machine,
+ *      which captures the page every few days, so no local price history is
+ *      needed and the comparison works from the very first run. After a
+ *      successful read we ping Wayback's Save Page Now so future baselines
+ *      keep existing even if third-party crawlers stop.
+ *   2. TrendForce press center (headline direction). Their pricing articles
+ *      carry the direction of the move in the title/lede; TrendForce only
+ *      publishes them intermittently, which is why this is the fallback
+ *      rather than the primary.
+ *   3. Email a reminder to enter the print by hand (both sources down).
  *
  * Usage:
  *   pnpm tsx scripts/fetch-dram-price.ts [--days 40] [--dry-run]
@@ -27,12 +30,21 @@
 import 'dotenv/config';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isMailerConfigured, sendEmail } from '@stock-vetter/core';
+import { parseDxi, cdxTimestamps, pickClosestSnapshot, momDirection } from '@stock-vetter/signals';
 
 const LISTING_URL = 'https://www.trendforce.com/presscenter/news';
 const PRICE_PAGE = 'https://www.trendforce.com/price/dram/dram_spot';
+// Override in tests to exercise the fallback chain without network mocking.
+const DXI_PAGE = process.env.DRAM_DXI_URL ?? 'https://www.dramexchange.com/';
 const MANUAL_FILE = 'data/manual-events.json';
 const THESIS_ID = 'DRAM-memory-growth';
 const TICKER = 'MU';
+
+// The Wayback baseline should be roughly a month old. Captures happen every
+// few days, so accept anything 21-45 days back and prefer the one nearest 30.
+const BASELINE_TARGET_DAYS = 30;
+const BASELINE_MIN_DAYS = 21;
+const BASELINE_MAX_DAYS = 45;
 
 const UP = /increase|rising|rise|climb|surg|jump|record high|upgrad|hike|higher|strengthen|gain|rebound|uptrend|extend.*gains/i;
 const DOWN = /declin|falling|\bfall\b|\bdrop|correction|soften|weaken|oversupply|glut|downgrad|lower|\bcut\b|slump|downtrend|pressure|erosion/i;
@@ -54,10 +66,10 @@ function arg(name: string, fallback: string): string {
 const DAYS = Number(arg('days', '40'));
 const DRY = process.argv.includes('--dry-run');
 
-async function fetchText(url: string): Promise<string> {
+async function fetchText(url: string, timeoutMs = 20_000): Promise<string> {
   const res = await fetch(url, {
     headers: { 'User-Agent': 'Mozilla/5.0 (compatible; stock-vetter/1.0)' },
-    signal: AbortSignal.timeout(20_000),
+    signal: AbortSignal.timeout(timeoutMs),
   });
   if (!res.ok) throw new Error(`${res.status} ${res.statusText} for ${url}`);
   return res.text();
@@ -157,23 +169,91 @@ function monthName(): string {
   const [y, m] = today().split('-');
   return `${['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][Number(m)]} ${y}`;
 }
+function daysAgo(n: number): string {
+  const d = new Date(`${today()}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - n);
+  return d.toISOString().slice(0, 10);
+}
 
-async function main(): Promise<void> {
+// A source either yields the month's event or explains why it couldn't.
+type SourceResult = { event: ManualInput } | { reason: string };
+
+/**
+ * Source 1: DXI month-over-month. Current value from the dramexchange.com
+ * homepage; ~30-day-ago baseline from the nearest Wayback Machine capture.
+ */
+async function tryDxi(id: string): Promise<SourceResult> {
+  const current = parseDxi(await fetchText(DXI_PAGE));
+  if (current == null) return { reason: 'DXI value not found on dramexchange.com homepage' };
+
+  const from = daysAgo(BASELINE_MAX_DAYS).replace(/-/g, '');
+  const to = daysAgo(BASELINE_MIN_DAYS).replace(/-/g, '');
+  const target = daysAgo(BASELINE_TARGET_DAYS).replace(/-/g, '');
+  const cdxUrl =
+    `https://web.archive.org/cdx/search/cdx?url=dramexchange.com&from=${from}&to=${to}` +
+    `&output=json&fl=timestamp&filter=statuscode:200&collapse=timestamp:8`;
+  const snapshots = cdxTimestamps(JSON.parse(await fetchText(cdxUrl, 30_000)));
+  const ts = pickClosestSnapshot(snapshots, target);
+  if (!ts) return { reason: `no Wayback capture of dramexchange.com in the last ${BASELINE_MIN_DAYS}-${BASELINE_MAX_DAYS} days` };
+
+  const past = parseDxi(await fetchText(`https://web.archive.org/web/${ts}id_/${DXI_PAGE}`, 60_000));
+  if (past == null) return { reason: `DXI value not found in Wayback capture ${ts}` };
+
+  const mom = momDirection(current, past);
+  if (!mom) return { reason: `unusable DXI baseline (current=${current}, past=${past})` };
+
+  const pastDate = `${ts.slice(0, 4)}-${ts.slice(4, 6)}-${ts.slice(6, 8)}`;
+  const pct = `${mom.pctChange >= 0 ? '+' : ''}${mom.pctChange.toFixed(1)}%`;
+  return {
+    event: {
+      id,
+      ticker: TICKER,
+      date: today(),
+      title: `DRAM price index (DXI) ${monthName()}: ${mom.direction} ${pct} MoM (${current.toFixed(1)} vs ${past.toFixed(1)} on ${pastDate}) (DRAMeXchange)`,
+      url: DXI_PAGE,
+      payload: {
+        thesisId: THESIS_ID,
+        direction: mom.direction,
+        dxi: current,
+        dxiBaseline: past,
+        dxiBaselineDate: pastDate,
+        pctChange: Number(mom.pctChange.toFixed(2)),
+        source: 'dramexchange-dxi',
+      },
+      note: `DXI month-over-month, computed from the dramexchange.com homepage vs its Wayback capture of ${pastDate}`,
+    },
+  };
+}
+
+/**
+ * Keep Wayback capturing dramexchange.com so a ~30-day-old baseline always
+ * exists. Best-effort: anonymous Save Page Now, short timeout, errors ignored.
+ */
+async function pingWaybackSave(): Promise<void> {
+  try {
+    await fetch(`https://web.archive.org/save/${DXI_PAGE}`, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; stock-vetter/1.0)' },
+      signal: AbortSignal.timeout(15_000),
+    });
+    console.error('[dram-price] pinged Wayback Save Page Now for the DXI page');
+  } catch {
+    // Purely opportunistic — third-party crawlers capture the page anyway.
+  }
+}
+
+/** Source 2: direction inferred from a recent TrendForce pricing headline. */
+async function tryPressCenter(id: string, existing: ManualInput[]): Promise<SourceResult> {
   let listing: string;
   try {
     listing = await fetchText(LISTING_URL);
   } catch (e) {
-    await reminderEmail(`press center unreachable: ${e instanceof Error ? e.message : e}`);
-    return;
+    return { reason: `press center unreachable: ${e instanceof Error ? e.message : e}` };
   }
 
-  const cutoff = new Date(today());
-  cutoff.setDate(cutoff.getDate() - DAYS);
-  const cutoffIso = cutoff.toISOString().slice(0, 10);
+  const cutoffIso = daysAgo(DAYS);
   const recent = articleLinks(listing).filter((a) => a.date >= cutoffIso);
   console.error(`[dram-price] ${recent.length} press articles in the last ${DAYS} days`);
 
-  // Find the most recent DRAM-pricing article.
   let found: { url: string; date: string; title: string; desc: string } | null = null;
   for (const a of recent.slice(0, 15)) {
     let html: string;
@@ -189,35 +269,79 @@ async function main(): Promise<void> {
       break;
     }
   }
+  if (!found) return { reason: `no DRAM-pricing press release found in the last ${DAYS} days` };
 
-  if (!found) {
-    await reminderEmail(`no DRAM-pricing press release found in the last ${DAYS} days`);
-    return;
+  // The event id is keyed to the RUN month, but the lookback window spans
+  // month boundaries — without this guard a late-July article recorded as
+  // July's print would be recorded again as August's.
+  if (existing.some((e) => e.url === found.url)) {
+    return { reason: `latest pricing article already recorded in a prior month (${found.url})` };
   }
 
   const direction = inferDirection(`${found.title} ${found.desc}`);
   if (direction === 'unclear') {
-    await reminderEmail(`found an article but couldn’t infer direction: "${found.title.slice(0, 120)}"`);
+    return { reason: `found an article but couldn’t infer direction: "${found.title.slice(0, 120)}"` };
+  }
+  return {
+    event: {
+      id,
+      ticker: TICKER,
+      date: today(),
+      title: `DRAM contract/spot price — TrendForce: ${found.title.slice(0, 140)}`,
+      url: found.url,
+      payload: {
+        thesisId: THESIS_ID,
+        direction,
+        headline: found.title,
+        articleDate: found.date,
+        source: 'trendforce-presscenter',
+      },
+      note: 'auto-scraped from TrendForce press center; direction inferred from headline',
+    },
+  };
+}
+
+async function main(): Promise<void> {
+  // One print per month: skip everything (including network) once recorded.
+  const id = `dram-price-${monthKey()}`;
+  const events = await loadManual();
+  if (events.some((e) => e.id === id)) {
+    console.error(`[dram-price] event ${id} already present — nothing to do.`);
     return;
   }
 
-  // Upsert a manual event, idempotent per month.
-  const id = `dram-price-${found.date.slice(0, 7)}`;
-  const events = await loadManual();
-  if (events.some((e) => e.id === id)) {
-    console.error(`[dram-price] event ${id} already present — nothing to do (direction=${direction}).`);
+  const reasons: string[] = [];
+  let event: ManualInput | null = null;
+
+  try {
+    const r = await tryDxi(id);
+    if ('event' in r) event = r.event;
+    else reasons.push(`DXI: ${r.reason}`);
+  } catch (e) {
+    reasons.push(`DXI: ${e instanceof Error ? e.message : String(e)}`);
+  }
+  // Whether or not the read succeeded, keep the capture cadence alive so next
+  // month's baseline exists.
+  if (!DRY) await pingWaybackSave();
+
+  if (!event) {
+    console.error(`[dram-price] DXI source failed (${reasons[reasons.length - 1]}); falling back to press center`);
+    try {
+      const r = await tryPressCenter(id, events);
+      if ('event' in r) event = r.event;
+      else reasons.push(`press: ${r.reason}`);
+    } catch (e) {
+      reasons.push(`press: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+
+  if (!event) {
+    await reminderEmail(reasons.join('; '));
     return;
   }
-  const event: ManualInput = {
-    id,
-    ticker: TICKER,
-    date: found.date,
-    title: `DRAM contract/spot price — TrendForce: ${found.title.slice(0, 140)}`,
-    url: found.url,
-    payload: { thesisId: THESIS_ID, direction, headline: found.title, source: 'trendforce-presscenter' },
-    note: 'auto-scraped from TrendForce press center; direction inferred from headline',
-  };
-  console.error(`[dram-price] ✓ direction=${direction.toUpperCase()} — ${found.title.slice(0, 110)}`);
+
+  const direction = String(event.payload?.direction ?? 'unclear');
+  console.error(`[dram-price] ✓ direction=${direction.toUpperCase()} — ${event.title.slice(0, 110)}`);
   if (DRY) {
     console.error('[dram-price] (dry-run) would append:\n' + JSON.stringify(event, null, 2));
     return;

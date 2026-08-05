@@ -82,7 +82,10 @@ async function withIndex(fn: (idx: LookbackIndex) => Promise<void>): Promise<voi
     await fn(idx);
   } finally {
     await idx.close();
-    await rm(dir, { recursive: true, force: true });
+    // libsql on Windows releases the db file handle only at process exit, so
+    // this rm can hit EBUSY there. Leak the temp dir (the OS temp cleaner
+    // reaps it) rather than fail a test whose body already passed.
+    await rm(dir, { recursive: true, force: true }).catch(() => undefined);
   }
 }
 
