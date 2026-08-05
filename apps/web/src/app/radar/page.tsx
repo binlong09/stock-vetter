@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { listRadarSignals } from '@/radar-queries';
+import { listRadarSignals, type RadarRow } from '@/radar-queries';
 import { isoDate } from '@/lib/format';
 
 // The deep-dive job status → a compact chip. `done` shows the verdict.
@@ -42,14 +42,64 @@ const KIND_LABEL: Record<string, string> = {
   composite: 'composite',
 };
 
+// Group signals by filing date, newest date first; loudest first within a day.
+function groupByFilingDate(rows: RadarRow[]): Array<{ date: string; signals: RadarRow[] }> {
+  const byDate = new Map<string, RadarRow[]>();
+  for (const r of rows) {
+    const date = isoDate(r.filingDate);
+    const list = byDate.get(date);
+    if (list) list.push(r);
+    else byDate.set(date, [r]);
+  }
+  return [...byDate.entries()]
+    .sort(([a], [b]) => b.localeCompare(a))
+    .map(([date, signals]) => ({
+      date,
+      signals: signals.sort(
+        (a, b) =>
+          SEV_ORDER.indexOf(a.severity) - SEV_ORDER.indexOf(b.severity) ||
+          b.firstSeenAt.localeCompare(a.firstSeenAt),
+      ),
+    }));
+}
+
+function severityCounts(signals: RadarRow[]): Array<{ severity: string; count: number }> {
+  return SEV_ORDER.map((severity) => ({
+    severity,
+    count: signals.filter((s) => s.severity === severity).length,
+  })).filter((c) => c.count > 0);
+}
+
+function SignalCard({ s }: { s: RadarRow }) {
+  const chip = analysisChip(s.jobStatus, s.verdict, s.conviction);
+  return (
+    <Link
+      href={`/radar/${encodeURIComponent(s.accession)}`}
+      className="block rounded-lg border border-slate-200 bg-white px-3.5 py-3 hover:border-slate-300"
+    >
+      <div className="flex items-center justify-between gap-3">
+        <span className="font-mono text-sm font-medium text-slate-900">{s.ticker}</span>
+        <span
+          className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium ${SEV_PILL[s.severity] ?? SEV_PILL.low}`}
+        >
+          {s.severity}
+        </span>
+      </div>
+      <p className="mt-1 text-sm text-slate-700">{s.headline}</p>
+      <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-400">
+        <span>{s.form}</span>
+        <span>{KIND_LABEL[s.kind] ?? s.kind}</span>
+        <span>filed {isoDate(s.filingDate)}</span>
+        <span>seen {isoDate(s.firstSeenAt)}</span>
+        <span className={`rounded-full border px-1.5 py-0.5 font-medium ${chip.cls}`}>{chip.label}</span>
+      </div>
+    </Link>
+  );
+}
+
 export default async function RadarPage() {
   const rows = await listRadarSignals();
-  // Loudest first (critical → low), then most-recently surfaced within a band.
-  const sorted = [...rows].sort(
-    (a, b) =>
-      SEV_ORDER.indexOf(a.severity) - SEV_ORDER.indexOf(b.severity) ||
-      b.firstSeenAt.localeCompare(a.firstSeenAt),
-  );
+  const groups = groupByFilingDate(rows);
 
   return (
     <div>
@@ -64,40 +114,43 @@ export default async function RadarPage() {
         way, and on what catalyst. Reflects the last daily sweep.
       </p>
 
-      <div className="mt-3 space-y-2">
-        {sorted.length === 0 ? (
+      <div className="mt-3 space-y-3">
+        {groups.length === 0 ? (
           <p className="rounded-lg border border-slate-200 bg-white px-3.5 py-6 text-sm text-slate-500">
             No signals yet. The sweep writes them on its first run (
             <code className="font-mono">pnpm radar</code>).
           </p>
         ) : (
-          sorted.map((s) => {
-            const chip = analysisChip(s.jobStatus, s.verdict, s.conviction);
-            return (
-              <Link
-                key={s.key}
-                href={`/radar/${encodeURIComponent(s.accession)}`}
-                className="block rounded-lg border border-slate-200 bg-white px-3.5 py-3 hover:border-slate-300"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <span className="font-mono text-sm font-medium text-slate-900">{s.ticker}</span>
-                  <span
-                    className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium ${SEV_PILL[s.severity] ?? SEV_PILL.low}`}
-                  >
-                    {s.severity}
-                  </span>
-                </div>
-                <p className="mt-1 text-sm text-slate-700">{s.headline}</p>
-                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-400">
-                  <span>{s.form}</span>
-                  <span>{KIND_LABEL[s.kind] ?? s.kind}</span>
-                  <span>filed {isoDate(s.filingDate)}</span>
-                  <span>seen {isoDate(s.firstSeenAt)}</span>
-                  <span className={`rounded-full border px-1.5 py-0.5 font-medium ${chip.cls}`}>{chip.label}</span>
-                </div>
-              </Link>
-            );
-          })
+          groups.map((g, i) => (
+            <details
+              key={g.date}
+              open={i === 0}
+              className="group rounded-lg border border-slate-200 bg-slate-50 open:bg-transparent"
+            >
+              <summary className="flex cursor-pointer select-none list-none items-center gap-2 px-3.5 py-2.5 text-sm [&::-webkit-details-marker]:hidden">
+                <span className="text-[10px] text-slate-400 transition-transform group-open:rotate-90">▶</span>
+                <span className="font-medium text-slate-900">filed {g.date}</span>
+                <span className="text-xs text-slate-400">
+                  {g.signals.length} signal{g.signals.length === 1 ? '' : 's'}
+                </span>
+                <span className="ml-auto flex items-center gap-1.5">
+                  {severityCounts(g.signals).map(({ severity, count }) => (
+                    <span
+                      key={severity}
+                      className={`rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${SEV_PILL[severity] ?? SEV_PILL.low}`}
+                    >
+                      {count} {severity}
+                    </span>
+                  ))}
+                </span>
+              </summary>
+              <div className="space-y-2 px-3.5 pb-3.5 pt-1">
+                {g.signals.map((s) => (
+                  <SignalCard key={s.key} s={s} />
+                ))}
+              </div>
+            </details>
+          ))
         )}
       </div>
     </div>
