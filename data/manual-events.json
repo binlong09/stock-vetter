@@ -1,0 +1,11 @@
+[
+  {
+    "id": "dram-price-2026-08",
+    "ticker": "MU",
+    "date": "2026-08-05",
+    "title": "DRAM contract price Aug 2026: up, 3Q26 contract +13-18% QoQ, DDR4 spot +16.9% MoM in Jul (TrendForce)",
+    "url": "https://www.trendforce.com/price/dram/dram_spot",
+    "payload": { "thesisId": "DRAM-memory-growth", "direction": "up" },
+    "note": "TrendForce monthly contract-price print. Sources: TrendForce 2026-07-03 press (3Q26 conventional DRAM contract +13-18% QoQ, gains moderating), TrendForce 2026-08-04 press (DRAM supply tight through 2027), DDR4 1Gx8 3200 spot $37.14 -> $41.10 over July (record high)."
+  }
+]
