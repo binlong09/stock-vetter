@@ -129,6 +129,16 @@ export {
   type InsiderStore,
 } from './radar.js';
 
+// Bullish XBRL detectors: buybacks and fundamental inflections.
+export {
+  detectBullishInflections,
+  detectBuyback,
+  detectProfitabilityTurn,
+  detectFcfTurn,
+  detectRevenueAcceleration,
+  type BullishFinding,
+} from './inflection.js';
+
 // Insider-buying clusters from Form 4 — the radar's bullish detector.
 export {
   detectInsiderCluster,

@@ -5,7 +5,7 @@ Four research tools that share one codebase:
 - **Stock Vetter** — type a ticker, get one decision card. Fetches the latest 10-K, DEF 14A proxy, 10-Q, SEC companyfacts, and current price; runs a three-pass primary-source value-investing checklist; computes a reverse DCF and historical valuation context; optionally folds in analyst-video or earnings-call analysis; and produces a verdict + 1–10 weighted score.
 - **Signal Tracker** — write a one-line investment thesis with explicit tripwires, then let a daily cron watch SEC filings, consensus estimates, and earnings calls for the events that would confirm or break it. You get an email only when a tripwire actually flips.
 - **Short-Side Scanner** — point a local GPU at the top ~2,000 US companies and read every 10-K, 10-Q, and 8-K they file, looking for the quantitative tells that precede a repricing downward. A local Qwen model does the bulk reading under a rigid schema with every claim quote-verified; a deterministic layer computes multi-quarter ratio trends straight from the companies' own XBRL; a gate then decides which ~15% of filings are worth the Claude API and your attention. Requires Ollama on a machine with a decent GPU.
-- **Radar** — the always-on, no-GPU tier of the scanner, pointed at **small-cap tech** ($50M–$2B, liquidity-filtered) rather than the mega caps that quant desks already read within seconds of the wire. It sweeps EDGAR several times a day for the deterministic catalysts that actually move a company this size: shelf registrations and takedowns, listing and late-filing notices, activist stakes, open-market insider buying clusters, share-count expansion, months of cash left, and 8-K items scored *relative to market cap*. No model and no GPU — EDGAR plus arithmetic — and each hit is enqueued for the scanner's deep-dive tier.
+- **Radar** — the always-on, no-GPU tier of the scanner, pointed at **small-cap tech** ($50M–$2B, liquidity-filtered) rather than the mega caps that quant desks already read within seconds of the wire. It sweeps EDGAR several times a day for the deterministic catalysts that actually move a company this size: shelf registrations and takedowns, listing and late-filing notices, activist stakes, open-market insider buying clusters, buybacks, uplistings, fundamental inflections (first profit or free cash flow after a loss run, revenue growth accelerating), share-count expansion, months of cash left, and 8-K items scored *relative to market cap*. No model and no GPU — EDGAR plus arithmetic — and each hit is enqueued for the scanner's deep-dive tier.
 
 All four run as a CLI on your laptop (or a scheduled runner). A small read-only Next.js viewer (`apps/web/`, on Vercel free tier) reads the results on your phone. The pipelines are **not** deployed — only the viewer.
 
@@ -305,6 +305,9 @@ survival, so the radar adds:
 | `dilution` | diluted share count up ≥10% QoQ or ≥25% YoY | one companyfacts request |
 | `runway` | cash ÷ trailing free-cash burn, under 6 quarters | shares that request |
 | `insider-buy` | Form 4 open-market purchase clusters | one submission fetch per Form 4 |
+| `buyback` | diluted share count *shrinking* ≥2% QoQ or ≥5% YoY | shares the companyfacts request |
+| `inflection` | first operating profit / first positive FCF after a loss run; YoY revenue growth accelerating | shares it too |
+| `uplisting` | Form 8-A12B (OTC → Nasdaq/NYSE), SC 13G | none — index-only |
 
 The financing cycle reads end to end: shelf registered (S-3) → takedown pricing
 (424B5) → share count jumps (`dilution`) → runway resets. And `runway` is what
@@ -350,6 +353,18 @@ isn't information asymmetry — it's that nobody is watching these several hundr
 names, and that a combination (insider cluster plus a runway extension plus a
 revenue inflection) is a pattern no single-signal screener surfaces. That's a
 coverage edge, not a secrecy one, and it is worth sizing positions accordingly.
+
+The other bullish detectors read the same series as the bearish ones, looking
+for the turn UP. The bar is deliberately "first in N quarters" rather than
+"good number": a profitable company printing another profitable quarter is not
+news and would fire every quarter forever — the TRANSITION is the event, which
+is the Altman gate's principle in reverse. Two traps are handled explicitly. A
+**reverse split** cuts the share count by 90% and is one of the most bearish
+things a small cap does; read naively it is by far the largest "buyback" the
+detector would ever see, so anything past a 30% single-quarter drop is rejected
+as a split (Item 5.03 covers it, in the right direction). And **SC 13G
+amendments are excluded** — every 13G holder re-files annually, so treating
+amendments as new stakes would bury the feed one February a week each year.
 
 **Focus list.** ~400 names is the right size for *discovery* and much too large
 to trade: for a short-term catalyst you need the story before the filing lands.

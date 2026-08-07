@@ -242,6 +242,9 @@ export const RadarSignalKind = z.enum([
   'late-filing',
   'ownership',
   'insider-buy',
+  'buyback',
+  'inflection',
+  'uplisting',
 ]);
 export type RadarSignalKind = z.infer<typeof RadarSignalKind>;
 

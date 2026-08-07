@@ -152,11 +152,21 @@ export function resolveItemSeverity(
 // ---------------------------------------------------------------------------
 
 export type FormSignalDef = {
-  kind: 'offering' | 'late-filing' | 'ownership';
+  kind: 'offering' | 'late-filing' | 'ownership' | 'uplisting';
   severity: Severity;
   direction: RadarDirection;
   headline: string;
   detail: string;
+  /**
+   * Match the exact form only, never its `/A` amendments.
+   *
+   * Needed for SC 13G, where amendments aren't a variation on the signal —
+   * they ARE the volume. Every 13G holder re-files annually and the market's
+   * worth of them lands in the same February week; treating those as new
+   * stakes would bury the feed once a year in filings that report nothing
+   * changed.
+   */
+  exactOnly?: boolean;
 };
 
 /**
@@ -266,6 +276,27 @@ export const INDEX_ONLY_FORMS: Record<string, FormSignalDef> = {
     headline: 'SC 14D9 — the board is responding to a tender offer',
     detail: 'The company’s recommendation on a live bid.',
   },
+  'SC 13G': {
+    kind: 'ownership',
+    severity: 'medium',
+    direction: 'bullish',
+    exactOnly: true,
+    headline: 'SC 13G — a passive holder crossed 5%',
+    detail:
+      'The weakest bullish signal here, and worth checking the filer before reading anything into it: ' +
+      'an index fund mechanically crossing 5% is not information, an active manager building a position is. ' +
+      'Amendments are excluded — every 13G holder re-files annually, which would otherwise bury one February a year.',
+  },
+  '8-A12B': {
+    kind: 'uplisting',
+    severity: 'high',
+    direction: 'bullish',
+    headline: '8-A12B — registering a class of securities on a national exchange',
+    detail:
+      'Usually an uplisting from OTC to Nasdaq or NYSE. It widens the eligible buyer base in one step — ' +
+      'index and institutional mandates that could not touch an OTC name can hold a listed one — and it ' +
+      'requires clearing the exchange’s price and equity standards, so it doubles as a quality gate.',
+  },
 };
 
 /** Every form the index-only tier wants from the sweep. */
@@ -276,7 +307,8 @@ export function indexOnlyFormDef(form: string): FormSignalDef | null {
   const f = form.toUpperCase();
   for (const [key, def] of Object.entries(INDEX_ONLY_FORMS)) {
     const K = key.toUpperCase();
-    if (f === K || f.startsWith(`${K}/`)) return def;
+    if (f === K) return def;
+    if (!def.exactOnly && f.startsWith(`${K}/`)) return def;
   }
   return null;
 }

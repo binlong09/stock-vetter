@@ -124,8 +124,19 @@ test('index-only forms match their amendments and ignore unrelated forms', () =>
   assert.equal(indexOnlyFormDef('NT 10-Q')?.severity, 'critical');
   assert.equal(indexOnlyFormDef('SC 13D')?.direction, 'bullish');
   assert.equal(indexOnlyFormDef('10-K'), null);
-  // 13G is the PASSIVE cousin of 13D and must not be surfaced as an activist stake.
-  assert.equal(indexOnlyFormDef('SC 13G'), null);
+  assert.equal(indexOnlyFormDef('8-A12B')?.kind, 'uplisting');
+});
+
+test('SC 13G is surfaced but its amendments are not', () => {
+  // Every 13G holder re-files annually, and the market's worth of those
+  // amendments lands in one February week. Treating them as new stakes would
+  // bury the feed once a year in filings reporting that nothing changed.
+  assert.equal(indexOnlyFormDef('SC 13G')?.direction, 'bullish');
+  assert.equal(indexOnlyFormDef('SC 13G')?.severity, 'medium');
+  assert.equal(indexOnlyFormDef('SC 13G/A'), null);
+  // 13D is the ACTIVIST cousin and keeps its amendments — a 13D/A is how a
+  // campaign escalates.
+  assert.ok(indexOnlyFormDef('SC 13D/A'));
 });
 
 // --- dilution --------------------------------------------------------------

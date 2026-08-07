@@ -46,6 +46,9 @@ const KIND_LABEL: Record<string, string> = {
   'late-filing': 'late filing',
   ownership: 'ownership',
   'insider-buy': 'insider buying',
+  buyback: 'buyback',
+  inflection: 'inflection',
+  uplisting: 'uplisting',
 };
 
 // Which way the signal cuts. Small-cap catalysts genuinely go both ways — a
@@ -195,7 +198,9 @@ export default async function RadarPage({
       <p className="mt-1 text-xs text-slate-400">
         Filing catalysts across the small-cap tech watchlist — 8-K events, shelf registrations
         and takedowns, listing and late-filing notices, share-count expansion, cash runway, and
-        multi-period XBRL moves, and open-market insider buying. No model; computed from the
+        multi-period XBRL moves, and the bullish side too — insider buying clusters, buybacks,
+        uplistings, and fundamental inflections (first profit or free cash flow after a loss run,
+        revenue growth accelerating). No model; computed from the
         filers&rsquo; own data. Materiality is judged relative to market cap, so an item that is
         noise at $500B surfaces at $200M. <span className="text-amber-500">★</span> marks the
         focus list — names whose story you already know, and the only ones queued for a deep-dive.

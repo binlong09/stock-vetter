@@ -27,6 +27,7 @@ import {
 } from '@stock-vetter/core';
 import type { RadarSignal } from '@stock-vetter/schema';
 import { detectInsiderCluster, groupPurchasesByIssuer } from './insider.js';
+import { detectBullishInflections } from './inflection.js';
 import { FORENSIC_CONCEPTS } from './concepts.js';
 import { detectTrends } from './trends.js';
 import { computeAnnualFundamentals } from './ratios.js';
@@ -328,6 +329,20 @@ export async function computeRadarSignals(
           direction: 'bearish',
           headline: dilution.headline,
           detail: dilution.detail,
+        });
+      }
+
+      // Bullish XBRL: buybacks and fundamental inflections. Same series, read
+      // for the turn UP rather than the turn down.
+      for (const f of detectBullishInflections(series)) {
+        signals.push({
+          ...base,
+          key: `${ticker}:${f.kind}:${f.id}:${f.period}`,
+          kind: f.kind,
+          severity: f.severity,
+          direction: 'bullish',
+          headline: f.headline,
+          detail: f.detail,
         });
       }
 
