@@ -117,6 +117,32 @@ export {
   type IndexEntry,
   type SweepOptions,
 } from './edgar-index.js';
+// Form 4 → open-market insider purchases. The radar's one bullish primary
+// source: an officer choosing to buy at a known price, as opposed to a
+// disclosure the company was compelled to make.
+export {
+  parseForm4,
+  fetchForm4Purchases,
+  submissionTextUrl,
+  type InsiderPurchase,
+} from './sec-form4.js';
+
+// Batched price/cap/liquidity screen — the market-data half of building a
+// small-cap universe (EDGAR supplies the other half).
+export { screenQuotes, type ScreenQuote, type ScreenOptions } from './market-screen.js';
+
+// SIC sector classification from EDGAR — how the small-cap tech universe is
+// cut out of the ~10,000 registrants SEC knows about.
+export {
+  fetchCompanyProfile,
+  techSicLabel,
+  isTechSic,
+  parseSicRanges,
+  sicInRanges,
+  TECH_SIC_RANGES,
+  type CompanyProfile,
+} from './sec-sic.js';
+
 export {
   parseFiling,
   type AnchorCandidate,

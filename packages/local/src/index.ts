@@ -122,4 +122,47 @@ export {
   type ScanDeps,
   type PreparedFiling,
 } from './pipeline.js';
-export { computeRadarSignals, type WatchlistEntry, type RadarOptions } from './radar.js';
+export {
+  computeRadarSignals,
+  type WatchlistEntry,
+  type RadarOptions,
+  type InsiderStore,
+} from './radar.js';
+
+// Bullish XBRL detectors: buybacks and fundamental inflections.
+export {
+  detectBullishInflections,
+  detectBuyback,
+  detectProfitabilityTurn,
+  detectFcfTurn,
+  detectRevenueAcceleration,
+  type BullishFinding,
+} from './inflection.js';
+
+// Insider-buying clusters from Form 4 — the radar's bullish detector.
+export {
+  detectInsiderCluster,
+  groupPurchasesByIssuer,
+  type InsiderCluster,
+  type ClusterOptions,
+} from './insider.js';
+
+// Small-cap radar tuning: cap tiers, cap-relative 8-K severity, the
+// financing/listing forms that need no document fetch, and the two XBRL
+// detectors (dilution, cash runway) that dominate outcomes at this size.
+export {
+  capTier,
+  isSmallCap,
+  resolveItemSeverity,
+  detectDilution,
+  detectCashRunway,
+  altmanIsNews,
+  indexOnlyFormDef,
+  INDEX_ONLY_FORMS,
+  INDEX_ONLY_FORM_LIST,
+  type CapTier,
+  type ItemVerdict,
+  type FormSignalDef,
+  type DilutionFinding,
+  type RunwayFinding,
+} from './smallcap.js';

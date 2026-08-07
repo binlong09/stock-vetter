@@ -1,20 +1,47 @@
-name: Short Radar
+name: Radar
 
-# Always-on "lite" radar: a daily deterministic sweep of the watchlist for
-# material 8-K items and multi-period XBRL deterioration (trends, restatements,
-# distress screens). NO GPU and NO model — it runs on a plain runner over EDGAR
-# + arithmetic, so it costs ~nothing and doesn't depend on the local box being
-# on. New signals are deduped into Turso; the web viewer's /radar page reads
-# them, and (optionally) a digest email is sent for the delta.
+# Always-on "lite" radar: a deterministic sweep of the small-cap tech watchlist
+# for material 8-K items, financing forms (S-3 shelves, 424B5 takedowns),
+# listing and late-filing notices, share-count expansion, cash runway, and
+# multi-period XBRL deterioration. NO GPU and NO model — it runs on a plain
+# runner over EDGAR + arithmetic, so it costs ~nothing and doesn't depend on
+# the local box being on. New signals are deduped into Turso; the web viewer's
+# /radar page reads them, and (optionally) a digest email is sent for the
+# delta.
+#
+# CADENCE. The watchlist is small caps now, and the trade in a small cap is
+# same-day: a 424B5 prices overnight and the stock opens down, an Item 3.01
+# listing notice hits mid-morning. A once-daily sweep finds those a day late,
+# which for short-term trading is the same as not finding them. So the radar
+# runs several times through the US session in addition to the overnight
+# backstop:
+#
+#   - the intraday runs sweep a 1-day window against the current day's index,
+#     which EDGAR regenerates through the business day as filings are accepted;
+#   - the 07:00 UTC run sweeps a 3-day window and is the authoritative one —
+#     it re-reads the completed day and self-heals any run that was throttled.
+#
+# Overlap is free: signals dedup on `key`, so a filing seen at 14:00 and again
+# at 22:00 and again overnight is surfaced exactly once.
 
 on:
   schedule:
-    # 07:00 UTC daily — after US market close and overnight filing settle.
+    # Overnight backstop — after US market close and the overnight filing settle.
     - cron: '0 7 * * *'
+    # Intraday, weekdays: pre-market (09:00 ET), mid-session, before the close,
+    # and after the post-close 8-K dump.
+    - cron: '0 13 * * 1-5'
+    - cron: '0 16 * * 1-5'
+    - cron: '0 19 * * 1-5'
+    - cron: '0 22 * * 1-5'
   workflow_dispatch:
     inputs:
       since:
         description: 'Sweep start (YYYY-MM-DD). Blank = last 3 days (overlap self-heals a missed/throttled day).'
+        required: false
+        type: string
+      watchlist:
+        description: 'Watchlist path. Blank = data/watchlist-smallcap.json.'
         required: false
         type: string
 
@@ -37,7 +64,24 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
+      - name: Skip intraday runs until the small-cap universe exists
+        id: guard
+        env:
+          SCHEDULE: ${{ github.event.schedule }}
+        run: |
+          # Before the first universe build, `pnpm radar` falls back to the
+          # legacy large-cap watchlist. That fallback is right for a manual run
+          # or the overnight backstop, but sweeping mega caps four times a day
+          # is exactly what this refocus moved away from — and it burns runner
+          # minutes to do it. So the intraday crons no-op until the universe is
+          # built. Run the "Rebuild small-cap universe" workflow to start them.
+          if [ ! -f data/watchlist-smallcap.json ] && [ -n "$SCHEDULE" ] && [ "$SCHEDULE" != "0 7 * * *" ]; then
+            echo "::warning::data/watchlist-smallcap.json missing — skipping the intraday sweep. Run the 'Rebuild small-cap universe' workflow."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Sweep the watchlist and persist new signals
+        if: steps.guard.outputs.skip != 'true'
         env:
           TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
           TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
@@ -49,14 +93,21 @@ jobs:
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
           RADAR_DIGEST_TO: ${{ secrets.RADAR_DIGEST_TO }}
           RADAR_BASE_URL: ${{ secrets.SIGNAL_TRACKER_BASE_URL }}
+          SCHEDULE: ${{ github.event.schedule }}
         run: |
-          # A 3-day window is the safety margin against a missed/throttled run:
-          # a day that couldn't be fetched is re-swept tomorrow, and the Turso
-          # dedup makes the overlap free.
+          # Window selection: an explicit `since` wins; the intraday crons sweep
+          # today only (they are looking for what just filed); everything else
+          # sweeps 3 days as the safety margin against a missed or throttled
+          # run. The Turso dedup makes every overlap free.
           if [ -n "${{ inputs.since }}" ]; then
             ARGS="--since=${{ inputs.since }}"
+          elif [ -n "$SCHEDULE" ] && [ "$SCHEDULE" != "0 7 * * *" ]; then
+            ARGS="--days=1"
           else
             ARGS="--days=3"
+          fi
+          if [ -n "${{ inputs.watchlist }}" ]; then
+            ARGS="$ARGS --watchlist=${{ inputs.watchlist }}"
           fi
           echo "Running: pnpm radar $ARGS"
           set +e
@@ -64,8 +115,8 @@ jobs:
           code=$?
           set -e
           # Exit 2 = one or more days couldn't be fetched (SEC throttling). Not a
-          # failure — tomorrow's overlapping window retries it — so warn, don't
-          # fail the job. Any other non-zero is a real error.
+          # failure — the next run's overlapping window retries it — so warn,
+          # don't fail the job. Any other non-zero is a real error.
           if [ "$code" = "2" ]; then
             echo "::warning::radar could not fetch some days (throttling); the next run's overlap will retry them"
           elif [ "$code" != "0" ]; then

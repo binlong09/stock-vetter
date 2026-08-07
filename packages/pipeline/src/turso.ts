@@ -22,6 +22,7 @@ import type {
   RadarSignal,
   ReverseDcfReport,
 } from '@stock-vetter/schema';
+import type { InsiderPurchase } from '@stock-vetter/core';
 import { getTursoClient, isTursoConfigured, migrate } from '@stock-vetter/core';
 import { loadTickerFixtures } from './fixture-loader.js';
 
@@ -45,14 +46,147 @@ export async function upsertRadarSignals(signals: RadarSignal[]): Promise<RadarS
   for (const s of signals) {
     const res = await client.execute({
       sql: `INSERT OR IGNORE INTO short_radar
-            (key, ticker, cik, accession, form, filing_date, kind, severity, headline, detail, first_seen_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      args: [s.key, s.ticker, s.cik, s.accession, s.form, s.filingDate, s.kind, s.severity, s.headline, s.detail, now],
+            (key, ticker, cik, accession, form, filing_date, kind, severity, direction,
+             headline, detail, market_cap, focus, first_seen_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        s.key,
+        s.ticker,
+        s.cik,
+        s.accession,
+        s.form,
+        s.filingDate,
+        s.kind,
+        s.severity,
+        s.direction,
+        s.headline,
+        s.detail,
+        s.marketCap,
+        s.focus ? 1 : 0,
+        now,
+      ],
     });
     if (res.rowsAffected > 0) inserted.push(s);
   }
   return inserted;
 }
+
+// ---- insider purchases (Form 4) -----------------------------------------
+
+/**
+ * Turso-backed store for the radar's insider-buying detector.
+ *
+ * The detector needs a trailing window of Form 4 purchases, and a single sweep
+ * only ever sees one day of them — so the sweep accumulates here and reads the
+ * window back out. `seen` is what keeps the intraday re-sweeps cheap: most
+ * Form 4s report a grant or an option exercise rather than a purchase, and
+ * without a processed-set those would be re-fetched and re-parsed on every run
+ * for nothing.
+ */
+export const insiderStore = {
+  /** Which of these Form 4 accessions have already been parsed. */
+  async seen(accessions: string[]): Promise<Set<string>> {
+    if (!accessions.length || !isTursoConfigured()) return new Set();
+    await migrate();
+    const client = getTursoClient();
+    if (!client) return new Set();
+    const out = new Set<string>();
+    // Chunked so a wide backfill window can't build a statement with thousands
+    // of placeholders.
+    for (let i = 0; i < accessions.length; i += 200) {
+      const batch = accessions.slice(i, i + 200);
+      const res = await client.execute({
+        sql: `SELECT accession FROM insider_filings_seen WHERE accession IN (${batch.map(() => '?').join(',')})`,
+        args: batch,
+      });
+      for (const r of res.rows) out.add(String(r.accession));
+    }
+    return out;
+  },
+
+  /** Mark filings processed and record whatever purchases they contained. */
+  async record(
+    filings: Array<{ accession: string; cik: string; filingDate: string }>,
+    purchases: InsiderPurchase[],
+  ): Promise<void> {
+    if (!isTursoConfigured()) return;
+    if (!filings.length && !purchases.length) return;
+    await migrate();
+    const client = getTursoClient();
+    if (!client) return;
+    const now = new Date().toISOString();
+    for (const f of filings) {
+      await client.execute({
+        sql: `INSERT OR IGNORE INTO insider_filings_seen (accession, cik, filing_date, seen_at)
+              VALUES (?, ?, ?, ?)`,
+        args: [f.accession, f.cik, f.filingDate, now],
+      });
+    }
+    for (const p of purchases) {
+      await client.execute({
+        sql: `INSERT OR IGNORE INTO insider_purchases
+              (key, cik, ticker, accession, filing_date, transaction_date, owner_cik, owner_name,
+               owner_title, is_officer, is_director, is_ten_percent, shares, price, value, recorded_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        args: [
+          p.key,
+          p.cik,
+          p.ticker,
+          p.accession,
+          p.filingDate,
+          p.transactionDate,
+          p.ownerCik,
+          p.ownerName,
+          p.ownerTitle,
+          p.isOfficer ? 1 : 0,
+          p.isDirector ? 1 : 0,
+          p.isTenPercentOwner ? 1 : 0,
+          p.shares,
+          p.price,
+          p.value,
+          now,
+        ],
+      });
+    }
+  },
+
+  /** Purchases for these issuers with a trade date on or after `since`. */
+  async recent(ciks: string[], since: string): Promise<InsiderPurchase[]> {
+    if (!ciks.length || !isTursoConfigured()) return [];
+    await migrate();
+    const client = getTursoClient();
+    if (!client) return [];
+    const out: InsiderPurchase[] = [];
+    for (let i = 0; i < ciks.length; i += 200) {
+      const batch = ciks.slice(i, i + 200);
+      const res = await client.execute({
+        sql: `SELECT * FROM insider_purchases
+              WHERE transaction_date >= ? AND cik IN (${batch.map(() => '?').join(',')})`,
+        args: [since, ...batch],
+      });
+      for (const r of res.rows) {
+        out.push({
+          key: String(r.key),
+          cik: String(r.cik),
+          ticker: String(r.ticker),
+          accession: String(r.accession),
+          filingDate: String(r.filing_date),
+          transactionDate: String(r.transaction_date),
+          ownerCik: String(r.owner_cik),
+          ownerName: String(r.owner_name),
+          ownerTitle: r.owner_title == null ? '' : String(r.owner_title),
+          isOfficer: Number(r.is_officer) === 1,
+          isDirector: Number(r.is_director) === 1,
+          isTenPercentOwner: Number(r.is_ten_percent) === 1,
+          shares: Number(r.shares),
+          price: r.price == null ? null : Number(r.price),
+          value: r.value == null ? null : Number(r.value),
+        });
+      }
+    }
+    return out;
+  },
+};
 
 // ---- deep-dive job queue ------------------------------------------------
 
@@ -89,12 +223,39 @@ export async function enqueueRadarJobs(jobs: RadarJobInput[]): Promise<number> {
 }
 
 /**
- * Enqueue a pending job for every radar signal's filing that doesn't already
- * have one (deduped per accession). Self-healing and idempotent: it backfills
- * signals surfaced before the queue existed and closes any gap where a signal
- * was stored but its job enqueue failed. Returns the count of new jobs.
+ * Enqueue a pending job for every LOUD radar signal's filing that doesn't
+ * already have one (deduped per accession). Self-healing and idempotent: it
+ * backfills signals surfaced before the queue existed and closes any gap where
+ * a signal was stored but its job enqueue failed. Returns the count of new
+ * jobs.
+ *
+ * The high/critical floor is what keeps the GPU tier honest. Every job is
+ * ~5-10 minutes of local model time, and the small-cap radar emits a
+ * medium-severity tail the large-cap one never did — a 424B3 resale
+ * registration, a 25%-YoY share-count drift, six quarters of runway. Those are
+ * worth seeing on the feed and are not worth a deep-dive each; a queue that
+ * takes them all is a queue that never drains, which delays the filings that
+ * do deserve the time.
+ *
+ * The kind exclusion is a harder constraint than a preference: the deep-dive
+ * scanner knows exactly two document shapes, 8-K and 10-K/10-Q, and routes
+ * anything that isn't an 8-K through the periodic-report section extractor.
+ * A 424B5, an SC 13D or a Form 4 sent down that path doesn't produce a bad
+ * analysis, it produces a filing whose every section fails to extract —
+ * burning GPU time, failing, and being retried. Those signals are also
+ * complete as they stand: "a shelf takedown is pricing now" is the whole
+ * finding, and there is nothing for a model to add to it.
+ *
+ * `focusOnly` is the second gate, and the one that decides whether the queue
+ * is finite. A ~400-name universe generates more high-severity filings per day
+ * than a single GPU can read; the focus list is the statement of which names
+ * you would actually trade, so it is the right thing to spend the GPU on. The
+ * caller passes false when no focus list is configured, so a checkout without
+ * one behaves exactly as before rather than silently queueing nothing.
  */
-export async function enqueueMissingRadarJobs(): Promise<number> {
+export async function enqueueMissingRadarJobs(
+  opts: { focusOnly?: boolean } = {},
+): Promise<number> {
   if (!isTursoConfigured()) return 0;
   await migrate();
   const client = getTursoClient();
@@ -104,8 +265,11 @@ export async function enqueueMissingRadarJobs(): Promise<number> {
           SELECT DISTINCT sr.accession, sr.ticker, sr.form, sr.filing_date, 'pending', ?
           FROM short_radar sr
           LEFT JOIN radar_jobs j ON j.accession = sr.accession
-          WHERE j.accession IS NULL`,
-    args: [new Date().toISOString()],
+          WHERE j.accession IS NULL
+            AND sr.severity IN ('critical', 'high')
+            AND sr.kind NOT IN ('offering', 'late-filing', 'ownership', 'insider-buy')
+            AND (? = 0 OR sr.focus = 1)`,
+    args: [new Date().toISOString(), opts.focusOnly ? 1 : 0],
   });
   return res.rowsAffected;
 }

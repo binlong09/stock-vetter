@@ -26,6 +26,7 @@
     "test": "tsx --test \"packages/*/src/*.test.ts\"",
     "trends": "tsx scripts/trends.ts",
     "build-watchlist": "tsx scripts/build-watchlist.ts",
+    "build-smallcap": "tsx scripts/build-smallcap-watchlist.ts",
     "add-watchlist": "tsx scripts/add-watchlist.ts",
     "radar": "tsx scripts/radar.ts",
     "radar-worker": "tsx scripts/radar-worker.ts"
