@@ -117,6 +117,15 @@ export async function enqueueRadarJobs(jobs: RadarJobInput[]): Promise<number> {
  * worth seeing on the feed and are not worth a deep-dive each; a queue that
  * takes them all is a queue that never drains, which delays the filings that
  * do deserve the time.
+ *
+ * The kind exclusion is a harder constraint than a preference: the deep-dive
+ * scanner knows exactly two document shapes, 8-K and 10-K/10-Q, and routes
+ * anything that isn't an 8-K through the periodic-report section extractor.
+ * A 424B5 or an SC 13D sent down that path doesn't produce a bad analysis, it
+ * produces a filing whose every section fails to extract — burning GPU time,
+ * failing, and being retried. Those signals are also complete as they stand:
+ * "a shelf takedown is pricing now" is the whole finding, and there is nothing
+ * for a model to add to it.
  */
 export async function enqueueMissingRadarJobs(): Promise<number> {
   if (!isTursoConfigured()) return 0;
@@ -129,7 +138,8 @@ export async function enqueueMissingRadarJobs(): Promise<number> {
           FROM short_radar sr
           LEFT JOIN radar_jobs j ON j.accession = sr.accession
           WHERE j.accession IS NULL
-            AND sr.severity IN ('critical', 'high')`,
+            AND sr.severity IN ('critical', 'high')
+            AND sr.kind NOT IN ('offering', 'late-filing', 'ownership')`,
     args: [new Date().toISOString()],
   });
   return res.rowsAffected;
