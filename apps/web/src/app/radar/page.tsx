@@ -40,7 +40,26 @@ const KIND_LABEL: Record<string, string> = {
   trend: 'trend',
   restatement: 'restatement',
   composite: 'composite',
+  dilution: 'dilution',
+  runway: 'cash runway',
+  offering: 'offering',
+  'late-filing': 'late filing',
+  ownership: 'ownership',
 };
+
+// Which way the signal cuts. Small-cap catalysts genuinely go both ways — a
+// tender offer and a shelf takedown are both loud — so direction gets its own
+// mark rather than being implied by the feed's name.
+const DIRECTION: Record<string, { mark: string; cls: string; title: string }> = {
+  bearish: { mark: '▼', cls: 'text-rose-500', title: 'bearish' },
+  bullish: { mark: '▲', cls: 'text-emerald-500', title: 'bullish' },
+  ambiguous: { mark: '◆', cls: 'text-slate-400', title: 'direction depends on terms' },
+};
+
+function capLabel(marketCap: number | null): string | null {
+  if (marketCap == null || marketCap <= 0) return null;
+  return marketCap >= 1e9 ? `$${(marketCap / 1e9).toFixed(1)}B` : `$${(marketCap / 1e6).toFixed(0)}M`;
+}
 
 // Group signals by filing date, newest date first; loudest first within a day.
 function groupByFilingDate(rows: RadarRow[]): Array<{ date: string; signals: RadarRow[] }> {
@@ -72,13 +91,21 @@ function severityCounts(signals: RadarRow[]): Array<{ severity: string; count: n
 
 function SignalCard({ s }: { s: RadarRow }) {
   const chip = analysisChip(s.jobStatus, s.verdict, s.conviction);
+  const dir = DIRECTION[s.direction] ?? DIRECTION.bearish!;
+  const cap = capLabel(s.marketCap);
   return (
     <Link
       href={`/radar/${encodeURIComponent(s.accession)}`}
       className="block rounded-lg border border-slate-200 bg-white px-3.5 py-3 hover:border-slate-300"
     >
       <div className="flex items-center justify-between gap-3">
-        <span className="font-mono text-sm font-medium text-slate-900">{s.ticker}</span>
+        <span className="flex items-baseline gap-1.5">
+          <span className={`text-[11px] ${dir.cls}`} title={dir.title}>
+            {dir.mark}
+          </span>
+          <span className="font-mono text-sm font-medium text-slate-900">{s.ticker}</span>
+          {cap ? <span className="text-[11px] text-slate-400">{cap}</span> : null}
+        </span>
         <span
           className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium ${SEV_PILL[s.severity] ?? SEV_PILL.low}`}
         >
@@ -108,10 +135,14 @@ export default async function RadarPage() {
         <span className="text-xs text-slate-400">{rows.length} signals</span>
       </div>
       <p className="mt-1 text-xs text-slate-400">
-        Material filing changes across the watchlist — 8-K events and multi-period XBRL moves
-        (trends, restatements, distress screens). No model; computed from the filers&rsquo; own
-        data. Each is a candidate for a deep-dive that judges whether it&rsquo;s mispriced, which
-        way, and on what catalyst. Reflects the last daily sweep.
+        Filing catalysts across the small-cap tech watchlist — 8-K events, shelf registrations
+        and takedowns, listing and late-filing notices, share-count expansion, cash runway, and
+        multi-period XBRL moves. No model; computed from the filers&rsquo; own data. Materiality
+        is judged relative to market cap, so an item that is noise at $500B surfaces at $200M.
+        <span className="text-rose-400"> ▼</span> bearish,
+        <span className="text-emerald-400"> ▲</span> bullish,
+        <span className="text-slate-400"> ◆</span> depends on terms. Each is a candidate for a
+        deep-dive that judges whether it&rsquo;s mispriced, which way, and on what catalyst.
       </p>
 
       <div className="mt-3 space-y-3">

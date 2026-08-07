@@ -1,12 +1,13 @@
 # Stock Vetter
 
-Three research tools that share one codebase:
+Four research tools that share one codebase:
 
 - **Stock Vetter** — type a ticker, get one decision card. Fetches the latest 10-K, DEF 14A proxy, 10-Q, SEC companyfacts, and current price; runs a three-pass primary-source value-investing checklist; computes a reverse DCF and historical valuation context; optionally folds in analyst-video or earnings-call analysis; and produces a verdict + 1–10 weighted score.
 - **Signal Tracker** — write a one-line investment thesis with explicit tripwires, then let a daily cron watch SEC filings, consensus estimates, and earnings calls for the events that would confirm or break it. You get an email only when a tripwire actually flips.
 - **Short-Side Scanner** — point a local GPU at the top ~2,000 US companies and read every 10-K, 10-Q, and 8-K they file, looking for the quantitative tells that precede a repricing downward. A local Qwen model does the bulk reading under a rigid schema with every claim quote-verified; a deterministic layer computes multi-quarter ratio trends straight from the companies' own XBRL; a gate then decides which ~15% of filings are worth the Claude API and your attention. Requires Ollama on a machine with a decent GPU.
+- **Radar** — the always-on, no-GPU tier of the scanner, pointed at **small-cap tech** ($50M–$2B, liquidity-filtered) rather than the mega caps that quant desks already read within seconds of the wire. It sweeps EDGAR several times a day for the deterministic catalysts that actually move a company this size: shelf registrations and takedowns, listing and late-filing notices, activist stakes, share-count expansion, months of cash left, and 8-K items scored *relative to market cap*. No model and no GPU — EDGAR plus arithmetic — and each hit is enqueued for the scanner's deep-dive tier.
 
-All three run as a CLI on your laptop (or a scheduled runner). A small read-only Next.js viewer (`apps/web/`, on Vercel free tier) reads the results on your phone. The pipelines are **not** deployed — only the viewer.
+All four run as a CLI on your laptop (or a scheduled runner). A small read-only Next.js viewer (`apps/web/`, on Vercel free tier) reads the results on your phone. The pipelines are **not** deployed — only the viewer.
 
 For operational depth — costs, web-viewer setup/deploy, cache management, reading the verdict — see **[USAGE.md](USAGE.md)**. For design rationale and build history see the spec docs: **[oldSPEC.md](oldSPEC.md)** (Stock Vetter), **[SPEC.md](SPEC.md)** (Signal Tracker build plan), **[SHORTSPEC.md](SHORTSPEC.md)** (Short-Side Scanner), and **[HANDOFF.md](HANDOFF.md)** (packaging overview). This file is the orientation: how to run it, then how each tool actually works.
 
@@ -103,6 +104,39 @@ didn't escalate), and `assessment.md` (the thesis, if it escalated).
 The trend detectors are tuned to be quiet — a healthy large cap should produce
 few or no findings. If a name like KO lights up across six detectors, suspect a
 concept mapping rather than a fraud.
+
+### Radar (small-cap tech)
+
+The always-on, no-GPU tier of the scanner: a deterministic sweep of a
+small-cap tech watchlist for filing catalysts. No model, no Ollama — EDGAR and
+arithmetic, so it runs on a plain cron.
+
+```bash
+# Build the universe (slow, weekly at most) — $50M–$2B tech, liquidity-filtered
+pnpm build-smallcap
+pnpm build-smallcap --min-cap=100e6 --max-cap=1e9   # a narrower band
+pnpm build-smallcap --min-dollar-volume=2e6         # stricter tradability floor
+pnpm build-smallcap --include-sic=4813,8731         # widen the sector set
+pnpm build-smallcap --pin=RKLB,SPCX                 # always keep these names
+pnpm build-smallcap --resume                        # continue from the caches
+
+# Sweep it
+pnpm radar                                   # since yesterday (the cron mode)
+pnpm radar --days=30                         # a wider backfill window
+pnpm radar --since=2026-07-01
+pnpm radar --watchlist=data/watchlist.json   # the old large-cap list
+pnpm radar --no-persist                      # compute + print only
+
+# Drain the deep-dive queue on the GPU box (radar enqueues one job per filing)
+pnpm radar-worker
+```
+
+New signals are deduped into Turso by key, so overlapping windows are free and
+each one surfaces exactly once. `.github/workflows/short-radar.yml` runs the
+sweep four times through the US session plus an overnight backstop;
+`.github/workflows/smallcap-universe.yml` rebuilds and commits the watchlist
+weekly. See [Radar — methodology](#radar--methodology) for what it looks for
+and why.
 
 ### Signal Tracker
 
@@ -203,13 +237,103 @@ The cron (`.github/workflows/signal-tracker.yml`, daily at 06:30 UTC) is the **a
 
 ---
 
+## Radar — methodology
+
+The radar started out pointed at the top ~100 large-cap tech names. That is the
+wrong place for it, and the reason is not that the detectors were bad — it is
+that those hundred securities are the most intensively analyzed assets in
+existence. Every 8-K they file is read by a hundred funds within seconds of
+hitting the wire, and by dozens of retail screeners that do exactly what this
+does. A deterministic EDGAR scanner adds no information there.
+
+Two orders of magnitude down the cap scale, that coverage collapses. A $250M
+company typically has no sell-side analyst, no quant desk modelling its
+inventory, and a filing that essentially nobody reads on the day. The
+deterministic tells are all still there — and at that size they are *larger*
+relative to the enterprise. That gap is the whole thesis.
+
+Three things had to change to move down the cap scale. A straight universe swap
+would have produced a worse feed, not a better one.
+
+**1. The universe is cut on tradability, not just size.** `pnpm build-smallcap`
+takes SEC's ~10,000 registrants, prices them all through Yahoo in batches
+(market cap, price, 3-month average volume), keeps the ones inside the cap band
+that also clear a price floor and an average-dollar-volume floor, and only
+*then* spends one EDGAR request each classifying the survivors by SIC code.
+The order is deliberate — the cheap filters run first — and the liquidity
+filter is not optional. A $150M company with $200k of daily turnover is one
+where a normal position is several days of volume to build, the spread eats the
+edge, and there is usually no borrow to short against. A signal on a name like
+that isn't an opportunity, it's a distraction.
+
+**2. Materiality is cap-relative.** The 8-K item severity table implicitly
+assumes a large enterprise: a new credit facility, an acquisition, an earnings
+release are all rated `medium` and filtered out. That is right at $500B and
+wrong at $200M, where a new $30M facility is a balance-sheet event and the
+earnings print is the single largest scheduled repricing event of the quarter.
+So below $2B the radar promotes the items whose materiality scales with size
+(1.01, 2.01, 2.02, 2.03, 5.01, 5.03) one notch. Items already rated high or
+critical are left alone — they were loud at any size. A watchlist that carries
+no market caps gets the old large-cap behaviour unchanged.
+
+**3. The detectors that matter at this size are different ones.** Multi-quarter
+margin drift is a large-cap tell. Down here the events are financing and
+survival, so the radar adds:
+
+| Kind | What it is | Cost |
+|---|---|---|
+| `offering` | S-1/S-3/F-1/F-3 registrations, 424B3/B4/B5 prospectuses | none — the form type in the daily index *is* the signal |
+| `late-filing` | NT 10-K, NT 10-Q, Form 25-NSE | none |
+| `ownership` | SC 13D (activist, not the passive 13G), SC TO-T, SC 14D9 | none |
+| `dilution` | diluted share count up ≥10% QoQ or ≥25% YoY | one companyfacts request |
+| `runway` | cash ÷ trailing free-cash burn, under 6 quarters | shares that request |
+
+The financing cycle reads end to end: shelf registered (S-3) → takedown pricing
+(424B5) → share count jumps (`dilution`) → runway resets. And `runway` is what
+makes the rest predictable — a company inside two quarters of cash is going to
+raise, and that is most of why the shelf filing matters at all.
+
+The same move also required *removing* a signal. Altman Z'' puts essentially
+every pre-profit micro cap in the distress zone permanently: it is a
+description of the business model, not news, and reporting it every quarter for
+200 names is how a feed teaches its reader to ignore it. So below $2B the
+distress screen fires only on the **transition** — outside the zone a year ago,
+inside it now.
+
+**Direction is now explicit.** As a short-only scanner it was implicit. On small
+caps it can't be: a tender offer and a shelf takedown are both loud signals on
+the same feed pointing opposite ways, and plenty of events (a material
+agreement, a change of control) genuinely cannot be signed without reading the
+terms. Every signal carries `bearish` / `bullish` / `ambiguous`, and the
+viewer marks it. Note that "bearish" on a small cap is frequently *not* a short
+— borrow is thin and squeezes are violent — it is more often a reason not to be
+long.
+
+**Cadence follows the trade.** The trade in a small cap is same-day: a 424B5
+prices overnight and the stock opens down; an Item 3.01 listing notice hits
+mid-morning. A once-daily sweep finds those a day late, which for short-term
+trading is the same as not finding them. So the radar runs four times through
+the US session against the current day's index — which EDGAR regenerates
+through the business day — plus an overnight 3-day-window backstop that
+re-reads the completed day and self-heals any throttled run. Overlap is free:
+signals dedup on `key`, so a filing seen three times is surfaced once.
+
+Everything above is arithmetic over filer-tagged data. No model, no GPU. What
+the radar produces is a *candidate list*; each flagged filing is enqueued for
+the deep-dive tier (`pnpm radar-worker` on the GPU box), which is where a model
+judges whether it's actually mispriced and on what catalyst.
+
+---
+
 ## Repository layout
 
 ```
 stock-vetter/
 ├── data/
-│   ├── tickers.json        # tickers Stock Vetter analyzes
-│   └── theses.json         # theses + tripwires the Signal Tracker watches
+│   ├── tickers.json               # tickers Stock Vetter analyzes
+│   ├── theses.json                # theses + tripwires the Signal Tracker watches
+│   ├── watchlist-smallcap.json    # small-cap tech universe the radar sweeps (pnpm build-smallcap)
+│   └── watchlist.json             # legacy large-cap radar watchlist
 ├── prompts/                # every LLM prompt as a .md file (never inlined in code)
 ├── fixtures/<TICKER>/      # per-ticker analysis output (cards, SEC sections, DCF)
 ├── scripts/                # CLI entry points (analyze-ticker, track, …)

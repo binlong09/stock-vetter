@@ -227,8 +227,32 @@ export type RecurrenceFinding = z.infer<typeof RecurrenceFinding>;
 // always-on watchlist sweep (no GPU, no model). Reacted to same-day for 8-Ks,
 // within a few days for XBRL-derived trends (companyfacts lags the filing). The
 // `key` dedups a signal to a single surfacing across daily runs.
-export const RadarSignalKind = z.enum(['8k-item', 'trend', 'restatement', 'composite']);
+// `offering`, `late-filing` and `ownership` are index-only kinds: the form
+// type appearing in the daily index IS the signal, so they cost no document
+// fetch. `dilution` and `runway` are the two XBRL tells that dominate
+// small-cap outcomes — share count and months of cash left.
+export const RadarSignalKind = z.enum([
+  '8k-item',
+  'trend',
+  'restatement',
+  'composite',
+  'dilution',
+  'runway',
+  'offering',
+  'late-filing',
+  'ownership',
+]);
 export type RadarSignalKind = z.infer<typeof RadarSignalKind>;
+
+/**
+ * Which way the signal cuts. The radar began as short-only, where direction
+ * was implicit; on small caps it is not — an activist 13D and a shelf takedown
+ * are both loud, and they point opposite ways. `ambiguous` is the honest
+ * answer for events whose sign depends on terms we haven't read yet (a
+ * material agreement, a change of control).
+ */
+export const RadarDirection = z.enum(['bearish', 'bullish', 'ambiguous']);
+export type RadarDirection = z.infer<typeof RadarDirection>;
 
 export const RadarSignal = z.object({
   /** Stable dedup key — a signal with this key is surfaced once. */
@@ -241,10 +265,19 @@ export const RadarSignal = z.object({
   filingDate: z.string(),
   kind: RadarSignalKind,
   severity: z.enum(['critical', 'high', 'medium', 'low']),
+  direction: RadarDirection.default('bearish'),
   /** One-line headline for the digest row. */
   headline: z.string(),
   /** Longer context — the claim, the series, the item note. */
   detail: z.string(),
+  /**
+   * Market cap (USD) at the last universe rebuild, when the watchlist carried
+   * one. Null for entries built by the plain ticker-list builder. Carried on
+   * the signal because "material" is cap-relative — the same 8-K item is noise
+   * at $500B and a repricing event at $200M — and because the reader needs to
+   * know how small the name is before sizing anything.
+   */
+  marketCap: z.number().nullable().default(null),
 });
 export type RadarSignal = z.infer<typeof RadarSignal>;
 

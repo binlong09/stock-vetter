@@ -1,0 +1,91 @@
+name: Rebuild small-cap universe
+
+# Weekly rebuild of the small-cap tech watchlist the radar sweeps, committed
+# back to the repo so the radar workflow (a plain checkout) picks it up.
+#
+# Why weekly and not daily: membership of a cap band is stable — a company does
+# not cross $2B or fall below the liquidity floor overnight, and a name that
+# does is caught at the next rebuild with no signal lost in between (the radar
+# joins on CIK, and a dropped name simply stops being swept). Daily rebuilds
+# would spend thousands of quote requests and hundreds of EDGAR profile
+# requests to change a handful of rows.
+#
+# Why it commits: the pipelines are not deployed anywhere — the radar runs from
+# a checkout of this repo — so the watchlist has to live in the repo to be
+# visible to it. The diff is also the audit trail: a PR-less commit history of
+# what entered and left the universe each week, which is exactly what you want
+# when a backtest disagrees with live results.
+
+on:
+  schedule:
+    # Sunday 06:00 UTC — before the week's first radar sweep, after Friday's
+    # closing prices have settled.
+    - cron: '0 6 * * 0'
+  workflow_dispatch:
+    inputs:
+      min_cap:
+        description: 'Minimum market cap (e.g. 50e6). Blank = $50M.'
+        required: false
+        type: string
+      max_cap:
+        description: 'Maximum market cap (e.g. 2e9). Blank = $2B.'
+        required: false
+        type: string
+      min_dollar_volume:
+        description: 'Minimum average daily dollar volume (e.g. 1e6). Blank = $1M/day.'
+        required: false
+        type: string
+
+concurrency:
+  group: smallcap-universe
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 9.15.0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build the watchlist
+        env:
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+        run: |
+          ARGS=""
+          if [ -n "${{ inputs.min_cap }}" ]; then ARGS="$ARGS --min-cap=${{ inputs.min_cap }}"; fi
+          if [ -n "${{ inputs.max_cap }}" ]; then ARGS="$ARGS --max-cap=${{ inputs.max_cap }}"; fi
+          if [ -n "${{ inputs.min_dollar_volume }}" ]; then ARGS="$ARGS --min-dollar-volume=${{ inputs.min_dollar_volume }}"; fi
+          echo "Running: pnpm build-smallcap $ARGS"
+          pnpm build-smallcap $ARGS
+
+      - name: Commit the rebuilt watchlist
+        run: |
+          # `builtAt` changes on every run, so a diff of only that line means
+          # nothing actually moved — don't commit noise.
+          if git diff --quiet -- data/watchlist-smallcap.json; then
+            echo "watchlist unchanged"
+            exit 0
+          fi
+          CHANGED=$(git diff --numstat -- data/watchlist-smallcap.json | awk '{print $1+$2}')
+          if [ "$CHANGED" -le 2 ]; then
+            echo "only the build timestamp changed; skipping commit"
+            git checkout -- data/watchlist-smallcap.json
+            exit 0
+          fi
+          COUNT=$(node -e "process.stdout.write(String(require('./data/watchlist-smallcap.json').count))")
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add data/watchlist-smallcap.json
+          git commit -m "Rebuild small-cap tech watchlist ($COUNT names)"
+          git push

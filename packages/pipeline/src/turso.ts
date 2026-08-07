@@ -45,9 +45,24 @@ export async function upsertRadarSignals(signals: RadarSignal[]): Promise<RadarS
   for (const s of signals) {
     const res = await client.execute({
       sql: `INSERT OR IGNORE INTO short_radar
-            (key, ticker, cik, accession, form, filing_date, kind, severity, headline, detail, first_seen_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      args: [s.key, s.ticker, s.cik, s.accession, s.form, s.filingDate, s.kind, s.severity, s.headline, s.detail, now],
+            (key, ticker, cik, accession, form, filing_date, kind, severity, direction,
+             headline, detail, market_cap, first_seen_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        s.key,
+        s.ticker,
+        s.cik,
+        s.accession,
+        s.form,
+        s.filingDate,
+        s.kind,
+        s.severity,
+        s.direction,
+        s.headline,
+        s.detail,
+        s.marketCap,
+        now,
+      ],
     });
     if (res.rowsAffected > 0) inserted.push(s);
   }
@@ -89,10 +104,19 @@ export async function enqueueRadarJobs(jobs: RadarJobInput[]): Promise<number> {
 }
 
 /**
- * Enqueue a pending job for every radar signal's filing that doesn't already
- * have one (deduped per accession). Self-healing and idempotent: it backfills
- * signals surfaced before the queue existed and closes any gap where a signal
- * was stored but its job enqueue failed. Returns the count of new jobs.
+ * Enqueue a pending job for every LOUD radar signal's filing that doesn't
+ * already have one (deduped per accession). Self-healing and idempotent: it
+ * backfills signals surfaced before the queue existed and closes any gap where
+ * a signal was stored but its job enqueue failed. Returns the count of new
+ * jobs.
+ *
+ * The high/critical floor is what keeps the GPU tier honest. Every job is
+ * ~5-10 minutes of local model time, and the small-cap radar emits a
+ * medium-severity tail the large-cap one never did — a 424B3 resale
+ * registration, a 25%-YoY share-count drift, six quarters of runway. Those are
+ * worth seeing on the feed and are not worth a deep-dive each; a queue that
+ * takes them all is a queue that never drains, which delays the filings that
+ * do deserve the time.
  */
 export async function enqueueMissingRadarJobs(): Promise<number> {
   if (!isTursoConfigured()) return 0;
@@ -104,7 +128,8 @@ export async function enqueueMissingRadarJobs(): Promise<number> {
           SELECT DISTINCT sr.accession, sr.ticker, sr.form, sr.filing_date, 'pending', ?
           FROM short_radar sr
           LEFT JOIN radar_jobs j ON j.accession = sr.accession
-          WHERE j.accession IS NULL`,
+          WHERE j.accession IS NULL
+            AND sr.severity IN ('critical', 'high')`,
     args: [new Date().toISOString()],
   });
   return res.rowsAffected;

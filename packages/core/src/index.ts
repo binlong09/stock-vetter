@@ -117,6 +117,22 @@ export {
   type IndexEntry,
   type SweepOptions,
 } from './edgar-index.js';
+// Batched price/cap/liquidity screen — the market-data half of building a
+// small-cap universe (EDGAR supplies the other half).
+export { screenQuotes, type ScreenQuote, type ScreenOptions } from './market-screen.js';
+
+// SIC sector classification from EDGAR — how the small-cap tech universe is
+// cut out of the ~10,000 registrants SEC knows about.
+export {
+  fetchCompanyProfile,
+  techSicLabel,
+  isTechSic,
+  parseSicRanges,
+  sicInRanges,
+  TECH_SIC_RANGES,
+  type CompanyProfile,
+} from './sec-sic.js';
+
 export {
   parseFiling,
   type AnchorCandidate,
