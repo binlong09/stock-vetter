@@ -1,0 +1,2217 @@
+{
+  "_doc": "Small-cap tech watchlist for the radar. Rebuilt with `pnpm build-smallcap`. The radar joins EDGAR daily-index entries on `cik`, and uses `marketCap` to decide what counts as material (an 8-K item that is noise at $500B is a repricing event at $200M).",
+  "builtAt": "2026-08-07T22:23:41.817Z",
+  "filters": {
+    "marketCap": [
+      50000000,
+      2000000000
+    ],
+    "minPrice": 1,
+    "minAvgDollarVolume": 1000000,
+    "sic": "tech set (packages/core/src/sec-sic.ts)",
+    "pinned": []
+  },
+  "count": 220,
+  "tickers": [
+    {
+      "ticker": "POET",
+      "cik": "0001437424",
+      "name": "POET TECHNOLOGIES INC.",
+      "marketCap": 1537776896,
+      "avgDollarVolume": 278989269.57,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "TE",
+      "cik": "0001992243",
+      "name": "T1 Energy Inc.",
+      "marketCap": 1633737600,
+      "avgDollarVolume": 243341373.6,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "WOLF",
+      "cik": "0000895419",
+      "name": "WOLFSPEED, INC.",
+      "marketCap": 1708322816,
+      "avgDollarVolume": 234148031.58999997,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "UMAC",
+      "cik": "0001956955",
+      "name": "Unusual Machines, Inc.",
+      "marketCap": 1304364288,
+      "avgDollarVolume": 158357567.76,
+      "sic": "3663",
+      "sicDescription": "Radio & Tv Broadcasting & Communications Equipment",
+      "sector": "Communications equipment"
+    },
+    {
+      "ticker": "RCAT",
+      "cik": "0000748268",
+      "name": "Red Cat Holdings, Inc.",
+      "marketCap": 1401690880,
+      "avgDollarVolume": 119003432.31000002,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "EOSE",
+      "cik": "0001805077",
+      "name": "Eos Energy Enterprises, Inc.",
+      "marketCap": 1501002496,
+      "avgDollarVolume": 117556838.35000001,
+      "sic": "3690",
+      "sicDescription": "Miscellaneous Electrical Machinery, Equipment & Supplies",
+      "sector": "Electrical & magnetic/optical media"
+    },
+    {
+      "ticker": "BBAI",
+      "cik": "0001836981",
+      "name": "BigBear.ai Holdings, Inc.",
+      "marketCap": 1567947008,
+      "avgDollarVolume": 116546233.5,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "RXT",
+      "cik": "0001810019",
+      "name": "Rackspace Technology, Inc.",
+      "marketCap": 1244152192,
+      "avgDollarVolume": 115630739.00000001,
+      "sic": "7370",
+      "sicDescription": "Services-Computer Programming, Data Processing, Etc.",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "SEDG",
+      "cik": "0001419612",
+      "name": "SOLAREDGE TECHNOLOGIES, INC.",
+      "marketCap": 1954057728,
+      "avgDollarVolume": 103137424,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "AMPX",
+      "cik": "0001899287",
+      "name": "Amprius Technologies, Inc.",
+      "marketCap": 1678281984,
+      "avgDollarVolume": 91392236.25,
+      "sic": "3690",
+      "sicDescription": "Miscellaneous Electrical Machinery, Equipment & Supplies",
+      "sector": "Electrical & magnetic/optical media"
+    },
+    {
+      "ticker": "GLOB",
+      "cik": "0001557860",
+      "name": "Globant S.A.",
+      "marketCap": 1614915456,
+      "avgDollarVolume": 78266980,
+      "sic": "7374",
+      "sicDescription": "Services-Computer Processing & Data Preparation",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "SHAZ",
+      "cik": "0002068385",
+      "name": "SharonAI Holdings Inc.",
+      "marketCap": 1789445120,
+      "avgDollarVolume": 77361909.56,
+      "sic": "7374",
+      "sicDescription": "Services-Computer Processing & Data Preparation",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "BAND",
+      "cik": "0001514416",
+      "name": "Bandwidth Inc.",
+      "marketCap": 1607752192,
+      "avgDollarVolume": 68562805.84,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "DXC",
+      "cik": "0001688568",
+      "name": "DXC Technology Co",
+      "marketCap": 1732001024,
+      "avgDollarVolume": 62336113.76,
+      "sic": "7374",
+      "sicDescription": "Services-Computer Processing & Data Preparation",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "BKSY",
+      "cik": "0001753539",
+      "name": "BlackSky Technology Inc.",
+      "marketCap": 1193274496,
+      "avgDollarVolume": 57894788.88,
+      "sic": "3663",
+      "sicDescription": "Radio & Tv Broadcasting & Communications Equipment",
+      "sector": "Communications equipment"
+    },
+    {
+      "ticker": "MRAM",
+      "cik": "0001438423",
+      "name": "EVERSPIN TECHNOLOGIES INC.",
+      "marketCap": 405184128,
+      "avgDollarVolume": 56270556.160000004,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "BLZE",
+      "cik": "0001462056",
+      "name": "Backblaze, Inc.",
+      "marketCap": 1164957952,
+      "avgDollarVolume": 56206871,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "AMBQ",
+      "cik": "0001500412",
+      "name": "Ambiq Micro, Inc.",
+      "marketCap": 1629575552,
+      "avgDollarVolume": 52101807.56999999,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "VELO",
+      "cik": "0001825079",
+      "name": "Velo3D, Inc.",
+      "marketCap": 421982176,
+      "avgDollarVolume": 51485179.44,
+      "sic": "3559",
+      "sicDescription": "Special Industry Machinery, NEC",
+      "sector": "Semiconductor capital equipment"
+    },
+    {
+      "ticker": "SHLS",
+      "cik": "0001831651",
+      "name": "Shoals Technologies Group, Inc.",
+      "marketCap": 1502918656,
+      "avgDollarVolume": 51336721.49,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "PLAB",
+      "cik": "0000810136",
+      "name": "PHOTRONICS INC",
+      "marketCap": 1925164800,
+      "avgDollarVolume": 51270621.5,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "GTM",
+      "cik": "0001794515",
+      "name": "ZoomInfo Technologies Inc.",
+      "marketCap": 1216839936,
+      "avgDollarVolume": 50922281.519999996,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "LPTH",
+      "cik": "0000889971",
+      "name": "LIGHTPATH TECHNOLOGIES INC",
+      "marketCap": 820029696,
+      "avgDollarVolume": 47942411.1,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "SATL",
+      "cik": "0001874315",
+      "name": "Satellogic Inc.",
+      "marketCap": 818307392,
+      "avgDollarVolume": 45772248.48,
+      "sic": "3663",
+      "sicDescription": "Radio & Tv Broadcasting & Communications Equipment",
+      "sector": "Communications equipment"
+    },
+    {
+      "ticker": "CSIQ",
+      "cik": "0001375877",
+      "name": "Canadian Solar Inc.",
+      "marketCap": 1080237312,
+      "avgDollarVolume": 45413631.28,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "LAES",
+      "cik": "0001951222",
+      "name": "SEALSQ Corp",
+      "marketCap": 572529152,
+      "avgDollarVolume": 45069252.18,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "COUR",
+      "cik": "0001651562",
+      "name": "Coursera, Inc.",
+      "marketCap": 1663743616,
+      "avgDollarVolume": 44506854.279999994,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "VPG",
+      "cik": "0001487952",
+      "name": "Vishay Precision Group, Inc.",
+      "marketCap": 912315520,
+      "avgDollarVolume": 43059155.84,
+      "sic": "3670",
+      "sicDescription": "Electronic Components & Accessories",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "TRIP",
+      "cik": "0001526520",
+      "name": "TripAdvisor, Inc.",
+      "marketCap": 1254373376,
+      "avgDollarVolume": 40371509.64,
+      "sic": "7370",
+      "sicDescription": "Services-Computer Programming, Data Processing, Etc.",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "RZLV",
+      "cik": "0001920294",
+      "name": "REZOLVE AI PLC",
+      "marketCap": 1088799360,
+      "avgDollarVolume": 39364192.14,
+      "sic": "7370",
+      "sicDescription": "Services-Computer Programming, Data Processing, Etc.",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "CRSR",
+      "cik": "0001743759",
+      "name": "Corsair Gaming, Inc.",
+      "marketCap": 1533759744,
+      "avgDollarVolume": 38908991.8,
+      "sic": "3577",
+      "sicDescription": "Computer Peripheral Equipment, NEC",
+      "sector": "Computer & office equipment"
+    },
+    {
+      "ticker": "BL",
+      "cik": "0001666134",
+      "name": "BLACKLINE, INC.",
+      "marketCap": 1717601792,
+      "avgDollarVolume": 37819065.15,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "UPWK",
+      "cik": "0001627475",
+      "name": "UPWORK, INC",
+      "marketCap": 1194420352,
+      "avgDollarVolume": 37611465,
+      "sic": "7374",
+      "sicDescription": "Services-Computer Processing & Data Preparation",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "HLIT",
+      "cik": "0000851310",
+      "name": "HARMONIC INC.",
+      "marketCap": 1284597760,
+      "avgDollarVolume": 37145584.64,
+      "sic": "3663",
+      "sicDescription": "Radio & Tv Broadcasting & Communications Equipment",
+      "sector": "Communications equipment"
+    },
+    {
+      "ticker": "CERT",
+      "cik": "0001827090",
+      "name": "Certara, Inc.",
+      "marketCap": 1250818048,
+      "avgDollarVolume": 35975581.199999996,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "BRUN",
+      "cik": "0002090646",
+      "name": "Boost Run Inc.",
+      "marketCap": 1118001920,
+      "avgDollarVolume": 34872401.199999996,
+      "sic": "7374",
+      "sicDescription": "Services-Computer Processing & Data Preparation",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "ARRY",
+      "cik": "0001820721",
+      "name": "Array Technologies, Inc.",
+      "marketCap": 853736448,
+      "avgDollarVolume": 34181667.449999996,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "CEVA",
+      "cik": "0001173489",
+      "name": "CEVA INC",
+      "marketCap": 1077321728,
+      "avgDollarVolume": 33667455.45,
+      "sic": "7370",
+      "sicDescription": "Services-Computer Programming, Data Processing, Etc.",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "ATEN",
+      "cik": "0001580808",
+      "name": "A10 Networks, Inc.",
+      "marketCap": 1932431104,
+      "avgDollarVolume": 32630059,
+      "sic": "3576",
+      "sicDescription": "Computer Communications Equipment",
+      "sector": "Computer & office equipment"
+    },
+    {
+      "ticker": "ENVX",
+      "cik": "0001828318",
+      "name": "Enovix Corp",
+      "marketCap": 1025321152,
+      "avgDollarVolume": 32623997.200000003,
+      "sic": "3690",
+      "sicDescription": "Miscellaneous Electrical Machinery, Equipment & Supplies",
+      "sector": "Electrical & magnetic/optical media"
+    },
+    {
+      "ticker": "PRGS",
+      "cik": "0000876167",
+      "name": "PROGRESS SOFTWARE CORP /MA",
+      "marketCap": 1756994560,
+      "avgDollarVolume": 32202142.560000002,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "ALNT",
+      "cik": "0000046129",
+      "name": "ALLIENT INC",
+      "marketCap": 1917376512,
+      "avgDollarVolume": 32090722.27,
+      "sic": "3825",
+      "sicDescription": "Instruments For Meas & Testing of  Electricity & Elec Signals",
+      "sector": "Instruments for measuring electricity"
+    },
+    {
+      "ticker": "SONO",
+      "cik": "0001314727",
+      "name": "Sonos Inc",
+      "marketCap": 1850117888,
+      "avgDollarVolume": 32005789.84,
+      "sic": "3651",
+      "sicDescription": "Household Audio & Video Equipment",
+      "sector": "Audio & video equipment"
+    },
+    {
+      "ticker": "NVEC",
+      "cik": "0000724910",
+      "name": "NVE CORP /NEW/",
+      "marketCap": 609192832,
+      "avgDollarVolume": 31422659.7,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "KOPN",
+      "cik": "0000771266",
+      "name": "KOPIN CORP",
+      "marketCap": 791236480,
+      "avgDollarVolume": 31393834.219999995,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "AIP",
+      "cik": "0001667011",
+      "name": "Arteris, Inc.",
+      "marketCap": 1375001728,
+      "avgDollarVolume": 30792609.34,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "PRCH",
+      "cik": "0001784535",
+      "name": "Porch Group, Inc.",
+      "marketCap": 1799289472,
+      "avgDollarVolume": 30666786.05,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "SKYT",
+      "cik": "0001819974",
+      "name": "SkyWater Technology, LLC",
+      "marketCap": 1597181312,
+      "avgDollarVolume": 30605462.82,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "AOSL",
+      "cik": "0001387467",
+      "name": "ALPHA & OMEGA SEMICONDUCTOR Ltd",
+      "marketCap": 1079859200,
+      "avgDollarVolume": 30080870.16,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "AZTA",
+      "cik": "0000933974",
+      "name": "Azenta, Inc.",
+      "marketCap": 1476813440,
+      "avgDollarVolume": 29033110.08,
+      "sic": "3559",
+      "sicDescription": "Special Industry Machinery, NEC",
+      "sector": "Semiconductor capital equipment"
+    },
+    {
+      "ticker": "AMPG",
+      "cik": "0001518461",
+      "name": "AmpliTech Group, Inc.",
+      "marketCap": 146965040,
+      "avgDollarVolume": 28976834.8,
+      "sic": "3669",
+      "sicDescription": "Communications Equipment, NEC",
+      "sector": "Communications equipment"
+    },
+    {
+      "ticker": "AMPL",
+      "cik": "0001866692",
+      "name": "Amplitude, Inc.",
+      "marketCap": 1493292800,
+      "avgDollarVolume": 28785919.759999998,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "MNTS",
+      "cik": "0001781162",
+      "name": "Momentus Inc.",
+      "marketCap": 92672216,
+      "avgDollarVolume": 28131266.04,
+      "sic": "3760",
+      "sicDescription": "Guided Missiles & Space Vehicles & Parts",
+      "sector": "Guided missiles & space vehicles"
+    },
+    {
+      "ticker": "RPD",
+      "cik": "0001560327",
+      "name": "Rapid7, Inc.",
+      "marketCap": 773230208,
+      "avgDollarVolume": 27453053.03,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "OMCL",
+      "cik": "0000926326",
+      "name": "OMNICELL, INC.",
+      "marketCap": 1674078720,
+      "avgDollarVolume": 26084743.92,
+      "sic": "3571",
+      "sicDescription": "Electronic Computers",
+      "sector": "Computer & office equipment"
+    },
+    {
+      "ticker": "ENR",
+      "cik": "0001632790",
+      "name": "ENERGIZER HOLDINGS, INC.",
+      "marketCap": 1545675776,
+      "avgDollarVolume": 24077472.87,
+      "sic": "3690",
+      "sicDescription": "Miscellaneous Electrical Machinery, Equipment & Supplies",
+      "sector": "Electrical & magnetic/optical media"
+    },
+    {
+      "ticker": "INDI",
+      "cik": "0001841925",
+      "name": "indie Semiconductor, Inc.",
+      "marketCap": 853605888,
+      "avgDollarVolume": 23820405.6,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "PD",
+      "cik": "0001568100",
+      "name": "PagerDuty, Inc.",
+      "marketCap": 901562816,
+      "avgDollarVolume": 23416098.72,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "VIA",
+      "cik": "0001603015",
+      "name": "Via Transportation, Inc.",
+      "marketCap": 1891004928,
+      "avgDollarVolume": 22468346.720000003,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "PAR",
+      "cik": "0000708821",
+      "name": "PAR TECHNOLOGY CORP",
+      "marketCap": 734594816,
+      "avgDollarVolume": 22158899.229999997,
+      "sic": "3578",
+      "sicDescription": "Calculating & Accounting Machines (No Electronic Computers)",
+      "sector": "Computer & office equipment"
+    },
+    {
+      "ticker": "STI",
+      "cik": "0001881551",
+      "name": "Solidion Technology Inc.",
+      "marketCap": 61253876,
+      "avgDollarVolume": 21851902.169999998,
+      "sic": "3690",
+      "sicDescription": "Miscellaneous Electrical Machinery, Equipment & Supplies",
+      "sector": "Electrical & magnetic/optical media"
+    },
+    {
+      "ticker": "VERX",
+      "cik": "0001806837",
+      "name": "Vertex, Inc.",
+      "marketCap": 1936882688,
+      "avgDollarVolume": 21639399.3,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "RUM",
+      "cik": "0001830081",
+      "name": "RUM Group Inc.",
+      "marketCap": 1760625152,
+      "avgDollarVolume": 21259579.005,
+      "sic": "7370",
+      "sicDescription": "Services-Computer Programming, Data Processing, Etc.",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "YSS",
+      "cik": "0002086587",
+      "name": "York Space Systems Inc.",
+      "marketCap": 1499251584,
+      "avgDollarVolume": 21225806.21,
+      "sic": "3760",
+      "sicDescription": "Guided Missiles & Space Vehicles & Parts",
+      "sector": "Guided missiles & space vehicles"
+    },
+    {
+      "ticker": "FEIM",
+      "cik": "0000039020",
+      "name": "FREQUENCY ELECTRONICS INC",
+      "marketCap": 815532032,
+      "avgDollarVolume": 21190072.14,
+      "sic": "3825",
+      "sicDescription": "Instruments For Meas & Testing of  Electricity & Elec Signals",
+      "sector": "Instruments for measuring electricity"
+    },
+    {
+      "ticker": "CTS",
+      "cik": "0000026058",
+      "name": "CTS CORP",
+      "marketCap": 1891276928,
+      "avgDollarVolume": 20875099.93,
+      "sic": "3672",
+      "sicDescription": "Printed Circuit Boards",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "ARQQ",
+      "cik": "0001859690",
+      "name": "Arqit Quantum Inc.",
+      "marketCap": 398515232,
+      "avgDollarVolume": 20379122.2,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "GRRR",
+      "cik": "0001903145",
+      "name": "Gorilla Technology Group Inc.",
+      "marketCap": 365010784,
+      "avgDollarVolume": 20299786.5,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "MITK",
+      "cik": "0000807863",
+      "name": "MITEK SYSTEMS INC",
+      "marketCap": 834987136,
+      "avgDollarVolume": 19659991.729999997,
+      "sic": "3577",
+      "sicDescription": "Computer Peripheral Equipment, NEC",
+      "sector": "Computer & office equipment"
+    },
+    {
+      "ticker": "SWMR",
+      "cik": "0002092574",
+      "name": "Swarmer, Inc",
+      "marketCap": 397384960,
+      "avgDollarVolume": 19433355.6,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "VYX",
+      "cik": "0000070866",
+      "name": "NCR Voyix Corp",
+      "marketCap": 1139076736,
+      "avgDollarVolume": 19171152,
+      "sic": "3578",
+      "sicDescription": "Calculating & Accounting Machines (No Electronic Computers)",
+      "sector": "Computer & office equipment"
+    },
+    {
+      "ticker": "NRGV",
+      "cik": "0001828536",
+      "name": "Energy Vault Holdings, Inc.",
+      "marketCap": 632525056,
+      "avgDollarVolume": 19135492.01,
+      "sic": "3690",
+      "sicDescription": "Miscellaneous Electrical Machinery, Equipment & Supplies",
+      "sector": "Electrical & magnetic/optical media"
+    },
+    {
+      "ticker": "ALMU",
+      "cik": "0001828805",
+      "name": "Aeluma, Inc.",
+      "marketCap": 334987648,
+      "avgDollarVolume": 18962203.8,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "EVTC",
+      "cik": "0001559865",
+      "name": "EVERTEC, Inc.",
+      "marketCap": 1783613440,
+      "avgDollarVolume": 18888303.900000002,
+      "sic": "7374",
+      "sicDescription": "Services-Computer Processing & Data Preparation",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "EVER",
+      "cik": "0001640428",
+      "name": "EverQuote, Inc.",
+      "marketCap": 906014016,
+      "avgDollarVolume": 18478728.27,
+      "sic": "7370",
+      "sicDescription": "Services-Computer Programming, Data Processing, Etc.",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "MQ",
+      "cik": "0001522540",
+      "name": "Marqeta, Inc.",
+      "marketCap": 1661417344,
+      "avgDollarVolume": 18443407.92,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "OSS",
+      "cik": "0001394056",
+      "name": "ONE STOP SYSTEMS, INC.",
+      "marketCap": 327941760,
+      "avgDollarVolume": 18204655.76,
+      "sic": "3571",
+      "sicDescription": "Electronic Computers",
+      "sector": "Computer & office equipment"
+    },
+    {
+      "ticker": "ADTN",
+      "cik": "0000926282",
+      "name": "ADTRAN Holdings, Inc.",
+      "marketCap": 615999424,
+      "avgDollarVolume": 18014194.8,
+      "sic": "3661",
+      "sicDescription": "Telephone & Telegraph Apparatus",
+      "sector": "Communications equipment"
+    },
+    {
+      "ticker": "GDYN",
+      "cik": "0001743725",
+      "name": "GRID DYNAMICS HOLDINGS, INC.",
+      "marketCap": 614941760,
+      "avgDollarVolume": 17832139.5,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "LASE",
+      "cik": "0001807887",
+      "name": "Laser Photonics Corp",
+      "marketCap": 57200860,
+      "avgDollarVolume": 17794608.84,
+      "sic": "3690",
+      "sicDescription": "Miscellaneous Electrical Machinery, Equipment & Supplies",
+      "sector": "Electrical & magnetic/optical media"
+    },
+    {
+      "ticker": "NSSC",
+      "cik": "0000069633",
+      "name": "NAPCO SECURITY TECHNOLOGIES, INC",
+      "marketCap": 1477682688,
+      "avgDollarVolume": 16848285.52,
+      "sic": "3669",
+      "sicDescription": "Communications Equipment, NEC",
+      "sector": "Communications equipment"
+    },
+    {
+      "ticker": "DDD",
+      "cik": "0000910638",
+      "name": "3D SYSTEMS CORP",
+      "marketCap": 613082560,
+      "avgDollarVolume": 16842244.86,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "MEI",
+      "cik": "0000065270",
+      "name": "METHODE ELECTRONICS INC",
+      "marketCap": 591700736,
+      "avgDollarVolume": 16620690.140000002,
+      "sic": "3678",
+      "sicDescription": "Electronic Connectors",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "XRX",
+      "cik": "0001770450",
+      "name": "Xerox Holdings Corp",
+      "marketCap": 425227328,
+      "avgDollarVolume": 16578726.840000002,
+      "sic": "3577",
+      "sicDescription": "Computer Peripheral Equipment, NEC",
+      "sector": "Computer & office equipment"
+    },
+    {
+      "ticker": "MPTI",
+      "cik": "0001902314",
+      "name": "M-tron Industries, Inc.",
+      "marketCap": 380459840,
+      "avgDollarVolume": 16551608.040000001,
+      "sic": "3679",
+      "sicDescription": "Electronic Components, NEC",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "EVLV",
+      "cik": "0001805385",
+      "name": "Evolv Technologies Holdings, Inc.",
+      "marketCap": 1102611712,
+      "avgDollarVolume": 16285111.25,
+      "sic": "3577",
+      "sicDescription": "Computer Peripheral Equipment, NEC",
+      "sector": "Computer & office equipment"
+    },
+    {
+      "ticker": "GCTS",
+      "cik": "0001851961",
+      "name": "GCT Semiconductor Holding, Inc.",
+      "marketCap": 234512768,
+      "avgDollarVolume": 16274115.299999999,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "LZ",
+      "cik": "0001286139",
+      "name": "LEGALZOOM.COM, INC.",
+      "marketCap": 988198016,
+      "avgDollarVolume": 16020999.309999999,
+      "sic": "7374",
+      "sicDescription": "Services-Computer Processing & Data Preparation",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "TRNS",
+      "cik": "0000099302",
+      "name": "TRANSCAT INC",
+      "marketCap": 871492224,
+      "avgDollarVolume": 15268922.68,
+      "sic": "3825",
+      "sicDescription": "Instruments For Meas & Testing of  Electricity & Elec Signals",
+      "sector": "Instruments for measuring electricity"
+    },
+    {
+      "ticker": "BTQ",
+      "cik": "0001821866",
+      "name": "BTQ Technologies Corp.",
+      "marketCap": 590305152,
+      "avgDollarVolume": 14797084.499999998,
+      "sic": "7370",
+      "sicDescription": "Services-Computer Programming, Data Processing, Etc.",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "SPT",
+      "cik": "0001517375",
+      "name": "Sprout Social, Inc.",
+      "marketCap": 621491264,
+      "avgDollarVolume": 14119280.34,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "QMCO",
+      "cik": "0000709283",
+      "name": "QUANTUM CORP /DE/",
+      "marketCap": 474068992,
+      "avgDollarVolume": 13813022.44,
+      "sic": "3572",
+      "sicDescription": "Computer Storage Devices",
+      "sector": "Computer & office equipment"
+    },
+    {
+      "ticker": "DQ",
+      "cik": "0001477641",
+      "name": "DAQO NEW ENERGY CORP.",
+      "marketCap": 996045568,
+      "avgDollarVolume": 13610656.64,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "JKS",
+      "cik": "0001481513",
+      "name": "JinkoSolar Holding Co., Ltd.",
+      "marketCap": 890816896,
+      "avgDollarVolume": 13483350.72,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "TBLA",
+      "cik": "0001840502",
+      "name": "Taboola.com Ltd.",
+      "marketCap": 1107637120,
+      "avgDollarVolume": 12764923.6,
+      "sic": "7370",
+      "sicDescription": "Services-Computer Programming, Data Processing, Etc.",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "CLVT",
+      "cik": "0001764046",
+      "name": "CLARIVATE PLC",
+      "marketCap": 1164188544,
+      "avgDollarVolume": 12577688.76,
+      "sic": "7374",
+      "sicDescription": "Services-Computer Processing & Data Preparation",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "LSPD",
+      "cik": "0001823306",
+      "name": "Lightspeed Commerce Inc.",
+      "marketCap": 1352473728,
+      "avgDollarVolume": 12505494.840000002,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "SLDP",
+      "cik": "0001844862",
+      "name": "Solid Power, Inc.",
+      "marketCap": 531662208,
+      "avgDollarVolume": 12149032.41,
+      "sic": "3690",
+      "sicDescription": "Miscellaneous Electrical Machinery, Equipment & Supplies",
+      "sector": "Electrical & magnetic/optical media"
+    },
+    {
+      "ticker": "RDVT",
+      "cik": "0001720116",
+      "name": "Red Violet, Inc.",
+      "marketCap": 923922688,
+      "avgDollarVolume": 12141639.334999999,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "CAST",
+      "cik": "0001633369",
+      "name": "FreeCast, Inc.",
+      "marketCap": 59000520,
+      "avgDollarVolume": 11970322.64,
+      "sic": "7374",
+      "sicDescription": "Services-Computer Processing & Data Preparation",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "MRLN",
+      "cik": "0002028707",
+      "name": "Merlin, Inc.",
+      "marketCap": 428566784,
+      "avgDollarVolume": 11667693.96,
+      "sic": "7373",
+      "sicDescription": "Services-Computer Integrated Systems Design",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "GSIT",
+      "cik": "0001126741",
+      "name": "GSI TECHNOLOGY INC",
+      "marketCap": 257860320,
+      "avgDollarVolume": 11466114.24,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "PDYN",
+      "cik": "0001826681",
+      "name": "Palladyne AI Corp.",
+      "marketCap": 295537664,
+      "avgDollarVolume": 11252831.97,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "SABR",
+      "cik": "0001597033",
+      "name": "Sabre Corp",
+      "marketCap": 818298432,
+      "avgDollarVolume": 11248851.959999999,
+      "sic": "7370",
+      "sicDescription": "Services-Computer Programming, Data Processing, Etc.",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "PUBM",
+      "cik": "0001422930",
+      "name": "PubMatic, Inc.",
+      "marketCap": 825762304,
+      "avgDollarVolume": 10914377.46,
+      "sic": "7370",
+      "sicDescription": "Services-Computer Programming, Data Processing, Etc.",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "NABL",
+      "cik": "0001834488",
+      "name": "N-able, Inc.",
+      "marketCap": 940007616,
+      "avgDollarVolume": 10594942.65,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "HQ",
+      "cik": "0002088256",
+      "name": "Horizon Quantum Holdings Ltd.",
+      "marketCap": 762625472,
+      "avgDollarVolume": 10205208.81,
+      "sic": "7371",
+      "sicDescription": "Services-Computer Programming Services",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "ELVA",
+      "cik": "0001844450",
+      "name": "Electrovaya Inc.",
+      "marketCap": 480717632,
+      "avgDollarVolume": 10112217.33,
+      "sic": "3690",
+      "sicDescription": "Miscellaneous Electrical Machinery, Equipment & Supplies",
+      "sector": "Electrical & magnetic/optical media"
+    },
+    {
+      "ticker": "MX",
+      "cik": "0001325702",
+      "name": "MAGNACHIP SEMICONDUCTOR Corp",
+      "marketCap": 145310240,
+      "avgDollarVolume": 9879653.5,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "GILT",
+      "cik": "0000897322",
+      "name": "GILAT SATELLITE NETWORKS LTD",
+      "marketCap": 847538688,
+      "avgDollarVolume": 9766551.32,
+      "sic": "3663",
+      "sicDescription": "Radio & Tv Broadcasting & Communications Equipment",
+      "sector": "Communications equipment"
+    },
+    {
+      "ticker": "WB",
+      "cik": "0001595761",
+      "name": "WEIBO Corp",
+      "marketCap": 1950640256,
+      "avgDollarVolume": 9705181.1,
+      "sic": "7370",
+      "sicDescription": "Services-Computer Programming, Data Processing, Etc.",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "CARS",
+      "cik": "0001683606",
+      "name": "Cars.com Inc.",
+      "marketCap": 688725312,
+      "avgDollarVolume": 9565999.52,
+      "sic": "7374",
+      "sicDescription": "Services-Computer Processing & Data Preparation",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "ERII",
+      "cik": "0001421517",
+      "name": "Energy Recovery, Inc.",
+      "marketCap": 443069536,
+      "avgDollarVolume": 9300177.32,
+      "sic": "3559",
+      "sicDescription": "Special Industry Machinery, NEC",
+      "sector": "Semiconductor capital equipment"
+    },
+    {
+      "ticker": "CRNC",
+      "cik": "0001768267",
+      "name": "Cerence Inc.",
+      "marketCap": 413242528,
+      "avgDollarVolume": 9146454.055,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "BMBL",
+      "cik": "0001830043",
+      "name": "Bumble Inc.",
+      "marketCap": 429253312,
+      "avgDollarVolume": 9009706.86,
+      "sic": "7370",
+      "sicDescription": "Services-Computer Programming, Data Processing, Etc.",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "NTGR",
+      "cik": "0001122904",
+      "name": "NETGEAR, INC.",
+      "marketCap": 635300544,
+      "avgDollarVolume": 8995641.48,
+      "sic": "3576",
+      "sicDescription": "Computer Communications Equipment",
+      "sector": "Computer & office equipment"
+    },
+    {
+      "ticker": "ISSC",
+      "cik": "0000836690",
+      "name": "INNOVATIVE SOLUTIONS & SUPPORT INC",
+      "marketCap": 360896736,
+      "avgDollarVolume": 8947573.360000001,
+      "sic": "7371",
+      "sicDescription": "Services-Computer Programming Services",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "DOMO",
+      "cik": "0001505952",
+      "name": "DOMO, INC.",
+      "marketCap": 183911392,
+      "avgDollarVolume": 8902155.06,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "NRDS",
+      "cik": "0001625278",
+      "name": "NERDWALLET, INC.",
+      "marketCap": 652065920,
+      "avgDollarVolume": 8487251.03,
+      "sic": "7374",
+      "sicDescription": "Services-Computer Processing & Data Preparation",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "CLFD",
+      "cik": "0000796505",
+      "name": "Clearfield, Inc.",
+      "marketCap": 373438368,
+      "avgDollarVolume": 8466395.64,
+      "sic": "3661",
+      "sicDescription": "Telephone & Telegraph Apparatus",
+      "sector": "Communications equipment"
+    },
+    {
+      "ticker": "SLP",
+      "cik": "0001023459",
+      "name": "Simulations Plus, Inc.",
+      "marketCap": 370519040,
+      "avgDollarVolume": 8464536.16,
+      "sic": "7373",
+      "sicDescription": "Services-Computer Integrated Systems Design",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "SSYS",
+      "cik": "0001517396",
+      "name": "STRATASYS LTD.",
+      "marketCap": 773946816,
+      "avgDollarVolume": 8057813.834999999,
+      "sic": "3577",
+      "sicDescription": "Computer Peripheral Equipment, NEC",
+      "sector": "Computer & office equipment"
+    },
+    {
+      "ticker": "OOMA",
+      "cik": "0001327688",
+      "name": "OOMA INC",
+      "marketCap": 603621888,
+      "avgDollarVolume": 8031616.84,
+      "sic": "7374",
+      "sicDescription": "Services-Computer Processing & Data Preparation",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "DUOT",
+      "cik": "0001396536",
+      "name": "DUOS TECHNOLOGIES GROUP, INC.",
+      "marketCap": 290257920,
+      "avgDollarVolume": 7807892.4,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "OSPN",
+      "cik": "0001044777",
+      "name": "OneSpan Inc.",
+      "marketCap": 618379456,
+      "avgDollarVolume": 7802129.48,
+      "sic": "7373",
+      "sicDescription": "Services-Computer Integrated Systems Design",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "LTRX",
+      "cik": "0001114925",
+      "name": "LANTRONIX INC",
+      "marketCap": 266313312,
+      "avgDollarVolume": 7632501.72,
+      "sic": "3576",
+      "sicDescription": "Computer Communications Equipment",
+      "sector": "Computer & office equipment"
+    },
+    {
+      "ticker": "YEXT",
+      "cik": "0001614178",
+      "name": "Yext, Inc.",
+      "marketCap": 574421696,
+      "avgDollarVolume": 7540794.600000001,
+      "sic": "7374",
+      "sicDescription": "Services-Computer Processing & Data Preparation",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "OPTX",
+      "cik": "0001866816",
+      "name": "SYNTEC OPTICS HOLDINGS, INC.",
+      "marketCap": 313780256,
+      "avgDollarVolume": 7532688.51,
+      "sic": "3827",
+      "sicDescription": "Optical Instruments & Lenses",
+      "sector": "Optical instruments & lenses"
+    },
+    {
+      "ticker": "NLST",
+      "cik": "0001282631",
+      "name": "NETLIST INC",
+      "marketCap": 1306603264,
+      "avgDollarVolume": 7504173.6,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "SILC",
+      "cik": "0000916793",
+      "name": "SILICOM LTD.",
+      "marketCap": 241916944,
+      "avgDollarVolume": 7495723.920000001,
+      "sic": "3576",
+      "sicDescription": "Computer Communications Equipment",
+      "sector": "Computer & office equipment"
+    },
+    {
+      "ticker": "QUIK",
+      "cik": "0000882508",
+      "name": "QUICKLOGIC Corp",
+      "marketCap": 257352496,
+      "avgDollarVolume": 7459650,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "IIIV",
+      "cik": "0001728688",
+      "name": "i3 Verticals, Inc.",
+      "marketCap": 487963520,
+      "avgDollarVolume": 7349384.42,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "NEOV",
+      "cik": "0001748137",
+      "name": "NeoVolta Inc.",
+      "marketCap": 155659712,
+      "avgDollarVolume": 7330850.7299999995,
+      "sic": "3690",
+      "sicDescription": "Miscellaneous Electrical Machinery, Equipment & Supplies",
+      "sector": "Electrical & magnetic/optical media"
+    },
+    {
+      "ticker": "NXDR",
+      "cik": "0001846069",
+      "name": "Nextdoor Holdings, Inc.",
+      "marketCap": 986463424,
+      "avgDollarVolume": 7303126.05,
+      "sic": "7370",
+      "sicDescription": "Services-Computer Programming, Data Processing, Etc.",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "SMWB",
+      "cik": "0001842731",
+      "name": "SIMILARWEB LTD.",
+      "marketCap": 657880128,
+      "avgDollarVolume": 7216268.88,
+      "sic": "7370",
+      "sicDescription": "Services-Computer Programming, Data Processing, Etc.",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "ASYS",
+      "cik": "0000720500",
+      "name": "AMTECH SYSTEMS INC",
+      "marketCap": 271900800,
+      "avgDollarVolume": 7001545.199999999,
+      "sic": "3559",
+      "sicDescription": "Special Industry Machinery, NEC",
+      "sector": "Semiconductor capital equipment"
+    },
+    {
+      "ticker": "FIRY",
+      "cik": "0001801661",
+      "name": "Firy Inc.",
+      "marketCap": 163098960,
+      "avgDollarVolume": 6924922.399999999,
+      "sic": "7374",
+      "sicDescription": "Services-Computer Processing & Data Preparation",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "NNDM",
+      "cik": "0001643303",
+      "name": "Nano Dimension Ltd.",
+      "marketCap": 343126240,
+      "avgDollarVolume": 6905118.47,
+      "sic": "3672",
+      "sicDescription": "Printed Circuit Boards",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "BNAI",
+      "cik": "0001838163",
+      "name": "Brand Engagement Network Inc.",
+      "marketCap": 95326104,
+      "avgDollarVolume": 6844281.15,
+      "sic": "7373",
+      "sicDescription": "Services-Computer Integrated Systems Design",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "KULR",
+      "cik": "0001662684",
+      "name": "KULR Technology Group, Inc.",
+      "marketCap": 135070928,
+      "avgDollarVolume": 6816985.28,
+      "sic": "3670",
+      "sicDescription": "Electronic Components & Accessories",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "OPRA",
+      "cik": "0001737450",
+      "name": "Opera Ltd",
+      "marketCap": 1787477120,
+      "avgDollarVolume": 6797996.760000001,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "AIOT",
+      "cik": "0001774170",
+      "name": "Powerfleet, Inc.",
+      "marketCap": 591936256,
+      "avgDollarVolume": 6742987.0200000005,
+      "sic": "3669",
+      "sicDescription": "Communications Equipment, NEC",
+      "sector": "Communications equipment"
+    },
+    {
+      "ticker": "CGNT",
+      "cik": "0001824814",
+      "name": "Cognyte Software Ltd.",
+      "marketCap": 679883520,
+      "avgDollarVolume": 6630807.999999999,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "IMOS",
+      "cik": "0001123134",
+      "name": "CHIPMOS TECHNOLOGIES INC",
+      "marketCap": 1826863360,
+      "avgDollarVolume": 6416289.88,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "HSTM",
+      "cik": "0001095565",
+      "name": "HEALTHSTREAM INC",
+      "marketCap": 839060160,
+      "avgDollarVolume": 6351083.359999999,
+      "sic": "7370",
+      "sicDescription": "Services-Computer Programming, Data Processing, Etc.",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "ATOM",
+      "cik": "0001420520",
+      "name": "Atomera Inc",
+      "marketCap": 212166416,
+      "avgDollarVolume": 6328013.5600000005,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "VTEX",
+      "cik": "0001793663",
+      "name": "VTEX",
+      "marketCap": 712631936,
+      "avgDollarVolume": 5948896.579999999,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "CCSI",
+      "cik": "0001866633",
+      "name": "Consensus Cloud Solutions, Inc.",
+      "marketCap": 646503936,
+      "avgDollarVolume": 5835910.64,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "VREX",
+      "cik": "0001681622",
+      "name": "Varex Imaging Corp",
+      "marketCap": 523037856,
+      "avgDollarVolume": 5729039.2700000005,
+      "sic": "3679",
+      "sicDescription": "Electronic Components, NEC",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "SSTK",
+      "cik": "0001549346",
+      "name": "Shutterstock, Inc.",
+      "marketCap": 219369728,
+      "avgDollarVolume": 5671017.4799999995,
+      "sic": "7374",
+      "sicDescription": "Services-Computer Processing & Data Preparation",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "BZAI",
+      "cik": "0001871638",
+      "name": "Blaize Holdings, Inc.",
+      "marketCap": 156529408,
+      "avgDollarVolume": 5660010.4,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "KDK",
+      "cik": "0001853138",
+      "name": "Kodiak AI, Inc.",
+      "marketCap": 865314944,
+      "avgDollarVolume": 5620303.36,
+      "sic": "7373",
+      "sicDescription": "Services-Computer Integrated Systems Design",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "WEAV",
+      "cik": "0001609151",
+      "name": "Weave Communications, Inc.",
+      "marketCap": 420902176,
+      "avgDollarVolume": 5506942.9,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "BLND",
+      "cik": "0001855747",
+      "name": "Blend Labs, Inc.",
+      "marketCap": 394650144,
+      "avgDollarVolume": 5299945,
+      "sic": "7370",
+      "sicDescription": "Services-Computer Programming, Data Processing, Etc.",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "WATT",
+      "cik": "0001575793",
+      "name": "Energous Corp",
+      "marketCap": 101715360,
+      "avgDollarVolume": 5236978.17,
+      "sic": "3663",
+      "sicDescription": "Radio & Tv Broadcasting & Communications Equipment",
+      "sector": "Communications equipment"
+    },
+    {
+      "ticker": "TASK",
+      "cik": "0001829864",
+      "name": "TaskUs, Inc.",
+      "marketCap": 668520960,
+      "avgDollarVolume": 5153376.6,
+      "sic": "7374",
+      "sicDescription": "Services-Computer Processing & Data Preparation",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "VUZI",
+      "cik": "0001463972",
+      "name": "Vuzix Corp",
+      "marketCap": 223695712,
+      "avgDollarVolume": 5134378.79,
+      "sic": "3663",
+      "sicDescription": "Radio & Tv Broadcasting & Communications Equipment",
+      "sector": "Communications equipment"
+    },
+    {
+      "ticker": "KE",
+      "cik": "0001606757",
+      "name": "Kimball Electronics, Inc.",
+      "marketCap": 628398336,
+      "avgDollarVolume": 5078783.58,
+      "sic": "3672",
+      "sicDescription": "Printed Circuit Boards",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "ZENA",
+      "cik": "0001997403",
+      "name": "ZenaTech, Inc.",
+      "marketCap": 146658912,
+      "avgDollarVolume": 5065767.3,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "GDRX",
+      "cik": "0001809519",
+      "name": "GoodRx Holdings, Inc.",
+      "marketCap": 1255415040,
+      "avgDollarVolume": 4873339.36,
+      "sic": "7374",
+      "sicDescription": "Services-Computer Processing & Data Preparation",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "LGCL",
+      "cik": "0001954694",
+      "name": "Lucas GC Ltd",
+      "marketCap": 52204296,
+      "avgDollarVolume": 4872148.08,
+      "sic": "7370",
+      "sicDescription": "Services-Computer Programming, Data Processing, Etc.",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "PERI",
+      "cik": "0001338940",
+      "name": "Perion Network Ltd.",
+      "marketCap": 405181344,
+      "avgDollarVolume": 4704257.970000001,
+      "sic": "7371",
+      "sicDescription": "Services-Computer Programming Services",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "IMMR",
+      "cik": "0001058811",
+      "name": "IMMERSION CORP",
+      "marketCap": 252258432,
+      "avgDollarVolume": 4700607.6,
+      "sic": "3577",
+      "sicDescription": "Computer Peripheral Equipment, NEC",
+      "sector": "Computer & office equipment"
+    },
+    {
+      "ticker": "VLN",
+      "cik": "0001863006",
+      "name": "Valens Semiconductor Ltd.",
+      "marketCap": 188394160,
+      "avgDollarVolume": 4477924.8,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "TOYO",
+      "cik": "0001985273",
+      "name": "TOYO Co., Ltd",
+      "marketCap": 247769904,
+      "avgDollarVolume": 4455043.8,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "EGHT",
+      "cik": "0001023731",
+      "name": "8X8 INC /DE/",
+      "marketCap": 332201664,
+      "avgDollarVolume": 4436327.399999999,
+      "sic": "7374",
+      "sicDescription": "Services-Computer Processing & Data Preparation",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "TBCH",
+      "cik": "0001493761",
+      "name": "Turtle Beach Corp",
+      "marketCap": 276871520,
+      "avgDollarVolume": 4431789.45,
+      "sic": "3669",
+      "sicDescription": "Communications Equipment, NEC",
+      "sector": "Communications equipment"
+    },
+    {
+      "ticker": "ALOT",
+      "cik": "0000008146",
+      "name": "AstroNova, Inc.",
+      "marketCap": 226924368,
+      "avgDollarVolume": 4412366.04,
+      "sic": "3577",
+      "sicDescription": "Computer Peripheral Equipment, NEC",
+      "sector": "Computer & office equipment"
+    },
+    {
+      "ticker": "PLTK",
+      "cik": "0001828016",
+      "name": "Playtika Holding Corp.",
+      "marketCap": 1118315904,
+      "avgDollarVolume": 4356830.1,
+      "sic": "7374",
+      "sicDescription": "Services-Computer Processing & Data Preparation",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "NEXN",
+      "cik": "0001849396",
+      "name": "Nexxen International Ltd.",
+      "marketCap": 607356480,
+      "avgDollarVolume": 4171909.6,
+      "sic": "7370",
+      "sicDescription": "Services-Computer Programming, Data Processing, Etc.",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "CHPT",
+      "cik": "0001777393",
+      "name": "ChargePoint Holdings, Inc.",
+      "marketCap": 161083264,
+      "avgDollarVolume": 4167057.9,
+      "sic": "3690",
+      "sicDescription": "Miscellaneous Electrical Machinery, Equipment & Supplies",
+      "sector": "Electrical & magnetic/optical media"
+    },
+    {
+      "ticker": "INTT",
+      "cik": "0001036262",
+      "name": "INTEST CORP",
+      "marketCap": 176533440,
+      "avgDollarVolume": 4157957,
+      "sic": "3825",
+      "sicDescription": "Instruments For Meas & Testing of  Electricity & Elec Signals",
+      "sector": "Instruments for measuring electricity"
+    },
+    {
+      "ticker": "SVCO",
+      "cik": "0001943289",
+      "name": "Silvaco Group, Inc.",
+      "marketCap": 256354288,
+      "avgDollarVolume": 4147049.7,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "RFIL",
+      "cik": "0000740664",
+      "name": "R F INDUSTRIES LTD",
+      "marketCap": 138959824,
+      "avgDollarVolume": 4109089.3200000003,
+      "sic": "3678",
+      "sicDescription": "Electronic Connectors",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "IBEX",
+      "cik": "0001720420",
+      "name": "IBEX Ltd",
+      "marketCap": 498744576,
+      "avgDollarVolume": 4038384.25,
+      "sic": "7374",
+      "sicDescription": "Services-Computer Processing & Data Preparation",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "MOMO",
+      "cik": "0001610601",
+      "name": "Hello Group Inc.",
+      "marketCap": 865799808,
+      "avgDollarVolume": 4011773.58,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "QNC",
+      "cik": "0002106613",
+      "name": "Quantum eMotion Corp",
+      "marketCap": 489194368,
+      "avgDollarVolume": 3947677.57,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "ZIP",
+      "cik": "0001617553",
+      "name": "ZIPRECRUITER, INC.",
+      "marketCap": 422642464,
+      "avgDollarVolume": 3789136.0399999996,
+      "sic": "7370",
+      "sicDescription": "Services-Computer Programming, Data Processing, Etc.",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "QMLS",
+      "cik": "0002084026",
+      "name": "QumulusAI, Inc.",
+      "marketCap": 203781168,
+      "avgDollarVolume": 3759010.4,
+      "sic": "7374",
+      "sicDescription": "Services-Computer Processing & Data Preparation",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "EXFY",
+      "cik": "0001476840",
+      "name": "Expensify, Inc.",
+      "marketCap": 259418544,
+      "avgDollarVolume": 3733362.23,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "DSP",
+      "cik": "0001828791",
+      "name": "Viant Technology Inc.",
+      "marketCap": 868794496,
+      "avgDollarVolume": 3720387.04,
+      "sic": "7370",
+      "sicDescription": "Services-Computer Programming, Data Processing, Etc.",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "TLS",
+      "cik": "0000320121",
+      "name": "TELOS CORP",
+      "marketCap": 357635680,
+      "avgDollarVolume": 3696283.18,
+      "sic": "7373",
+      "sicDescription": "Services-Computer Integrated Systems Design",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "GRVY",
+      "cik": "0001313310",
+      "name": "GRAVITY Co., Ltd.",
+      "marketCap": 473359072,
+      "avgDollarVolume": 3694488.2,
+      "sic": "7374",
+      "sicDescription": "Services-Computer Processing & Data Preparation",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "VERI",
+      "cik": "0001615165",
+      "name": "Veritone, Inc.",
+      "marketCap": 121770256,
+      "avgDollarVolume": 3619307.3000000003,
+      "sic": "7374",
+      "sicDescription": "Services-Computer Processing & Data Preparation",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "AVNW",
+      "cik": "0001377789",
+      "name": "AVIAT NETWORKS, INC.",
+      "marketCap": 273281472,
+      "avgDollarVolume": 3503216.64,
+      "sic": "3663",
+      "sicDescription": "Radio & Tv Broadcasting & Communications Equipment",
+      "sector": "Communications equipment"
+    },
+    {
+      "ticker": "BKTI",
+      "cik": "0000002186",
+      "name": "BK Technologies Corp",
+      "marketCap": 290999072,
+      "avgDollarVolume": 3479213.52,
+      "sic": "3663",
+      "sicDescription": "Radio & Tv Broadcasting & Communications Equipment",
+      "sector": "Communications equipment"
+    },
+    {
+      "ticker": "BYRN",
+      "cik": "0001354866",
+      "name": "Byrna Technologies Inc.",
+      "marketCap": 100985432,
+      "avgDollarVolume": 3357938.85,
+      "sic": "3690",
+      "sicDescription": "Miscellaneous Electrical Machinery, Equipment & Supplies",
+      "sector": "Electrical & magnetic/optical media"
+    },
+    {
+      "ticker": "ALLT",
+      "cik": "0001365767",
+      "name": "Allot Ltd.",
+      "marketCap": 382578656,
+      "avgDollarVolume": 3301893.3400000003,
+      "sic": "3576",
+      "sicDescription": "Computer Communications Equipment",
+      "sector": "Computer & office equipment"
+    },
+    {
+      "ticker": "XZO",
+      "cik": "0001873951",
+      "name": "Exzeo Group, Inc.",
+      "marketCap": 1409235712,
+      "avgDollarVolume": 3296757,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "ODYS",
+      "cik": "0001577445",
+      "name": "Odysight.ai Inc.",
+      "marketCap": 74491312,
+      "avgDollarVolume": 3294244.68,
+      "sic": "7373",
+      "sicDescription": "Services-Computer Integrated Systems Design",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "XPER",
+      "cik": "0001788999",
+      "name": "Xperi Inc.",
+      "marketCap": 344658176,
+      "avgDollarVolume": 3267778.08,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "IPWR",
+      "cik": "0001507957",
+      "name": "Ideal Power Inc.",
+      "marketCap": 74225272,
+      "avgDollarVolume": 3184981.84,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "CRCT",
+      "cik": "0001828962",
+      "name": "Cricut, Inc.",
+      "marketCap": 1225808128,
+      "avgDollarVolume": 3011378.48,
+      "sic": "3559",
+      "sicDescription": "Special Industry Machinery, NEC",
+      "sector": "Semiconductor capital equipment"
+    },
+    {
+      "ticker": "UIS",
+      "cik": "0000746838",
+      "name": "UNISYS CORP",
+      "marketCap": 216560384,
+      "avgDollarVolume": 2964980.7,
+      "sic": "7373",
+      "sicDescription": "Services-Computer Integrated Systems Design",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "FAC",
+      "cik": "0002049662",
+      "name": "Factorial Energy Inc.",
+      "marketCap": 636976832,
+      "avgDollarVolume": 2927729.9499999997,
+      "sic": "3690",
+      "sicDescription": "Miscellaneous Electrical Machinery, Equipment & Supplies",
+      "sector": "Electrical & magnetic/optical media"
+    },
+    {
+      "ticker": "BCAR",
+      "cik": "0002065779",
+      "name": "D. Boral ARC Acquisition I Corp.",
+      "marketCap": 190344000,
+      "avgDollarVolume": 2872508.1,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "SMRT",
+      "cik": "0001837014",
+      "name": "SmartRent, Inc.",
+      "marketCap": 272088736,
+      "avgDollarVolume": 2784746.38,
+      "sic": "7373",
+      "sicDescription": "Services-Computer Integrated Systems Design",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "DCBO",
+      "cik": "0001829959",
+      "name": "Docebo Inc.",
+      "marketCap": 565906240,
+      "avgDollarVolume": 2758136.745,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "HCAT",
+      "cik": "0001636422",
+      "name": "Health Catalyst, Inc.",
+      "marketCap": 127836648,
+      "avgDollarVolume": 2726872.71,
+      "sic": "7370",
+      "sicDescription": "Services-Computer Programming, Data Processing, Etc.",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "BRAI",
+      "cik": "0002076975",
+      "name": "Braiin Ltd",
+      "marketCap": 1168520192,
+      "avgDollarVolume": 2556954.54,
+      "sic": "7374",
+      "sicDescription": "Services-Computer Processing & Data Preparation",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "HUYA",
+      "cik": "0001728190",
+      "name": "HUYA Inc.",
+      "marketCap": 558392640,
+      "avgDollarVolume": 2333021.1300000004,
+      "sic": "7370",
+      "sicDescription": "Services-Computer Programming, Data Processing, Etc.",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "MVIS",
+      "cik": "0000065770",
+      "name": "MICROVISION, INC.",
+      "marketCap": 79039832,
+      "avgDollarVolume": 2286530.2649999997,
+      "sic": "3679",
+      "sicDescription": "Electronic Components, NEC",
+      "sector": "Semiconductors & electronic components"
+    },
+    {
+      "ticker": "RDCM",
+      "cik": "0001016838",
+      "name": "RADCOM LTD",
+      "marketCap": 169057616,
+      "avgDollarVolume": 2250906.1999999997,
+      "sic": "3577",
+      "sicDescription": "Computer Peripheral Equipment, NEC",
+      "sector": "Computer & office equipment"
+    },
+    {
+      "ticker": "XTIA",
+      "cik": "0001529113",
+      "name": "XTI Aerospace, Inc.",
+      "marketCap": 58871016,
+      "avgDollarVolume": 2200173.66,
+      "sic": "7371",
+      "sicDescription": "Services-Computer Programming Services",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "RBBN",
+      "cik": "0001708055",
+      "name": "Ribbon Communications Inc.",
+      "marketCap": 382682016,
+      "avgDollarVolume": 1990901.9200000002,
+      "sic": "7373",
+      "sicDescription": "Services-Computer Integrated Systems Design",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "API",
+      "cik": "0001802883",
+      "name": "Agora, Inc.",
+      "marketCap": 377092032,
+      "avgDollarVolume": 1988914.7,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "FATN",
+      "cik": "0001993400",
+      "name": "Fatpipe Inc/UT",
+      "marketCap": 89342232,
+      "avgDollarVolume": 1973355.93,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "SOPH",
+      "cik": "0001840706",
+      "name": "SOPHiA GENETICS SA",
+      "marketCap": 646832512,
+      "avgDollarVolume": 1953421.02,
+      "sic": "7374",
+      "sicDescription": "Services-Computer Processing & Data Preparation",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "EGAN",
+      "cik": "0001066194",
+      "name": "EGAIN Corp",
+      "marketCap": 201209088,
+      "avgDollarVolume": 1933998.51,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "ECX",
+      "cik": "0001861974",
+      "name": "ECARX Holdings Inc.",
+      "marketCap": 432289984,
+      "avgDollarVolume": 1859059.4000000001,
+      "sic": "7373",
+      "sicDescription": "Services-Computer Integrated Systems Design",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "INSG",
+      "cik": "0001022652",
+      "name": "INSEEGO CORP.",
+      "marketCap": 89684656,
+      "avgDollarVolume": 1856120.64,
+      "sic": "3669",
+      "sicDescription": "Communications Equipment, NEC",
+      "sector": "Communications equipment"
+    },
+    {
+      "ticker": "TUYA",
+      "cik": "0001829118",
+      "name": "Tuya Inc.",
+      "marketCap": 1103599104,
+      "avgDollarVolume": 1833256.8,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "DMRC",
+      "cik": "0002119322",
+      "name": "Digimarc Corp",
+      "marketCap": 178135072,
+      "avgDollarVolume": 1813434.75,
+      "sic": "7373",
+      "sicDescription": "Services-Computer Integrated Systems Design",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "XNET",
+      "cik": "0001510593",
+      "name": "Xunlei Ltd",
+      "marketCap": 325907360,
+      "avgDollarVolume": 1783086.08,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "ABXXF",
+      "cik": "0001971975",
+      "name": "Abaxx Technologies Inc.",
+      "marketCap": 734606272,
+      "avgDollarVolume": 1764222.91,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "IDN",
+      "cik": "0001040896",
+      "name": "Intellicheck, Inc.",
+      "marketCap": 79587296,
+      "avgDollarVolume": 1759386.33,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "YALA",
+      "cik": "0001794350",
+      "name": "Yalla Group Ltd",
+      "marketCap": 832022848,
+      "avgDollarVolume": 1710417.6,
+      "sic": "7370",
+      "sicDescription": "Services-Computer Programming, Data Processing, Etc.",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "EVCM",
+      "cik": "0001853145",
+      "name": "EverCommerce Inc.",
+      "marketCap": 1929184512,
+      "avgDollarVolume": 1710181.2,
+      "sic": "7372",
+      "sicDescription": "Services-Prepackaged Software",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "MWC",
+      "cik": "0002083526",
+      "name": "Micware Co., Ltd.",
+      "marketCap": 83781376,
+      "avgDollarVolume": 1704042.8099999998,
+      "sic": "7371",
+      "sicDescription": "Services-Computer Programming Services",
+      "sector": "Software, IT & data-processing services"
+    },
+    {
+      "ticker": "CRNT",
+      "cik": "0001119769",
+      "name": "CERAGON NETWORKS LTD",
+      "marketCap": 200875072,
+      "avgDollarVolume": 1659855.8599999999,
+      "sic": "3663",
+      "sicDescription": "Radio & Tv Broadcasting & Communications Equipment",
+      "sector": "Communications equipment"
+    }
+  ]
+}
