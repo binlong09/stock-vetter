@@ -122,7 +122,20 @@ export {
   type ScanDeps,
   type PreparedFiling,
 } from './pipeline.js';
-export { computeRadarSignals, type WatchlistEntry, type RadarOptions } from './radar.js';
+export {
+  computeRadarSignals,
+  type WatchlistEntry,
+  type RadarOptions,
+  type InsiderStore,
+} from './radar.js';
+
+// Insider-buying clusters from Form 4 — the radar's bullish detector.
+export {
+  detectInsiderCluster,
+  groupPurchasesByIssuer,
+  type InsiderCluster,
+  type ClusterOptions,
+} from './insider.js';
 
 // Small-cap radar tuning: cap tiers, cap-relative 8-K severity, the
 // financing/listing forms that need no document fetch, and the two XBRL

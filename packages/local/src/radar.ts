@@ -17,8 +17,16 @@
 // Each signal carries a stable `key` so a daily run surfaces it exactly once;
 // the persistence layer treats an already-seen key as old.
 
-import { sweepFilings, listFilings, fetchEightK, fetchSeriesSet } from '@stock-vetter/core';
+import {
+  sweepFilings,
+  listFilings,
+  fetchEightK,
+  fetchSeriesSet,
+  fetchForm4Purchases,
+  type InsiderPurchase,
+} from '@stock-vetter/core';
 import type { RadarSignal } from '@stock-vetter/schema';
+import { detectInsiderCluster, groupPurchasesByIssuer } from './insider.js';
 import { FORENSIC_CONCEPTS } from './concepts.js';
 import { detectTrends } from './trends.js';
 import { computeAnnualFundamentals } from './ratios.js';
@@ -48,15 +56,49 @@ export type WatchlistEntry = {
   marketCap?: number | null;
   /** SEC SIC code, when classified. Carried for provenance, not used here. */
   sic?: string;
+  /** On the focus list — a name whose story you already know. */
+  focus?: boolean;
+};
+
+/**
+ * Where the insider-buying detector keeps its history.
+ *
+ * A cluster — three insiders buying across two weeks — is the thing worth
+ * reporting, and it cannot be computed from a single sweep, which only sees
+ * one day of Form 4s. So the sweep accumulates into a store and reads the
+ * trailing window back out. Optional: without one the detector still works,
+ * it just can only see clusters that fall entirely inside the sweep window.
+ */
+export type InsiderStore = {
+  /** Which of these Form 4 accessions have already been parsed. */
+  seen: (accessions: string[]) => Promise<Set<string>>;
+  /** Mark filings processed and record whatever purchases they contained. */
+  record: (
+    filings: Array<{ accession: string; cik: string; filingDate: string }>,
+    purchases: InsiderPurchase[],
+  ) => Promise<void>;
+  /** Purchases for these issuers with a trade date on or after `since`. */
+  recent: (ciks: string[], since: string) => Promise<InsiderPurchase[]>;
 };
 
 export type RadarOptions = {
   since: Date;
   until?: Date;
   onProgress?: (message: string) => void;
+  /** History for the insider-buying detector. Omit to run without one. */
+  insiderStore?: InsiderStore;
+  /**
+   * Days of Form 4 history the cluster detector considers. Two weeks is the
+   * default because it is long enough for a management team to act on the
+   * same information and short enough that unrelated buys don't accrete into
+   * a fake cluster.
+   */
+  insiderWindowDays?: number;
 };
 
 const PERIODIC_FORMS = ['8-K', '10-K', '10-Q'];
+/** EDGAR's form type for a statement of changes in beneficial ownership. */
+const FORM_4 = '4';
 
 /** 10-K / 10-Q (and their amendments) — the forms that carry fresh XBRL. */
 function isPeriodicReport(form: string): boolean {
@@ -77,6 +119,7 @@ export async function computeRadarSignals(
   const byCik = new Map(watchlist.map((w) => [w.cik.padStart(10, '0'), w]));
   const tierOf = (cik: string): CapTier => capTier(byCik.get(cik)?.marketCap);
   const capOf = (cik: string): number | null => byCik.get(cik)?.marketCap ?? null;
+  const focusOf = (cik: string): boolean => byCik.get(cik)?.focus === true;
 
   // A day whose index can't be fetched is NOT an empty day — surface it so the
   // caller can re-run rather than silently reporting "no signals".
@@ -86,7 +129,7 @@ export async function computeRadarSignals(
     // The index-only forms (S-3, 424B5, NT 10-Q, SC 13D…) cost nothing beyond
     // the same one-request-per-day index we already fetch, and at small-cap
     // scale they are the highest-yield tier of the whole radar.
-    forms: [...PERIODIC_FORMS, ...INDEX_ONLY_FORM_LIST],
+    forms: [...PERIODIC_FORMS, ...INDEX_ONLY_FORM_LIST, FORM_4],
     since: opts.since,
     until: opts.until,
     onDayError: (date, err) => {
@@ -117,7 +160,78 @@ export async function computeRadarSignals(
       headline: def.headline,
       detail: def.detail,
       marketCap: capOf(e.cik),
+      focus: focusOf(e.cik),
     });
+  }
+
+  // --- Form 4: open-market insider buying, the one bullish primary source ---
+  const form4Entries = entries.filter((e) => e.form.toUpperCase() === FORM_4);
+  if (form4Entries.length) {
+    const store = opts.insiderStore;
+    // Skip filings a previous run already parsed. Most Form 4s report a grant
+    // or an option exercise rather than a purchase, so without this the
+    // intraday re-sweeps would re-fetch the same documents to find nothing.
+    const already = store ? await store.seen(form4Entries.map((e) => e.accession)) : new Set<string>();
+    const todo = form4Entries.filter((e) => !already.has(e.accession));
+    log(`${form4Entries.length} Form 4s in the window (${todo.length} new to parse)`);
+
+    const fresh: InsiderPurchase[] = [];
+    const processed: Array<{ accession: string; cik: string; filingDate: string }> = [];
+    for (const e of todo) {
+      const entry = byCik.get(e.cik);
+      if (!entry) continue;
+      try {
+        const purchases = await fetchForm4Purchases({
+          cik: e.cik,
+          accession: e.accession,
+          filingDate: e.filingDate,
+          ticker: entry.ticker,
+        });
+        fresh.push(...purchases);
+        processed.push({ accession: e.accession, cik: e.cik, filingDate: e.filingDate });
+      } catch (err) {
+        log(`  Form 4 ${entry.ticker} ${e.accession} failed: ${(err as Error).message}`);
+      }
+    }
+    if (store && processed.length) await store.record(processed, fresh);
+
+    // The window is what makes a cluster visible, so read history back out and
+    // merge it with what this sweep just found (the store write above may not
+    // be visible to a read in the same transaction, and there may be no store
+    // at all).
+    const windowDays = opts.insiderWindowDays ?? 14;
+    const windowStart = new Date(Date.now() - windowDays * 86_400_000).toISOString().slice(0, 10);
+    const ciksWithActivity = [...new Set(form4Entries.map((e) => e.cik))];
+    const history = store ? await store.recent(ciksWithActivity, windowStart) : [];
+    const byKey = new Map<string, InsiderPurchase>();
+    for (const p of [...history, ...fresh]) {
+      if (p.transactionDate >= windowStart) byKey.set(p.key, p);
+    }
+
+    for (const [cik, purchases] of groupPurchasesByIssuer([...byKey.values()])) {
+      const entry = byCik.get(cik);
+      if (!entry) continue;
+      const cluster = detectInsiderCluster(purchases, { marketCap: entry.marketCap });
+      if (!cluster) continue;
+      signals.push({
+        // Keyed on the window's latest trade date, so a cluster that grows —
+        // a third insider joining next week — surfaces again as a new, louder
+        // signal rather than being silently deduped against the first two.
+        key: `${entry.ticker}:insider-buy:${cluster.lastDate}:${cluster.buyers}`,
+        ticker: entry.ticker,
+        cik,
+        accession: cluster.accession,
+        form: 'Form 4',
+        filingDate: cluster.filingDate,
+        kind: 'insider-buy',
+        severity: cluster.severity,
+        direction: 'bullish',
+        headline: cluster.headline,
+        detail: cluster.detail,
+        marketCap: entry.marketCap ?? null,
+        focus: entry.focus === true,
+      });
+    }
   }
 
   // --- 8-K material items: same-day, fully deterministic ---------------------
@@ -152,6 +266,7 @@ export async function computeRadarSignals(
           headline: `8-K Item ${item.number}: ${item.label}`,
           detail: verdict.note ? `${note} ${verdict.note}` : note,
           marketCap: capOf(e.cik),
+          focus: focusOf(e.cik),
         });
       }
     } catch (err) {
@@ -190,6 +305,7 @@ export async function computeRadarSignals(
       form: trig.form,
       filingDate: trig.filingDate,
       marketCap,
+      focus: focusOf(trig.cik),
     };
     try {
       const series = await fetchSeriesSet(trig.cik, FORENSIC_CONCEPTS);

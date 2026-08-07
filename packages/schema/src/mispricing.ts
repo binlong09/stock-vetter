@@ -241,6 +241,7 @@ export const RadarSignalKind = z.enum([
   'offering',
   'late-filing',
   'ownership',
+  'insider-buy',
 ]);
 export type RadarSignalKind = z.infer<typeof RadarSignalKind>;
 
@@ -278,6 +279,15 @@ export const RadarSignal = z.object({
    * know how small the name is before sizing anything.
    */
   marketCap: z.number().nullable().default(null),
+  /**
+   * Whether the ticker is on the focus list — the ~30-50 names whose story you
+   * already know. A signal you can act on today and a signal on a company you
+   * have never heard of are different objects, and the difference is not
+   * severity: an Item 3.01 on a focus name is a decision, the same item on a
+   * universe name is a research lead. Alerting, deep-dive queueing and the
+   * viewer all key off this.
+   */
+  focus: z.boolean().default(false),
 });
 export type RadarSignal = z.infer<typeof RadarSignal>;
 

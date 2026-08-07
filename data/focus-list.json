@@ -1,0 +1,5 @@
+{
+  "_doc": "The focus list: the ~30-50 small caps whose story you have actually read. Signals on these are separated in the digest, sorted first in the CLI and the viewer, and are the ONLY ones queued for a GPU deep-dive. Everything else in data/watchlist-smallcap.json is discovery — swept and surfaced, but reviewed weekly rather than acted on. Tickers must also be in the watchlist; the radar warns about any that aren't (pin them with `pnpm build-smallcap --pin=TICKER`). An empty list means 'no focus list': every signal is discovery and the deep-dive queue keeps its unfiltered behaviour.",
+  "_workflow": "Weekly: skim the universe signals, pick 2-3 names worth understanding, read their last 10-Q and share-count history, then promote them here. Intraday: act only on focus signals — you already know the story, so you can decide in minutes instead of reading an S-3 for a company you've never heard of.",
+  "tickers": []
+}

@@ -18,6 +18,8 @@ export interface RadarRow {
   detail: string;
   /** Market cap at the last universe rebuild; null for the legacy watchlist. */
   marketCap: number | null;
+  /** On the focus list at the time the signal was surfaced. */
+  focus: boolean;
   firstSeenAt: string;
   // The deep-dive job for this filing (jobs are keyed per accession, so several
   // signals on one filing share it). null when nothing has been queued yet.
@@ -36,7 +38,7 @@ export async function listRadarSignals(limit = 200): Promise<RadarRow[]> {
     const res = await db().execute({
       sql: `SELECT sr.key, sr.ticker, sr.cik, sr.accession, sr.form, sr.filing_date,
                    sr.kind, sr.severity, sr.direction, sr.headline, sr.detail,
-                   sr.market_cap, sr.first_seen_at,
+                   sr.market_cap, sr.focus, sr.first_seen_at,
                    j.status AS job_status, j.verdict, j.conviction
             FROM short_radar sr
             LEFT JOIN radar_jobs j ON j.accession = sr.accession
@@ -57,6 +59,7 @@ export async function listRadarSignals(limit = 200): Promise<RadarRow[]> {
       headline: String(r.headline),
       detail: r.detail == null ? '' : String(r.detail),
       marketCap: r.market_cap == null ? null : Number(r.market_cap),
+      focus: Number(r.focus ?? 0) === 1,
       firstSeenAt: String(r.first_seen_at),
       jobStatus: r.job_status == null ? null : String(r.job_status),
       verdict: r.verdict == null ? null : String(r.verdict),

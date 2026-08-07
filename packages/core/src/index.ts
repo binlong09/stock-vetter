@@ -117,6 +117,16 @@ export {
   type IndexEntry,
   type SweepOptions,
 } from './edgar-index.js';
+// Form 4 → open-market insider purchases. The radar's one bullish primary
+// source: an officer choosing to buy at a known price, as opposed to a
+// disclosure the company was compelled to make.
+export {
+  parseForm4,
+  fetchForm4Purchases,
+  submissionTextUrl,
+  type InsiderPurchase,
+} from './sec-form4.js';
+
 // Batched price/cap/liquidity screen — the market-data half of building a
 // small-cap universe (EDGAR supplies the other half).
 export { screenQuotes, type ScreenQuote, type ScreenOptions } from './market-screen.js';

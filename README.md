@@ -5,7 +5,7 @@ Four research tools that share one codebase:
 - **Stock Vetter** — type a ticker, get one decision card. Fetches the latest 10-K, DEF 14A proxy, 10-Q, SEC companyfacts, and current price; runs a three-pass primary-source value-investing checklist; computes a reverse DCF and historical valuation context; optionally folds in analyst-video or earnings-call analysis; and produces a verdict + 1–10 weighted score.
 - **Signal Tracker** — write a one-line investment thesis with explicit tripwires, then let a daily cron watch SEC filings, consensus estimates, and earnings calls for the events that would confirm or break it. You get an email only when a tripwire actually flips.
 - **Short-Side Scanner** — point a local GPU at the top ~2,000 US companies and read every 10-K, 10-Q, and 8-K they file, looking for the quantitative tells that precede a repricing downward. A local Qwen model does the bulk reading under a rigid schema with every claim quote-verified; a deterministic layer computes multi-quarter ratio trends straight from the companies' own XBRL; a gate then decides which ~15% of filings are worth the Claude API and your attention. Requires Ollama on a machine with a decent GPU.
-- **Radar** — the always-on, no-GPU tier of the scanner, pointed at **small-cap tech** ($50M–$2B, liquidity-filtered) rather than the mega caps that quant desks already read within seconds of the wire. It sweeps EDGAR several times a day for the deterministic catalysts that actually move a company this size: shelf registrations and takedowns, listing and late-filing notices, activist stakes, share-count expansion, months of cash left, and 8-K items scored *relative to market cap*. No model and no GPU — EDGAR plus arithmetic — and each hit is enqueued for the scanner's deep-dive tier.
+- **Radar** — the always-on, no-GPU tier of the scanner, pointed at **small-cap tech** ($50M–$2B, liquidity-filtered) rather than the mega caps that quant desks already read within seconds of the wire. It sweeps EDGAR several times a day for the deterministic catalysts that actually move a company this size: shelf registrations and takedowns, listing and late-filing notices, activist stakes, open-market insider buying clusters, share-count expansion, months of cash left, and 8-K items scored *relative to market cap*. No model and no GPU — EDGAR plus arithmetic — and each hit is enqueued for the scanner's deep-dive tier.
 
 All four run as a CLI on your laptop (or a scheduled runner). A small read-only Next.js viewer (`apps/web/`, on Vercel free tier) reads the results on your phone. The pipelines are **not** deployed — only the viewer.
 
@@ -124,10 +124,12 @@ pnpm build-smallcap --resume                        # continue from the caches
 pnpm radar                                   # since yesterday (the cron mode)
 pnpm radar --days=30                         # a wider backfill window
 pnpm radar --since=2026-07-01
+pnpm radar --direction=bullish               # green flags only
+pnpm radar --focus-only                      # only names you already know
 pnpm radar --watchlist=data/watchlist.json   # the old large-cap list
 pnpm radar --no-persist                      # compute + print only
 
-# Drain the deep-dive queue on the GPU box (radar enqueues one job per filing)
+# Drain the deep-dive queue on the GPU box (focus-list filings only)
 pnpm radar-worker
 ```
 
@@ -137,6 +139,21 @@ sweep four times through the US session plus an overnight backstop;
 `.github/workflows/smallcap-universe.yml` rebuilds and commits the watchlist
 weekly. See [Radar — methodology](#radar--methodology) for what it looks for
 and why.
+
+**The two-tier workflow.** `data/watchlist-smallcap.json` (~400 names) is the
+*discovery* funnel; `data/focus-list.json` (~30–50) is what you actually trade.
+Signals on focus names sort first, get their own section in the digest email,
+and are the only ones queued for a GPU deep-dive. Everything else is a research
+lead. In practice:
+
+- **Weekly** — skim the universe signals; pick 2–3 names worth understanding;
+  read their last 10-Q and share-count history; promote them to the focus list.
+- **Intraday** — act only on focus signals. You already know the story, so a
+  424B5 or an Item 3.01 is a decision you can make in minutes rather than a
+  company you have to learn from scratch while the move happens.
+
+The filters are views, never writes: `--direction=bullish` changes what you
+read and what the digest emails, and the sweep still persists everything.
 
 ### Signal Tracker
 
@@ -287,6 +304,7 @@ survival, so the radar adds:
 | `ownership` | SC 13D (activist, not the passive 13G), SC TO-T, SC 14D9 | none |
 | `dilution` | diluted share count up ≥10% QoQ or ≥25% YoY | one companyfacts request |
 | `runway` | cash ÷ trailing free-cash burn, under 6 quarters | shares that request |
+| `insider-buy` | Form 4 open-market purchase clusters | one submission fetch per Form 4 |
 
 The financing cycle reads end to end: shelf registered (S-3) → takedown pricing
 (424B5) → share count jumps (`dilution`) → runway resets. And `runway` is what
@@ -308,6 +326,38 @@ terms. Every signal carries `bearish` / `bullish` / `ambiguous`, and the
 viewer marks it. Note that "bearish" on a small cap is frequently *not* a short
 — borrow is thin and squeezes are violent — it is more often a reason not to be
 long.
+
+**The green flags.** Adding a direction column didn't by itself make the feed
+two-sided: the detector set was inherited from a short-side scanner and, once
+counted, was ~20 bearish signals to 3 bullish. `insider-buy` is the correction,
+and it is the one genuinely bullish *primary source* EDGAR offers. Everything
+else the radar reads is a disclosure a company was compelled to make; a Form 4
+coded `P` is an officer choosing to put their own money in at a known price.
+
+Transaction code is the whole detector. Most Form 4s are noise for this purpose
+— `A` is a grant, `M`/`X` are option exercises, `F` is tax withholding, `S` is a
+sale — and a detector that counted "insider acquired shares" would fire on every
+routine RSU vest in the market. Only `P` counts. Scoring is by concentration:
+how many distinct buyers (three inside two weeks is a management team that saw
+the same thing, one repeat buyer is a person averaging in), whether the CEO or
+CFO participated, and the dollars both absolutely and as a fraction of market
+cap. A cluster needs a window wider than one sweep, so purchases accumulate in
+Turso and the detector reads the trailing 14 days back out.
+
+One caveat worth being honest about: the radar detects *disclosure events*, not
+mispricing. A Form 4 is public the instant it hits EDGAR. The edge at this cap
+isn't information asymmetry — it's that nobody is watching these several hundred
+names, and that a combination (insider cluster plus a runway extension plus a
+revenue inflection) is a pattern no single-signal screener surfaces. That's a
+coverage edge, not a secrecy one, and it is worth sizing positions accordingly.
+
+**Focus list.** ~400 names is the right size for *discovery* and much too large
+to trade: for a short-term catalyst you need the story before the filing lands.
+So `data/focus-list.json` names the ~30–50 you have actually read, and that flag
+is stamped on every signal. Focus signals sort first, get their own digest
+section, and are the only ones queued for a deep-dive — which is also what keeps
+the GPU queue finite, since a few hundred small caps generate more high-severity
+filings per day than one box can read.
 
 **Cadence follows the trade.** The trade in a small cap is same-day: a 424B5
 prices overnight and the stock opens down; an Item 3.01 listing notice hits
@@ -333,6 +383,7 @@ stock-vetter/
 │   ├── tickers.json               # tickers Stock Vetter analyzes
 │   ├── theses.json                # theses + tripwires the Signal Tracker watches
 │   ├── watchlist-smallcap.json    # small-cap tech universe the radar sweeps (pnpm build-smallcap)
+│   ├── focus-list.json            # the ~30-50 names you actually trade
 │   └── watchlist.json             # legacy large-cap radar watchlist
 ├── prompts/                # every LLM prompt as a .md file (never inlined in code)
 ├── fixtures/<TICKER>/      # per-ticker analysis output (cards, SEC sections, DCF)

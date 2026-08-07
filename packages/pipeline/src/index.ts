@@ -27,6 +27,7 @@ export {
   pushTicker,
   pushTickerFromFixtures,
   upsertRadarSignals,
+  insiderStore,
   enqueueRadarJobs,
   enqueueMissingRadarJobs,
   claimNextRadarJob,
