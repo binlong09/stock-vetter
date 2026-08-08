@@ -453,6 +453,45 @@ export async function reanalyzeDoneRadarJobs(accessions?: string[]): Promise<num
   return res.rowsAffected;
 }
 
+export type RadarCompany = {
+  cik: string;
+  ticker: string;
+  name: string;
+  description: string | null;
+};
+
+/**
+ * Refresh company identity (name + short description) for the feed. Called by
+ * the sweep with the whole watchlist. COALESCE on description so a watchlist
+ * built before descriptions existed — or a rebuild whose Yahoo profile fetch
+ * failed for a name — never wipes a description a previous run stored.
+ */
+export async function upsertRadarCompanies(rows: RadarCompany[]): Promise<void> {
+  if (!rows.length || !isTursoConfigured()) return;
+  await migrate();
+  const client = getTursoClient();
+  if (!client) return;
+  const now = new Date().toISOString();
+  // Batched: the watchlist is ~400 rows and this runs on every sweep — one
+  // round trip per row would dominate the sweep's Turso time.
+  const chunk = 100;
+  for (let i = 0; i < rows.length; i += chunk) {
+    await client.batch(
+      rows.slice(i, i + chunk).map((r) => ({
+        sql: `INSERT INTO radar_companies (cik, ticker, name, description, updated_at)
+              VALUES (?, ?, ?, ?, ?)
+              ON CONFLICT(cik) DO UPDATE SET
+                ticker = excluded.ticker,
+                name = excluded.name,
+                description = COALESCE(excluded.description, radar_companies.description),
+                updated_at = excluded.updated_at`,
+        args: [r.cik, r.ticker, r.name, r.description, now],
+      })),
+      'write',
+    );
+  }
+}
+
 /** Mark a claimed job failed with an error message. */
 export async function failRadarJob(accession: string, error: string): Promise<void> {
   const client = getTursoClient();

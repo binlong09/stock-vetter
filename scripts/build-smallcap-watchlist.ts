@@ -43,6 +43,7 @@ import { dirname } from 'node:path';
 import {
   allTickerCiks,
   screenQuotes,
+  fetchBusinessSummary,
   fetchCompanyProfile,
   techSicLabel,
   parseSicRanges,
@@ -81,6 +82,7 @@ const PINNED = list('pin');
 
 const QUOTE_CACHE = '.cache/smallcap-quotes.json';
 const SIC_CACHE = '.cache/smallcap-sic.json';
+const DESC_CACHE = '.cache/smallcap-desc.json';
 
 type SicRow = { cik: string; name: string; sic: string; sicDescription: string; exchanges: string[] };
 
@@ -208,17 +210,48 @@ async function main(): Promise<void> {
       return {
         ticker: q.ticker,
         cik,
-        name: profile?.name ?? q.name ?? '',
+        // Prefer Yahoo's name: it's properly cased ("PAR Technology Corp"),
+        // where EDGAR's registrant name is shouted legal boilerplate
+        // ("PAR TECHNOLOGY CORP /DE/"). The feed displays this string.
+        name: q.name ?? profile?.name ?? '',
         marketCap: q.marketCap,
         avgDollarVolume: q.avgDollarVolume,
         sic: profile?.sic ?? '',
         sicDescription: profile?.sicDescription ?? '',
         sector: label ?? (isPinned(q.ticker) ? 'pinned' : 'included by --include-sic'),
+        description: null as string | null,
       };
     })
     .filter((e): e is NonNullable<typeof e> => e != null)
     .sort((a, b) => (b.avgDollarVolume ?? 0) - (a.avgDollarVolume ?? 0))
     .slice(0, Number.isFinite(MAX_NAMES) ? MAX_NAMES : undefined);
+
+  // --- 4. business descriptions, over the final list only -------------------
+  // One quoteSummary request per surviving name — the same order of traffic as
+  // the SIC stage. A name whose profile fails stays description-less (the feed
+  // falls back to the SIC industry label) rather than dropping out: identity
+  // is a nicety, membership is the product.
+  type DescRow = { ticker: string; description: string | null };
+  const descCache = new Map((await loadCache<DescRow>(DESC_CACHE)).map((r) => [r.ticker, r]));
+  const descRows: DescRow[] = [...descCache.values()];
+  let described = 0;
+  for (const e of entries) {
+    described++;
+    if (!descCache.has(e.ticker)) {
+      try {
+        const row: DescRow = { ticker: e.ticker, description: await fetchBusinessSummary(e.ticker) };
+        descCache.set(e.ticker, row);
+        descRows.push(row);
+      } catch {
+        // Transport blip: leave it out of the cache so --resume retries it.
+      }
+      if (described % 50 === 0) await saveCache(DESC_CACHE, descRows);
+    }
+    e.description = descCache.get(e.ticker)?.description ?? null;
+    process.stdout.write(`\r  described ${described}/${entries.length}`);
+  }
+  await saveCache(DESC_CACHE, descRows);
+  process.stdout.write('\n');
 
   await mkdir(dirname(OUT), { recursive: true });
   await writeFile(

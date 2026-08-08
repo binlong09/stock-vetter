@@ -28,6 +28,27 @@ export interface RadarRow {
   conviction: number | null;
   /** The comparison model's verdict, when a side-by-side ran. */
   altVerdict: string | null;
+  /** Full company name, when the sweep has stored one for this CIK. */
+  companyName: string | null;
+  /** Short business description (or SIC industry label as fallback). */
+  companyDescription: string | null;
+}
+
+// Company identity rows, keyed by CIK. Queried separately from the feed —
+// never joined — so a database the sweep hasn't migrated yet (no
+// radar_companies table) costs the names, not the feed.
+async function companyByCik(): Promise<Map<string, { name: string; description: string | null }>> {
+  try {
+    const res = await db().execute(`SELECT cik, name, description FROM radar_companies`);
+    return new Map(
+      res.rows.map((r) => [
+        String(r.cik),
+        { name: String(r.name), description: r.description == null ? null : String(r.description) },
+      ]),
+    );
+  } catch {
+    return new Map();
+  }
 }
 
 /**
@@ -37,6 +58,7 @@ export interface RadarRow {
  */
 export async function listRadarSignals(limit = 200): Promise<RadarRow[]> {
   try {
+    const companies = await companyByCik();
     const res = await db().execute({
       sql: `SELECT sr.key, sr.ticker, sr.cik, sr.accession, sr.form, sr.filing_date,
                    sr.kind, sr.severity, sr.direction, sr.headline, sr.detail,
@@ -49,6 +71,8 @@ export async function listRadarSignals(limit = 200): Promise<RadarRow[]> {
       args: [limit],
     });
     return res.rows.map((r) => ({
+      companyName: companies.get(String(r.cik))?.name ?? null,
+      companyDescription: companies.get(String(r.cik))?.description ?? null,
       key: String(r.key),
       ticker: String(r.ticker),
       cik: String(r.cik),
@@ -76,6 +100,8 @@ export async function listRadarSignals(limit = 200): Promise<RadarRow[]> {
 export interface RadarAssessment {
   ticker: string;
   cik: string;
+  companyName: string | null;
+  companyDescription: string | null;
   form: string;
   filingDate: string;
   status: string;
@@ -137,9 +163,31 @@ export async function getRadarAssessment(accession: string): Promise<RadarAssess
       }
     };
     const assessment = parse(r.assessment_json);
+    // Same isolation as the feed: a missing radar_companies table (sweep not
+    // yet migrated) costs the name line, never the assessment.
+    let company: { name: string; description: string | null } | null = null;
+    if (r.cik != null) {
+      try {
+        const c = await db().execute({
+          sql: `SELECT name, description FROM radar_companies WHERE cik = ? LIMIT 1`,
+          args: [String(r.cik)],
+        });
+        const row = c.rows[0];
+        if (row) {
+          company = {
+            name: String(row.name),
+            description: row.description == null ? null : String(row.description),
+          };
+        }
+      } catch {
+        company = null;
+      }
+    }
     return {
       ticker: String(r.ticker),
       cik: r.cik == null ? '0' : String(r.cik),
+      companyName: company?.name ?? null,
+      companyDescription: company?.description ?? null,
       form: String(r.form),
       filingDate: String(r.filing_date),
       status: String(r.status),

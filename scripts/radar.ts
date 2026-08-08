@@ -35,6 +35,7 @@ import { computeRadarSignals, capTier, type WatchlistEntry } from '@stock-vetter
 import { isTursoConfigured, isMailerConfigured, sendEmail } from '@stock-vetter/core';
 import {
   upsertRadarSignals,
+  upsertRadarCompanies,
   enqueueMissingRadarJobs,
   listAutoFocusTickers,
   insiderStore,
@@ -314,6 +315,24 @@ async function main(): Promise<void> {
     const newSignals = await upsertRadarSignals(signals);
     newCount = newSignals.length;
     process.stderr.write(`persisted: ${newCount} new of ${signals.length} to Turso\n`);
+    // Company identity for the feed: full name + short description per ticker,
+    // so a reader who has never heard of the registrant doesn't have to leave
+    // the page to learn what it is. Descriptions come from the watchlist
+    // build; until it's rebuilt with them, the SIC industry label stands in.
+    await upsertRadarCompanies(
+      watchlist
+        .filter((w) => w.cik)
+        .map((w) => ({
+          cik: w.cik,
+          ticker: w.ticker.toUpperCase(),
+          name: w.name || w.ticker.toUpperCase(),
+          description:
+            w.description ??
+            (w.sicDescription
+              ? `${w.sicDescription}${w.sector ? ` · ${w.sector}` : ''}`
+              : null),
+        })),
+    );
     const digestable = applyView(newSignals, view);
     if (digestable.length) await emailDigest(digestable);
     // Auto-queue a deep-dive per flagged filing that doesn't already have one

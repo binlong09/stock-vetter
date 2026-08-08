@@ -9,6 +9,8 @@ import type { RadarRow } from '@/radar-queries';
 
 export type Suggestion = {
   ticker: string;
+  /** Full company name, when the sweep has stored one. */
+  name: string | null;
   /** How many signals this ticker has in the current view. */
   count: number;
   marketCap: number | null;
@@ -34,8 +36,9 @@ export function suggest(rows: RadarRow[], query: string, limit = 8): Suggestion[
     if (cur) {
       cur.count += 1;
       cur.focus = cur.focus || r.focus;
+      cur.name = cur.name ?? r.companyName;
     } else {
-      byTicker.set(t, { ticker: t, count: 1, marketCap: r.marketCap, focus: r.focus });
+      byTicker.set(t, { ticker: t, name: r.companyName, count: 1, marketCap: r.marketCap, focus: r.focus });
     }
   }
   return [...byTicker.values()]

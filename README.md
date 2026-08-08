@@ -119,7 +119,15 @@ pnpm build-smallcap --min-dollar-volume=2e6         # stricter tradability floor
 pnpm build-smallcap --include-sic=4813,8731         # widen the sector set
 pnpm build-smallcap --pin=RKLB,SPCX                 # always keep these names
 pnpm build-smallcap --resume                        # continue from the caches
+```
 
+The build also fetches each name's full company name and a short business
+description (Yahoo assetProfile, cached like the other stages). The sweep
+pushes those to Turso so the `/radar` feed and detail pages can say what each
+unfamiliar ticker actually is; until the watchlist is rebuilt with
+descriptions, the SIC industry label stands in.
+
+```bash
 # Sweep it
 pnpm radar                                   # since yesterday (the cron mode)
 pnpm radar --days=30                         # a wider backfill window

@@ -57,6 +57,12 @@ export type WatchlistEntry = {
   marketCap?: number | null;
   /** SEC SIC code, when classified. Carried for provenance, not used here. */
   sic?: string;
+  /** SEC SIC industry label, e.g. "Semiconductors & Related Devices". */
+  sicDescription?: string;
+  /** Coarse tech-sector bucket from the universe builder. */
+  sector?: string;
+  /** Short business description (first sentences of Yahoo's assetProfile). */
+  description?: string | null;
   /** On the focus list — a name whose story you already know. */
   focus?: boolean;
 };

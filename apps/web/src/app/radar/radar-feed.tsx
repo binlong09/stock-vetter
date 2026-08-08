@@ -118,7 +118,7 @@ function SignalCard({ s }: { s: RadarRow }) {
       className="block rounded-lg border border-slate-200 bg-white px-3.5 py-3 hover:border-slate-300"
     >
       <div className="flex items-center justify-between gap-3">
-        <span className="flex items-baseline gap-1.5">
+        <span className="flex min-w-0 items-baseline gap-1.5">
           <span className={`text-[11px] ${dir.cls}`} title={dir.title}>
             {dir.mark}
           </span>
@@ -128,7 +128,15 @@ function SignalCard({ s }: { s: RadarRow }) {
               ★
             </span>
           ) : null}
-          {cap ? <span className="text-[11px] text-slate-400">{cap}</span> : null}
+          {s.companyName ? (
+            <span
+              className="truncate text-[11px] text-slate-500"
+              title={s.companyDescription ?? s.companyName}
+            >
+              {s.companyName}
+            </span>
+          ) : null}
+          {cap ? <span className="shrink-0 text-[11px] text-slate-400">{cap}</span> : null}
         </span>
         <span
           className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium ${SEV_PILL[s.severity] ?? SEV_PILL.low}`}
@@ -137,6 +145,9 @@ function SignalCard({ s }: { s: RadarRow }) {
         </span>
       </div>
       <p className="mt-1 text-sm text-slate-700">{s.headline}</p>
+      {s.companyDescription ? (
+        <p className="mt-0.5 line-clamp-2 text-xs text-slate-400">{s.companyDescription}</p>
+      ) : null}
       <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-400">
         <span>{s.form}</span>
         <span>{KIND_LABEL[s.kind] ?? s.kind}</span>
@@ -278,10 +289,13 @@ export function RadarFeed({ rows, totalCount }: { rows: RadarRow[]; totalCount: 
                 >
                   <span className="font-mono font-medium text-slate-900">{s.ticker}</span>
                   {s.focus ? <span className="text-[11px] text-amber-500">★</span> : null}
-                  {capLabel(s.marketCap) ? (
-                    <span className="text-[11px] text-slate-400">{capLabel(s.marketCap)}</span>
+                  {s.name ? (
+                    <span className="min-w-0 truncate text-[11px] text-slate-500">{s.name}</span>
                   ) : null}
-                  <span className="ml-auto text-[11px] text-slate-400">
+                  {capLabel(s.marketCap) ? (
+                    <span className="shrink-0 text-[11px] text-slate-400">{capLabel(s.marketCap)}</span>
+                  ) : null}
+                  <span className="ml-auto shrink-0 text-[11px] text-slate-400">
                     {s.count} signal{s.count === 1 ? '' : 's'}
                   </span>
                 </button>

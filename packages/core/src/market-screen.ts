@@ -109,3 +109,53 @@ export async function screenQuotes(
   }
   return out;
 }
+
+// --- business descriptions ---------------------------------------------------
+
+// Legal-suffix and other abbreviations whose trailing period is NOT a sentence
+// boundary. Without this, "PAR Technology Corp. provides point-of-sale…" would
+// be cut after "Corp." and every description would be a company name.
+const NON_TERMINAL =
+  /\b(?:Inc|Corp|Co|Ltd|LLC|LP|L\.P|PLC|plc|S\.A|N\.V|A\.G|Pte|Pty|U\.S|U\.K|No|vs|etc|approx|f\/k\/a|d\/b\/a)\.$/;
+
+/**
+ * First sentence or two of a business summary, bounded in length.
+ *
+ * Yahoo's `longBusinessSummary` runs to a full paragraph — products, segments,
+ * founding year, headquarters. The feed needs the first clause of that: what
+ * the company actually does. Cutting at sentence boundaries (skipping the
+ * abbreviation traps above) keeps the result readable; the hard length cap
+ * keeps a run-on first sentence from swallowing a card.
+ */
+export function trimBusinessSummary(text: string | null | undefined, maxLen = 300): string | null {
+  const clean = (text ?? '').replace(/\s+/g, ' ').trim();
+  if (!clean) return null;
+  const sentences: string[] = [];
+  let start = 0;
+  for (let i = 0; i < clean.length && sentences.length < 2; i++) {
+    const ch = clean[i]!;
+    if (ch !== '.' && ch !== '!' && ch !== '?') continue;
+    if (i + 1 < clean.length && clean[i + 1] !== ' ') continue;
+    const candidate = clean.slice(start, i + 1).trim();
+    if (ch === '.' && NON_TERMINAL.test(candidate)) continue;
+    const joined = sentences.length ? `${sentences.join(' ')} ${candidate}` : candidate;
+    if (sentences.length && joined.length > maxLen) break;
+    sentences.push(candidate);
+    start = i + 2;
+  }
+  const s = sentences.length ? sentences.join(' ') : clean;
+  return s.length > maxLen ? `${s.slice(0, maxLen - 1).trimEnd()}…` : s;
+}
+
+/**
+ * The company's business summary from Yahoo's assetProfile, already trimmed.
+ * One request per symbol — universe-build cadence, not sweep cadence. Returns
+ * null for symbols Yahoo has no profile for; throws on transport errors so the
+ * caller's cache/retry logic can tell "no profile" from "network blip".
+ */
+export async function fetchBusinessSummary(symbol: string): Promise<string | null> {
+  const res = (await yahooFinance.quoteSummary(symbol, { modules: ['assetProfile'] })) as {
+    assetProfile?: { longBusinessSummary?: string };
+  };
+  return trimBusinessSummary(res.assetProfile?.longBusinessSummary);
+}
