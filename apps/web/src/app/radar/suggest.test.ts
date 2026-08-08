@@ -25,6 +25,8 @@ function row(ticker: string, over: Partial<RadarRow> = {}): RadarRow {
     verdict: null,
     conviction: null,
     altVerdict: null,
+    companyName: null,
+    companyDescription: null,
     ...over,
   };
 }
@@ -77,6 +79,14 @@ test('an empty or unmatched query offers nothing', () => {
 
 test('the suggestion list is capped', () => {
   assert.equal(suggest(rows, 'T', 2).length, 2);
+});
+
+test('the company name rides along, from whichever signal has one', () => {
+  // Rows written before the companies table existed have a null name; the
+  // suggestion should surface the name as soon as ANY of the ticker's rows
+  // carries it, not only when the first-seen row does.
+  const mixed = [row('NAMD'), row('NAMD', { companyName: 'Named Technologies Corp' })];
+  assert.equal(suggest(mixed, 'NAMD')[0]!.name, 'Named Technologies Corp');
 });
 
 test('a ticker on the focus list anywhere marks the whole suggestion', () => {

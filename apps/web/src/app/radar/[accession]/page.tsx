@@ -50,10 +50,17 @@ export default async function RadarDetailPage({ params }: { params: Promise<{ ac
       </Link>
       <div className="mt-2 flex items-baseline justify-between gap-3">
         <h1 className="text-base font-semibold text-slate-900">
-          {job.ticker} <span className="font-normal text-slate-500">{job.form}</span>
+          {job.ticker}{' '}
+          {job.companyName ? (
+            <span className="font-normal text-slate-600">{job.companyName}</span>
+          ) : null}{' '}
+          <span className="font-normal text-slate-500">{job.form}</span>
         </h1>
         {job.verdict ? <VerdictChip verdict={job.verdict} conviction={job.conviction} /> : null}
       </div>
+      {job.companyDescription ? (
+        <p className="mt-1 text-xs text-slate-500">{job.companyDescription}</p>
+      ) : null}
       <div className="mt-1 flex flex-wrap items-center gap-x-3 text-[11px] text-slate-400">
         <span>filed {isoDate(job.filingDate)}</span>
         {job.triageScore != null ? <span>triage {job.triageScore}</span> : null}

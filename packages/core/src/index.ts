@@ -129,7 +129,13 @@ export {
 
 // Batched price/cap/liquidity screen — the market-data half of building a
 // small-cap universe (EDGAR supplies the other half).
-export { screenQuotes, type ScreenQuote, type ScreenOptions } from './market-screen.js';
+export {
+  screenQuotes,
+  fetchBusinessSummary,
+  trimBusinessSummary,
+  type ScreenQuote,
+  type ScreenOptions,
+} from './market-screen.js';
 
 // DeepSeek routing helpers — the adapter itself is wired inside llm.ts; these
 // are exported for the worker's compare-model resolution.
