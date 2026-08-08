@@ -427,8 +427,12 @@ export async function requeueFailedRadarJobs(): Promise<number> {
 /** Reset completed jobs to `pending` so the worker re-runs them under the
  *  current pipeline — e.g. after the synthesis frame changed. Clears the prior
  *  result (verdict, conviction, assessment, triage) so the re-run starts clean.
- *  With `accessions`, only those done jobs; otherwise every done job. Returns the
- *  count reset. */
+ *  Naming `accessions` resets those jobs whether they finished `done` or
+ *  `failed` — an explicitly named job should re-run, full stop; a silent
+ *  "0 reset" on a failed job is a trap. The blanket (no-args) form stays
+ *  done-only, because resurrecting every failure indiscriminately is what
+ *  requeueFailedRadarJobs is for and shouldn't happen as a side effect.
+ *  Returns the count reset. */
 export async function reanalyzeDoneRadarJobs(accessions?: string[]): Promise<number> {
   if (!isTursoConfigured()) return 0;
   await migrate();
@@ -440,7 +444,7 @@ export async function reanalyzeDoneRadarJobs(accessions?: string[]): Promise<num
   if (accessions && accessions.length) {
     const placeholders = accessions.map(() => '?').join(',');
     const res = await client.execute({
-      sql: `UPDATE radar_jobs SET ${clear} WHERE status='done' AND accession IN (${placeholders})`,
+      sql: `UPDATE radar_jobs SET ${clear} WHERE status IN ('done','failed') AND accession IN (${placeholders})`,
       args: accessions,
     });
     return res.rowsAffected;

@@ -172,13 +172,17 @@ async function main(): Promise<void> {
     const n = await requeueFailedRadarJobs();
     err(`requeued ${n} failed job(s)`);
   }
-  // Re-run already-completed jobs under the current pipeline. `--reanalyze`
-  // resets every done job; `--reanalyze=ACC1,ACC2` only those accessions.
+  // Re-run jobs under the current pipeline. Bare `--reanalyze` resets every
+  // done job; `--reanalyze=ACC1,ACC2` resets those accessions whether they
+  // finished done or failed.
   const reanalyze = arg('reanalyze');
   if (reanalyze != null) {
     const accs = reanalyze === 'true' ? undefined : reanalyze.split(',').map((s) => s.trim()).filter(Boolean);
     const n = await reanalyzeDoneRadarJobs(accs);
-    err(`reset ${n} done job(s) to pending for re-analysis`);
+    err(`reset ${n} job(s) to pending for re-analysis`);
+    if (accs && n < accs.length) {
+      err(`  ⚠ ${accs.length - n} accession(s) matched no done/failed job — check for typos or pending/running status`);
+    }
   }
   const synthModel = arg('model') ?? process.env.RADAR_SYNTHESIS_MODEL ?? 'anthropic default';
   const compare = resolveCompareConfig(arg('model') ?? process.env.RADAR_SYNTHESIS_MODEL);
