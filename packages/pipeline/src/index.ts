@@ -30,6 +30,7 @@ export {
   insiderStore,
   enqueueRadarJobs,
   enqueueMissingRadarJobs,
+  listAutoFocusTickers,
   claimNextRadarJob,
   completeRadarJob,
   requeueRadarJob,

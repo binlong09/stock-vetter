@@ -2,16 +2,27 @@ import Anthropic from '@anthropic-ai/sdk';
 import type { Message, MessageCreateParamsNonStreaming } from '@anthropic-ai/sdk/resources/messages';
 import { z } from 'zod';
 import { LLMValidationError, PipelineError } from './errors.js';
+import { deepseekChat, isDeepSeekModel } from './deepseek.js';
 
 const DEFAULT_MODEL = 'claude-sonnet-4-6';
 
 // Per-model pricing (USD per million tokens). Cache-write is 1.25× input;
 // cache-read is 0.10× input. Both assume the 5-minute TTL cache.
 type Pricing = { input: number; output: number; cacheWrite: number; cacheRead: number };
-const PRICING: Record<string, Pricing> = {
+// Exported so a test can assert every routable model has an entry — the
+// fallback below silently prices unknown models at Sonnet rates, which would
+// make a cheap model look expensive (or vice versa) in every cost log.
+export const PRICING: Record<string, Pricing> = {
   'claude-opus-4-8': { input: 5.0, output: 25.0, cacheWrite: 6.25, cacheRead: 0.50 },
   'claude-sonnet-4-6': { input: 3.0, output: 15.0, cacheWrite: 3.75, cacheRead: 0.30 },
   'claude-haiku-4-5-20251001': { input: 1.0, output: 5.0, cacheWrite: 1.25, cacheRead: 0.10 },
+  // DeepSeek V4 Pro via the OpenAI-compat adapter (deepseek.ts). Rates as of
+  // Aug 2026: $0.435/M input (cache miss), $0.87/M output, $0.003625/M cache
+  // hit. No write premium — a miss IS the write — so cacheWrite mirrors input
+  // and the adapter always reports zero write tokens.
+  'deepseek-chat': { input: 0.435, output: 0.87, cacheWrite: 0.435, cacheRead: 0.003625 },
+  'deepseek-reasoner': { input: 0.435, output: 0.87, cacheWrite: 0.435, cacheRead: 0.003625 },
+  'deepseek-v4-pro': { input: 0.435, output: 0.87, cacheWrite: 0.435, cacheRead: 0.003625 },
 };
 // 1-hour cache writes are billed at 2x base input (vs 1.25x for the 5-minute
 // `cacheWrite` rate above), so they're priced separately from the breakdown.
@@ -471,16 +482,20 @@ export async function llmCallWithToolsJson<T>(opts: {
     // mid-investigation with nothing to show.
     const lastChance = iteration === maxIterations - 1;
     rollConversationCache(messages);
-    const resp = await callWithRetry(
-      {
-        model,
-        max_tokens: opts.maxTokens ?? 8192,
-        system: buildContentBlocks(opts.systemPrompt),
-        messages,
-        tools: lastChance ? [submitTool] : [...toAnthropicTools(opts.tools), submitTool],
-      },
-      `${opts.stage}-i${iteration}`,
-    );
+    const request = {
+      model,
+      max_tokens: opts.maxTokens ?? 8192,
+      system: buildContentBlocks(opts.systemPrompt),
+      messages,
+      tools: lastChance ? [submitTool] : [...toAnthropicTools(opts.tools), submitTool],
+    };
+    // deepseek-* models route through the OpenAI-compat adapter. It returns
+    // Anthropic-shaped content blocks and usage, so everything below stays
+    // provider-blind; the cast is structural, and safe because this loop only
+    // reads `content` and `usage`.
+    const resp = isDeepSeekModel(model)
+      ? ((await deepseekChat(request, `${opts.stage}-i${iteration}`)) as unknown as Message)
+      : await callWithRetry(request, `${opts.stage}-i${iteration}`);
 
     const u = resp.usage as {
       cache_creation_input_tokens?: number;

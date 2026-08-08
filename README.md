@@ -140,20 +140,42 @@ sweep four times through the US session plus an overnight backstop;
 weekly. See [Radar — methodology](#radar--methodology) for what it looks for
 and why.
 
-**The two-tier workflow.** `data/watchlist-smallcap.json` (~400 names) is the
-*discovery* funnel; `data/focus-list.json` (~30–50) is what you actually trade.
-Signals on focus names sort first, get their own section in the digest email,
-and are the only ones queued for a GPU deep-dive. Everything else is a research
-lead. In practice:
+**The two-tier workflow.** `data/watchlist-smallcap.json` (a few hundred names)
+is the *discovery* funnel; the FOCUS list is what you actually act on. Focus is
+manual entries in `data/focus-list.json` **∪ auto-focus**: every ticker a
+deep-dive flagged `mispriced-long` in the last ~two quarters is promoted
+automatically. That closes the discovery loop for a universe of companies you
+have never heard of — focus membership is earned by a verdict, not curated by
+familiarity. Focus signals sort first and get their own digest section.
 
-- **Weekly** — skim the universe signals; pick 2–3 names worth understanding;
-  read their last 10-Q and share-count history; promote them to the focus list.
-- **Intraday** — act only on focus signals. You already know the story, so a
-  424B5 or an Item 3.01 is a decision you can make in minutes rather than a
-  company you have to learn from scratch while the move happens.
+Queueing follows the same split. Loud non-earnings signals (a 4.02
+non-reliance, a restructuring, high XBRL deterioration, an inflection) queue a
+deep-dive for the **whole universe** — that is discovery. Routine earnings
+releases (Item 2.02, promoted to high at small-cap size) queue **only for
+focus names** — which both keeps earnings season affordable and re-underwrites
+every live long thesis once a quarter for ~$0.20. Tune auto-focus with
+`RADAR_AUTO_FOCUS_DAYS` (default 180), `RADAR_AUTO_FOCUS_MIN_CONVICTION`
+(default 0), or disable with `RADAR_AUTO_FOCUS=0`.
 
-The filters are views, never writes: `--direction=bullish` changes what you
-read and what the digest emails, and the sweep still persists everything.
+The view filters are views, never writes: `--direction=bullish` changes what
+you read and what the digest emails, and the sweep still persists everything.
+
+**Synthesis on a cheaper model.** The deep-dive's cloud pass defaults to
+Claude; at universe-wide volume you can route it to DeepSeek V4 Pro (~12x
+cheaper per report) via the OpenAI-compat adapter:
+
+```bash
+# On the GPU box:
+DEEPSEEK_API_KEY=... RADAR_SYNTHESIS_MODEL=deepseek-chat pnpm radar-worker
+pnpm radar-worker --model=deepseek-chat        # flag form; overrides the env
+pnpm radar-worker --reanalyze=ACC1 --model=... # A/B one filing across models
+```
+
+Cost logs price each model at its own rates. Caveats: DeepSeek does not
+enforce tool schemas server-side (malformed submissions cost a retry
+iteration, handled automatically), and citation fidelity still rides on the
+`verify_quote` tool rather than the model. Judge it on a few `--reanalyze`
+A/Bs against stored Claude assessments before trusting it with the queue.
 
 ### Signal Tracker
 

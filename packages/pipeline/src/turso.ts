@@ -240,38 +240,84 @@ export async function enqueueRadarJobs(jobs: RadarJobInput[]): Promise<number> {
  * The kind exclusion is a harder constraint than a preference: the deep-dive
  * scanner knows exactly two document shapes, 8-K and 10-K/10-Q, and routes
  * anything that isn't an 8-K through the periodic-report section extractor.
- * A 424B5, an SC 13D or a Form 4 sent down that path doesn't produce a bad
- * analysis, it produces a filing whose every section fails to extract —
- * burning GPU time, failing, and being retried. Those signals are also
- * complete as they stand: "a shelf takedown is pricing now" is the whole
- * finding, and there is nothing for a model to add to it.
+ * A 424B5, an SC 13D, a Form 4 or an 8-A12B sent down that path doesn't
+ * produce a bad analysis, it produces a filing whose every section fails to
+ * extract — burning GPU time, failing, and being retried. Those signals are
+ * also complete as they stand: "a shelf takedown is pricing now" is the whole
+ * finding, and there is nothing for a model to add to it. (`buyback` and
+ * `inflection` are NOT excluded: they attach to 10-K/10-Q accessions, which
+ * parse fine — and a fundamental inflection is exactly the long-mispricing
+ * candidate the deep-dive exists to judge.)
  *
- * `focusOnly` is the second gate, and the one that decides whether the queue
- * is finite. A ~400-name universe generates more high-severity filings per day
- * than a single GPU can read; the focus list is the statement of which names
- * you would actually trade, so it is the right thing to spend the GPU on. The
- * caller passes false when no focus list is configured, so a checkout without
- * one behaves exactly as before rather than silently queueing nothing.
+ * The third gate is the earnings-release rule, and it is what keeps the queue
+ * finite through earnings season. Item 2.02 is promoted to high for small
+ * caps because the print IS the quarter's repricing event — but on a
+ * several-hundred-name universe that promotion queues every earnings report
+ * four times a year, which is more GPU-days and cloud spend than the reader
+ * gets value from. So a 2.02 signal only counts toward queueing when the
+ * ticker is on the FOCUS list (manual, or auto-promoted by a mispriced-long
+ * verdict — see listAutoFocusTickers). The accession still queues for anyone
+ * if it carries some OTHER loud signal (a 2.05 restructuring, a 4.02
+ * non-reliance): the rule is per signal row, and DISTINCT accession keeps one
+ * job. Net behaviour: discovery keeps flowing on genuinely loud events for
+ * the whole universe, while routine earnings prints are deep-dived only for
+ * names with a live thesis — which re-underwrites every auto-focused long
+ * once a quarter for ~$0.20.
  */
-export async function enqueueMissingRadarJobs(
-  opts: { focusOnly?: boolean } = {},
-): Promise<number> {
+export async function enqueueMissingRadarJobs(): Promise<number> {
   if (!isTursoConfigured()) return 0;
   await migrate();
   const client = getTursoClient();
   if (!client) return 0;
   const res = await client.execute({
+    // The signal key encodes the 8-K item number (`<accession>:8k:2.02`), so
+    // the earnings-release rule can be expressed on the key without a schema
+    // change.
     sql: `INSERT OR IGNORE INTO radar_jobs (accession, ticker, form, filing_date, status, enqueued_at)
           SELECT DISTINCT sr.accession, sr.ticker, sr.form, sr.filing_date, 'pending', ?
           FROM short_radar sr
           LEFT JOIN radar_jobs j ON j.accession = sr.accession
           WHERE j.accession IS NULL
             AND sr.severity IN ('critical', 'high')
-            AND sr.kind NOT IN ('offering', 'late-filing', 'ownership', 'insider-buy')
-            AND (? = 0 OR sr.focus = 1)`,
-    args: [new Date().toISOString(), opts.focusOnly ? 1 : 0],
+            AND sr.kind NOT IN ('offering', 'late-filing', 'ownership', 'insider-buy', 'uplisting')
+            AND (sr.focus = 1 OR sr.key NOT LIKE '%:8k:2.02')`,
+    args: [new Date().toISOString()],
   });
   return res.rowsAffected;
+}
+
+/**
+ * Tickers holding a live long thesis: a deep-dive returned `mispriced-long`
+ * within the window. The sweep unions these into the focus list, which is the
+ * mechanism that turns discovery into coverage — the reader doesn't know
+ * these names in advance (that is the whole premise of a small-cap radar), so
+ * focus membership is EARNED by a verdict rather than curated by hand.
+ * Derived at read time from radar_jobs rather than stored: no second write
+ * path, no sync bugs between the worker box and the Actions checkout.
+ *
+ * The window exists because a thesis ages out: a long flagged three quarters
+ * ago that never re-confirmed shouldn't hold a focus slot forever. Conviction
+ * floor defaults to 0 — a name the deep-dive called mispriced at any
+ * conviction is worth watching; raise it if the auto set gets noisy.
+ */
+export async function listAutoFocusTickers(
+  opts: { sinceDays?: number; minConviction?: number } = {},
+): Promise<string[]> {
+  if (!isTursoConfigured()) return [];
+  await migrate();
+  const client = getTursoClient();
+  if (!client) return [];
+  const sinceDays = opts.sinceDays ?? 180;
+  const cutoff = new Date(Date.now() - sinceDays * 86_400_000).toISOString();
+  const res = await client.execute({
+    sql: `SELECT DISTINCT ticker FROM radar_jobs
+          WHERE verdict = 'mispriced-long'
+            AND COALESCE(conviction, 0) >= ?
+            AND COALESCE(finished_at, enqueued_at) >= ?
+          ORDER BY ticker`,
+    args: [opts.minConviction ?? 0, cutoff],
+  });
+  return res.rows.map((r) => String(r.ticker));
 }
 
 /**

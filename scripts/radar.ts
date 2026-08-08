@@ -13,9 +13,13 @@
  * `data/watchlist.json` when that file doesn't exist. Point it anywhere with
  * `--watchlist=`.
  *
- * Tickers listed in `data/focus-list.json` are marked `focus` — signals on
- * them are separated in the digest and are the only ones queued for a
- * deep-dive. Everything else is discovery: worth a skim, not worth the GPU.
+ * The focus list is manual entries (`data/focus-list.json`) plus every ticker
+ * a deep-dive flagged `mispriced-long` in the last ~two quarters (auto-focus;
+ * see loadFocusList). Focus signals sort first and get their own digest
+ * section. Queueing: loud non-earnings signals queue for the whole universe
+ * (discovery); routine earnings releases (promoted Item 2.02) queue only for
+ * focus names — so each live long thesis is re-underwritten quarterly while
+ * earnings season stays affordable.
  *
  *   pnpm radar                         # since yesterday (the daily cron mode)
  *   pnpm radar --days=30               # a wider backfill window
@@ -29,7 +33,12 @@ import 'dotenv/config';
 import { readFile } from 'node:fs/promises';
 import { computeRadarSignals, capTier, type WatchlistEntry } from '@stock-vetter/local';
 import { isTursoConfigured, isMailerConfigured, sendEmail } from '@stock-vetter/core';
-import { upsertRadarSignals, enqueueMissingRadarJobs, insiderStore } from '@stock-vetter/pipeline';
+import {
+  upsertRadarSignals,
+  enqueueMissingRadarJobs,
+  listAutoFocusTickers,
+  insiderStore,
+} from '@stock-vetter/pipeline';
 import type { RadarSignal } from '@stock-vetter/schema';
 
 const arg = (n: string): string | undefined => {
@@ -155,18 +164,46 @@ function applyView(signals: RadarSignal[], view: View): RadarSignal[] {
 }
 
 /**
- * Load the focus list — the ~30-50 names you have actually done the work on.
- * Missing file is the normal state before you build one, and means "no focus
- * list": every signal is discovery, and the deep-dive queue keeps its old
- * unfiltered behaviour rather than silently going empty.
+ * The focus list: manual entries ∪ names the deep-dive itself flagged.
+ *
+ * Manual (`data/focus-list.json`) is for names whose story you already know.
+ * The AUTO half is the discovery loop closing: when a deep-dive returns
+ * `mispriced-long`, that ticker is promoted here automatically — its signals
+ * sort first, get their own digest section, and its earnings reports keep
+ * being deep-dived, so every live long thesis is re-underwritten quarterly
+ * without anyone curating a list. This is what makes a several-hundred-name
+ * universe of companies you've never heard of usable: focus membership is
+ * earned by a verdict, not assumed by familiarity.
+ *
+ * Tune with RADAR_AUTO_FOCUS_DAYS (default 180 — a thesis ages out after two
+ * quarters without re-confirmation), RADAR_AUTO_FOCUS_MIN_CONVICTION
+ * (default 0), or RADAR_AUTO_FOCUS=0 to disable the auto half entirely.
+ * Missing file and unconfigured Turso are both fine — each half degrades to
+ * empty independently.
  */
-async function loadFocusList(): Promise<Set<string>> {
+async function loadFocusList(): Promise<{ manual: Set<string>; auto: Set<string> }> {
+  let manual = new Set<string>();
   try {
     const raw = JSON.parse(await readFile(FOCUS_LIST, 'utf-8')) as { tickers?: string[] };
-    return new Set((raw.tickers ?? []).map((t) => t.toUpperCase()));
+    manual = new Set((raw.tickers ?? []).map((t) => t.toUpperCase()));
   } catch {
-    return new Set();
+    // No file yet — the normal state.
   }
+  let auto = new Set<string>();
+  if (process.env.RADAR_AUTO_FOCUS !== '0' && isTursoConfigured()) {
+    try {
+      const tickers = await listAutoFocusTickers({
+        sinceDays: Number(process.env.RADAR_AUTO_FOCUS_DAYS ?? 180),
+        minConviction: Number(process.env.RADAR_AUTO_FOCUS_MIN_CONVICTION ?? 0),
+      });
+      auto = new Set(tickers.map((t) => t.toUpperCase()));
+    } catch (e) {
+      // A Turso blip shouldn't kill the sweep; it just means auto-focus is
+      // stale for one run. Say so rather than silently shrinking the list.
+      process.stderr.write(`⚠ auto-focus lookup failed (${(e as Error).message}) — using manual list only\n`);
+    }
+  }
+  return { manual, auto };
 }
 
 /**
@@ -195,7 +232,8 @@ async function main(): Promise<void> {
   const view = parseView();
   const wlPath = await resolveWatchlistPath();
   const raw = JSON.parse(await readFile(wlPath, 'utf-8')) as { tickers?: WatchlistEntry[] };
-  const focusTickers = await loadFocusList();
+  const { manual, auto } = await loadFocusList();
+  const focusTickers = new Set([...manual, ...auto]);
   const watchlist = (raw.tickers ?? []).map((w) => ({
     ...w,
     focus: focusTickers.has(w.ticker.toUpperCase()),
@@ -205,9 +243,14 @@ async function main(): Promise<void> {
     process.exit(1);
   }
   const onFocus = watchlist.filter((w) => w.focus).length;
-  // A focus list naming tickers that aren't in the universe is a silent
-  // mistake — you'd never get an alert and nothing would say why.
-  const missing = [...focusTickers].filter(
+  if (auto.size) {
+    process.stderr.write(`auto-focus: ${[...auto].join(', ')} (mispriced-long verdicts)\n`);
+  }
+  // A manual focus entry naming a ticker that isn't in the universe is a
+  // silent mistake — you'd never get an alert and nothing would say why.
+  // Auto entries are exempt: they came FROM the watchlist, and one that has
+  // since dropped out (cap drifted, liquidity fell) is churn, not a typo.
+  const missing = [...manual].filter(
     (t) => !watchlist.some((w) => w.ticker.toUpperCase() === t),
   );
   if (missing.length) {
@@ -276,7 +319,10 @@ async function main(): Promise<void> {
     // Auto-queue a deep-dive per flagged filing that doesn't already have one
     // (deduped per accession; backfills anything surfaced before the queue). A
     // worker on the GPU box drains it; triage gates the cloud spend.
-    const queued = await enqueueMissingRadarJobs({ focusOnly: focusTickers.size > 0 });
+    // Queue gating moved into the SQL itself: loud non-earnings signals queue
+    // for the whole universe (discovery), earnings releases only for focus
+    // names. See enqueueMissingRadarJobs for the full rationale.
+    const queued = await enqueueMissingRadarJobs();
     if (queued) process.stderr.write(`queued: ${queued} new deep-dive job(s)\n`);
   } else if (persist) {
     process.stderr.write('Turso not configured — printing only (set TURSO_DATABASE_URL to persist)\n');
