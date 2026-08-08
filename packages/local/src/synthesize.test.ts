@@ -362,9 +362,57 @@ test('a model that never submits fails loudly at the iteration cap', async () =>
           synthesizeAssessment(BRIEF, idx, newCostTracker(), { maxIterations: 3 }),
           /did not submit an answer within 3 iterations/,
         );
-        // On the final turn only `submit` is offered, so an indecisive model is
-        // forced to answer with what it has rather than looping forever.
+        // On the final turns only `submit` is offered AND the tool choice is
+        // forced, so a real API cannot reach this error by indecision — only a
+        // model that keeps producing something other than a valid submission
+        // (which this scripted one does, to pin the failure path).
+        assert.equal(seen.length, 4, 'cap turns + one grace turn');
         assert.deepEqual(seen.at(-1).tools.map((t: { name: string }) => t.name), ['submit_assessment']);
+        assert.deepEqual(seen.at(-1).tool_choice, { type: 'tool', name: 'submit_assessment' });
+      },
+    );
+  });
+});
+
+test('the final turn says research is over and forces the submission', async () => {
+  await withIndex(async (idx) => {
+    await withAnthropic(
+      [
+        { content: [{ type: 'tool_use', id: 'tu_1', name: 'search_filings', input: { query: 'receivables' } }] },
+        { content: [submitBlock()] },
+      ],
+      async (seen) => {
+        const r = await synthesizeAssessment(BRIEF, idx, newCostTracker(), { maxIterations: 2 });
+        assert.equal(r.assessment.verdict, 'mispriced-short');
+        assert.equal(r.iterations, 2);
+        const final = seen[1];
+        // All three levers at once: the notice in the conversation, the tool
+        // list narrowed to submit, and the choice forced. A dense filing that
+        // burns the budget on verification ends as a hedged answer, not a
+        // wasted synthesis.
+        assert.match(JSON.stringify(final.messages.at(-1)), /FINAL TURN/);
+        assert.deepEqual(final.tools.map((t: { name: string }) => t.name), ['submit_assessment']);
+        assert.deepEqual(final.tool_choice, { type: 'tool', name: 'submit_assessment' });
+      },
+    );
+  });
+});
+
+test('a validation failure on the forced final turn gets one grace correction', async () => {
+  await withIndex(async (idx) => {
+    await withAnthropic(
+      [
+        { content: [{ type: 'tool_use', id: 'tu_1', name: 'search_filings', input: { query: 'receivables' } }] },
+        { content: [submitBlock({ ...ASSESSMENT, conviction: 99 })] },
+        { content: [submitBlock({ ...ASSESSMENT, conviction: 4 })] },
+      ],
+      async (seen) => {
+        const r = await synthesizeAssessment(BRIEF, idx, newCostTracker(), { maxIterations: 2 });
+        // Without the grace turn the Zod rejection at the cap would throw away
+        // the whole run; with it, the correction lands one turn later.
+        assert.equal(r.assessment.conviction, 4);
+        assert.equal(r.iterations, 3, 'the grace turn runs past the nominal cap');
+        assert.deepEqual(seen[2].tool_choice, { type: 'tool', name: 'submit_assessment' });
       },
     );
   });

@@ -149,6 +149,17 @@ export function toOpenAIMessages(
   return out;
 }
 
+/**
+ * Anthropic forced-tool choice → OpenAI form. The loop forces `submit` on its
+ * final turns; without translating this, DeepSeek would stay free to answer in
+ * prose there and time out the run.
+ */
+export function toOpenAIToolChoice(
+  tc: { type: 'tool'; name: string } | undefined,
+): { type: 'function'; function: { name: string } } | undefined {
+  return tc ? { type: 'function', function: { name: tc.name } } : undefined;
+}
+
 /** Anthropic tool definitions → OpenAI function-tool definitions. */
 export function toOpenAITools(tools: Tool[]): OpenAITool[] {
   return tools.map((t) => ({
@@ -242,6 +253,7 @@ export type DeepSeekChatParams = {
   system: Array<{ type: 'text'; text: string }>;
   messages: MessageParam[];
   tools: Tool[];
+  tool_choice?: { type: 'tool'; name: string };
 };
 
 export type DeepSeekChatResult = {
@@ -274,6 +286,7 @@ export async function deepseekChat(
     max_tokens: params.max_tokens,
     messages: toOpenAIMessages(params.system, params.messages),
     tools: toOpenAITools(params.tools),
+    ...(params.tool_choice ? { tool_choice: toOpenAIToolChoice(params.tool_choice) } : {}),
     ...(effort ? { reasoning_effort: effort } : {}),
   };
 
