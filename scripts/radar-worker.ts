@@ -73,7 +73,17 @@ async function runJob(
   // Triage gates the cloud tier (no force-synthesis); force re-processes even if
   // the filing was indexed by an earlier scan. Errors propagate — the caller
   // classifies them (transient cloud/box → requeue; real error → fail).
-  const opts = { noSynthesis: false, force: true, onProgress: (m: string) => err(`    ${m}`) };
+  // Synthesis model override (--model / RADAR_SYNTHESIS_MODEL): deepseek-*
+  // models route through the OpenAI-compat adapter in core — the ~12x-cheaper
+  // tier for high-volume runs. Unset = the Anthropic default. Cost logs stay
+  // honest either way: PRICING carries entries for both providers.
+  const synthesisModel = arg('model') ?? process.env.RADAR_SYNTHESIS_MODEL;
+  const opts = {
+    noSynthesis: false,
+    force: true,
+    ...(synthesisModel ? { synthesis: { model: synthesisModel } } : {}),
+    onProgress: (m: string) => err(`    ${m}`),
+  };
   const result: ScanResult = job.form.startsWith('8-K')
     ? await scanEightK(ref, deps, opts)
     : await scanPeriodicByRef(ref, deps, opts);
@@ -120,7 +130,11 @@ async function main(): Promise<void> {
     const n = await reanalyzeDoneRadarJobs(accs);
     err(`reset ${n} done job(s) to pending for re-analysis`);
   }
-  err(`radar-worker: ${ollama.model} · ${watch ? `watching (poll ${pollMs / 1000}s)` : 'draining once'}`);
+  const synthModel = arg('model') ?? process.env.RADAR_SYNTHESIS_MODEL ?? 'anthropic default';
+  err(
+    `radar-worker: ${ollama.model} · synthesis: ${synthModel} · ` +
+      `${watch ? `watching (poll ${pollMs / 1000}s)` : 'draining once'}`,
+  );
 
   // Embeddings improve retrieval — the model finds evidence in fewer, better-
   // targeted lookups, which means fewer synthesis turns (lower cost) with no
