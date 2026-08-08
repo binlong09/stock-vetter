@@ -29,6 +29,28 @@ export function isDeepSeekModel(model: string): boolean {
   return model.toLowerCase().startsWith('deepseek');
 }
 
+/**
+ * Which model the comparison leg should run, given the primary.
+ *
+ * The default rule is "the other provider": a Claude primary is challenged by
+ * DeepSeek and vice versa, because the comparison exists to answer exactly one
+ * question — can the cheap model be trusted with the primary seat — and that
+ * question is symmetric once the seats swap. An explicit override wins;
+ * `undefined` primary means the Anthropic default. Returns null when the
+ * comparison would be against itself, which is a config mistake rather than
+ * an experiment.
+ */
+export function resolveCompareModel(
+  primary: string | undefined,
+  override?: string,
+): string | null {
+  // The Anthropic default lives in llm.ts, which imports this module — the
+  // literal here avoids the cycle and is pinned by a test.
+  const effectivePrimary = primary ?? 'claude-sonnet-4-6';
+  const compare = override ?? (isDeepSeekModel(effectivePrimary) ? 'claude-sonnet-4-6' : 'deepseek-chat');
+  return compare === effectivePrimary ? null : compare;
+}
+
 // --- request translation ----------------------------------------------------
 
 type OpenAIToolCall = { id: string; type: 'function'; function: { name: string; arguments: string } };

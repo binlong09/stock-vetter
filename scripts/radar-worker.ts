@@ -24,7 +24,14 @@ import {
   scanPeriodicByRef,
   type ScanResult,
 } from '@stock-vetter/local';
-import { listFilings, newCostTracker, summarizeCost, type FilingRef } from '@stock-vetter/core';
+import {
+  listFilings,
+  newCostTracker,
+  summarizeCost,
+  isDeepSeekModel,
+  resolveCompareModel,
+  type FilingRef,
+} from '@stock-vetter/core';
 import {
   isTursoConfigured,
   claimNextRadarJob,
@@ -45,6 +52,30 @@ const arg = (n: string): string | undefined => {
   return next && !next.startsWith('--') ? next : 'true';
 };
 const err = (m: string): void => void process.stderr.write(`${m}\n`);
+
+/**
+ * Side-by-side comparison config: run a second synthesis on "the other"
+ * provider so the cheap model can be judged against the incumbent on live
+ * filings. DEFAULT ON — disable with --no-compare or RADAR_COMPARE=0, pick a
+ * specific challenger with RADAR_COMPARE_MODEL. The comparison never drives
+ * anything (auto-focus, the feed chip, the digest all read the primary); it
+ * only records what the challenger WOULD have said, and what it cost.
+ *
+ * Degrades rather than fails: a DeepSeek challenger without DEEPSEEK_API_KEY
+ * is skipped with one startup warning, so default-on is safe on a box that
+ * hasn't set the key up yet.
+ */
+function resolveCompareConfig(primaryModel: string | undefined): { model: string | null; note: string } {
+  if (arg('no-compare') != null || process.env.RADAR_COMPARE === '0') {
+    return { model: null, note: 'off' };
+  }
+  const model = resolveCompareModel(primaryModel, process.env.RADAR_COMPARE_MODEL);
+  if (!model) return { model: null, note: 'off (compare model equals primary)' };
+  if (isDeepSeekModel(model) && !process.env.DEEPSEEK_API_KEY) {
+    return { model: null, note: `off (${model} needs DEEPSEEK_API_KEY)` };
+  }
+  return { model, note: model };
+}
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
 
 // A cloud-availability failure — out of credits, rate limit, overload, a network
@@ -78,10 +109,12 @@ async function runJob(
   // tier for high-volume runs. Unset = the Anthropic default. Cost logs stay
   // honest either way: PRICING carries entries for both providers.
   const synthesisModel = arg('model') ?? process.env.RADAR_SYNTHESIS_MODEL;
+  const compareModel = resolveCompareConfig(synthesisModel).model;
   const opts = {
     noSynthesis: false,
     force: true,
     ...(synthesisModel ? { synthesis: { model: synthesisModel } } : {}),
+    ...(compareModel ? { compareSynthesisModel: compareModel } : {}),
     onProgress: (m: string) => err(`    ${m}`),
   };
   const result: ScanResult = job.form.startsWith('8-K')
@@ -89,21 +122,38 @@ async function runJob(
     : await scanPeriodicByRef(ref, deps, opts);
 
   const escalated = Boolean(result.assessment);
+  const primaryCost = summarizeCost(tracker).total;
   await completeRadarJob(job.accession, {
     triageScore: result.decision?.score ?? null,
     escalated,
     verdict: result.assessment?.verdict ?? (result.decision?.escalate ? 'insufficient-data' : 'no-edge'),
     conviction: result.assessment?.conviction ?? null,
     assessmentJson: result.assessment ? JSON.stringify(result.assessment) : null,
+    // The primary model is recorded even when it's the implicit default —
+    // once the primary flips, "which model said this" must be answerable per
+    // row, not inferred from deploy history.
+    model: synthesisModel ?? 'claude-sonnet-4-6',
+    cost: escalated ? primaryCost : null,
+    altModel: result.compare?.model ?? null,
+    altVerdict: result.compare?.assessment.verdict ?? null,
+    altConviction: result.compare?.assessment.conviction ?? null,
+    altAssessmentJson: result.compare ? JSON.stringify(result.compare.assessment) : null,
+    altCost: result.compare?.cost ?? null,
   });
-  const cost = summarizeCost(tracker).total;
-  err(
-    `  ✓ ${job.ticker} ${job.form}: ` +
-      (escalated
-        ? `${result.assessment!.verdict} (${result.assessment!.conviction}/10)`
-        : `no-edge (triage ${result.decision?.score ?? '?'}/${result.decision?.threshold ?? '?'})`) +
-      ` · $${cost.toFixed(4)}`,
-  );
+  // One line per job, both sides visible: the console IS the running
+  // scoreboard. A ⚠ marks disagreement — those are the filings worth opening.
+  const primary = escalated
+    ? `${result.assessment!.verdict} (${result.assessment!.conviction}/10) $${primaryCost.toFixed(4)}`
+    : `no-edge (triage ${result.decision?.score ?? '?'}/${result.decision?.threshold ?? '?'})`;
+  let vs = '';
+  if (result.compare) {
+    const b = result.compare;
+    const disagree = escalated && b.assessment.verdict !== result.assessment!.verdict;
+    vs =
+      ` | ${b.model}: ${b.assessment.verdict} (${b.assessment.conviction}/10) $${b.cost.toFixed(4)}` +
+      (disagree ? ' ⚠ DISAGREE' : '');
+  }
+  err(`  ✓ ${job.ticker} ${job.form}: ${primary}${vs}`);
 }
 
 async function main(): Promise<void> {
@@ -131,8 +181,9 @@ async function main(): Promise<void> {
     err(`reset ${n} done job(s) to pending for re-analysis`);
   }
   const synthModel = arg('model') ?? process.env.RADAR_SYNTHESIS_MODEL ?? 'anthropic default';
+  const compare = resolveCompareConfig(arg('model') ?? process.env.RADAR_SYNTHESIS_MODEL);
   err(
-    `radar-worker: ${ollama.model} · synthesis: ${synthModel} · ` +
+    `radar-worker: ${ollama.model} · synthesis: ${synthModel} · compare: ${compare.note} · ` +
       `${watch ? `watching (poll ${pollMs / 1000}s)` : 'draining once'}`,
   );
 

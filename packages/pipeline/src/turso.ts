@@ -198,6 +198,15 @@ export type RadarJobResult = {
   verdict: string;
   conviction: number | null;
   assessmentJson: string | null;
+  /** Which model produced the primary assessment, and what it cost. */
+  model: string | null;
+  cost: number | null;
+  /** The comparison leg (side-by-side eval) — all null when it didn't run. */
+  altModel: string | null;
+  altVerdict: string | null;
+  altConviction: number | null;
+  altAssessmentJson: string | null;
+  altCost: number | null;
 };
 
 /**
@@ -369,7 +378,9 @@ export async function completeRadarJob(accession: string, r: RadarJobResult): Pr
   if (!client) return;
   await client.execute({
     sql: `UPDATE radar_jobs SET status='done', finished_at=?, triage_score=?, escalated=?,
-          verdict=?, conviction=?, assessment_json=?, error=NULL WHERE accession=?`,
+          verdict=?, conviction=?, assessment_json=?, model=?, cost=?,
+          alt_model=?, alt_verdict=?, alt_conviction=?, alt_assessment_json=?, alt_cost=?,
+          error=NULL WHERE accession=?`,
     args: [
       new Date().toISOString(),
       r.triageScore,
@@ -377,6 +388,13 @@ export async function completeRadarJob(accession: string, r: RadarJobResult): Pr
       r.verdict,
       r.conviction,
       r.assessmentJson,
+      r.model,
+      r.cost,
+      r.altModel,
+      r.altVerdict,
+      r.altConviction,
+      r.altAssessmentJson,
+      r.altCost,
       accession,
     ],
   });

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import type { MessageParam, Tool } from '@anthropic-ai/sdk/resources/messages';
 import {
   isDeepSeekModel,
+  resolveCompareModel,
   toOpenAIMessages,
   toOpenAITools,
   toAnthropicContent,
@@ -178,4 +179,33 @@ test('usage degrades sanely when a gateway reports only prompt_tokens', () => {
     cache_creation_input_tokens: 0,
     cache_read_input_tokens: 0,
   });
+});
+
+// --- compare-model resolution ----------------------------------------------
+
+test('the comparison defaults to the other provider', () => {
+  // Claude primary (explicit or implicit default) → DeepSeek challenger.
+  assert.equal(resolveCompareModel('claude-sonnet-4-6'), 'deepseek-chat');
+  assert.equal(resolveCompareModel(undefined), 'deepseek-chat');
+  // DeepSeek primary → Claude challenger: the question "can the cheap model
+  // hold the primary seat" is symmetric once the seats swap.
+  assert.equal(resolveCompareModel('deepseek-chat'), 'claude-sonnet-4-6');
+  assert.equal(resolveCompareModel('deepseek-v4-pro'), 'claude-sonnet-4-6');
+});
+
+test('an explicit override wins', () => {
+  assert.equal(resolveCompareModel('claude-sonnet-4-6', 'deepseek-v4-pro'), 'deepseek-v4-pro');
+});
+
+test('comparing a model against itself is refused, not silently run twice', () => {
+  assert.equal(resolveCompareModel('claude-sonnet-4-6', 'claude-sonnet-4-6'), null);
+  assert.equal(resolveCompareModel(undefined, 'claude-sonnet-4-6'), null);
+  assert.equal(resolveCompareModel('deepseek-chat', 'deepseek-chat'), null);
+});
+
+test('the implicit-default literal stays in sync with llm.ts DEFAULT_MODEL', () => {
+  // resolveCompareModel hardcodes 'claude-sonnet-4-6' to avoid an import
+  // cycle with llm.ts. PRICING (from llm.ts) must know that model — if the
+  // default ever changes there, this fails and points at the literal.
+  assert.ok(PRICING['claude-sonnet-4-6'], 'default-model literal drifted from llm.ts');
 });

@@ -26,6 +26,8 @@ export interface RadarRow {
   jobStatus: string | null; // pending | running | done | failed
   verdict: string | null;
   conviction: number | null;
+  /** The comparison model's verdict, when a side-by-side ran. */
+  altVerdict: string | null;
 }
 
 /**
@@ -39,7 +41,7 @@ export async function listRadarSignals(limit = 200): Promise<RadarRow[]> {
       sql: `SELECT sr.key, sr.ticker, sr.cik, sr.accession, sr.form, sr.filing_date,
                    sr.kind, sr.severity, sr.direction, sr.headline, sr.detail,
                    sr.market_cap, sr.focus, sr.first_seen_at,
-                   j.status AS job_status, j.verdict, j.conviction
+                   j.status AS job_status, j.verdict, j.conviction, j.alt_verdict
             FROM short_radar sr
             LEFT JOIN radar_jobs j ON j.accession = sr.accession
             ORDER BY sr.first_seen_at DESC, sr.ticker
@@ -64,6 +66,7 @@ export async function listRadarSignals(limit = 200): Promise<RadarRow[]> {
       jobStatus: r.job_status == null ? null : String(r.job_status),
       verdict: r.verdict == null ? null : String(r.verdict),
       conviction: r.conviction == null ? null : Number(r.conviction),
+      altVerdict: r.alt_verdict == null ? null : String(r.alt_verdict),
     }));
   } catch {
     return [];
@@ -82,6 +85,17 @@ export interface RadarAssessment {
   conviction: number | null;
   error: string | null;
   assessment: MispricingAssessment | null; // parsed; null when the job didn't escalate
+  /** Which model produced the primary assessment. Null on pre-compare rows. */
+  model: string | null;
+  cost: number | null;
+  /** The comparison leg — a second synthesis on the other provider. */
+  alt: {
+    model: string;
+    verdict: string | null;
+    conviction: number | null;
+    cost: number | null;
+    assessment: MispricingAssessment | null;
+  } | null;
 }
 
 // Assessments written before the direction-agnostic reframe used short-only
@@ -106,21 +120,23 @@ export async function getRadarAssessment(accession: string): Promise<RadarAssess
   try {
     const res = await db().execute({
       sql: `SELECT j.ticker, j.form, j.filing_date, j.status, j.triage_score, j.escalated,
-                   j.verdict, j.conviction, j.assessment_json, j.error,
+                   j.verdict, j.conviction, j.assessment_json, j.error, j.model, j.cost,
+                   j.alt_model, j.alt_verdict, j.alt_conviction, j.alt_assessment_json, j.alt_cost,
                    (SELECT cik FROM short_radar WHERE accession = j.accession LIMIT 1) AS cik
             FROM radar_jobs j WHERE j.accession = ? LIMIT 1`,
       args: [accession],
     });
     const r = res.rows[0];
     if (!r) return null;
-    let assessment: MispricingAssessment | null = null;
-    if (r.assessment_json != null) {
+    const parse = (raw: unknown): MispricingAssessment | null => {
+      if (raw == null) return null;
       try {
-        assessment = normalizeAssessment(JSON.parse(String(r.assessment_json)));
+        return normalizeAssessment(JSON.parse(String(raw)));
       } catch {
-        assessment = null;
+        return null;
       }
-    }
+    };
+    const assessment = parse(r.assessment_json);
     return {
       ticker: String(r.ticker),
       cik: r.cik == null ? '0' : String(r.cik),
@@ -133,6 +149,18 @@ export async function getRadarAssessment(accession: string): Promise<RadarAssess
       conviction: r.conviction == null ? null : Number(r.conviction),
       error: r.error == null ? null : String(r.error),
       assessment,
+      model: r.model == null ? null : String(r.model),
+      cost: r.cost == null ? null : Number(r.cost),
+      alt:
+        r.alt_model == null
+          ? null
+          : {
+              model: String(r.alt_model),
+              verdict: r.alt_verdict == null ? null : String(r.alt_verdict),
+              conviction: r.alt_conviction == null ? null : Number(r.alt_conviction),
+              cost: r.alt_cost == null ? null : Number(r.alt_cost),
+              assessment: parse(r.alt_assessment_json),
+            },
     };
   } catch {
     return null;

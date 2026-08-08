@@ -24,6 +24,7 @@ function row(ticker: string, over: Partial<RadarRow> = {}): RadarRow {
     jobStatus: null,
     verdict: null,
     conviction: null,
+    altVerdict: null,
     ...over,
   };
 }
