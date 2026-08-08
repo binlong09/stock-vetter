@@ -19,7 +19,9 @@ export const PRICING: Record<string, Pricing> = {
   // DeepSeek V4 Pro via the OpenAI-compat adapter (deepseek.ts). Rates as of
   // Aug 2026: $0.435/M input (cache miss), $0.87/M output, $0.003625/M cache
   // hit. No write premium — a miss IS the write — so cacheWrite mirrors input
-  // and the adapter always reports zero write tokens.
+  // and the adapter always reports zero write tokens. The -chat and -reasoner
+  // aliases were retired upstream on 2026-07-24; they stay priced so a stale
+  // config errors with a clear API message instead of a mispriced fallback.
   'deepseek-chat': { input: 0.435, output: 0.87, cacheWrite: 0.435, cacheRead: 0.003625 },
   'deepseek-reasoner': { input: 0.435, output: 0.87, cacheWrite: 0.435, cacheRead: 0.003625 },
   'deepseek-v4-pro': { input: 0.435, output: 0.87, cacheWrite: 0.435, cacheRead: 0.003625 },

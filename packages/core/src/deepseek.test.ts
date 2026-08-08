@@ -185,8 +185,8 @@ test('usage degrades sanely when a gateway reports only prompt_tokens', () => {
 
 test('the comparison defaults to the other provider', () => {
   // Claude primary (explicit or implicit default) → DeepSeek challenger.
-  assert.equal(resolveCompareModel('claude-sonnet-4-6'), 'deepseek-chat');
-  assert.equal(resolveCompareModel(undefined), 'deepseek-chat');
+  assert.equal(resolveCompareModel('claude-sonnet-4-6'), 'deepseek-v4-pro');
+  assert.equal(resolveCompareModel(undefined), 'deepseek-v4-pro');
   // DeepSeek primary → Claude challenger: the question "can the cheap model
   // hold the primary seat" is symmetric once the seats swap.
   assert.equal(resolveCompareModel('deepseek-chat'), 'claude-sonnet-4-6');
