@@ -33,6 +33,8 @@ import {
   fetchFilingSectionsWithLayout,
   fetchFilingSectionsWithLayoutByRef,
   fetchSeriesSet,
+  newCostTracker,
+  summarizeCost,
   type CostTracker,
   type LayoutBlock,
   type FilingRef,
@@ -70,7 +72,23 @@ export type ScanOptions = {
   force?: boolean;
   /** Skip the XBRL fetch and cross-filing analysis entirely. */
   noCrossFiling?: boolean;
+  /**
+   * Run the cloud synthesis a SECOND time on this model and return the result
+   * alongside the primary. The B side is an evaluation harness: it shares the
+   * brief, the index, and the as-of cap, so the only variable is the model —
+   * and its failure never fails the scan, because a broken challenger is a
+   * data point about the challenger, not about the filing.
+   */
+  compareSynthesisModel?: string;
   onProgress?: (message: string) => void;
+};
+
+/** The comparison leg's outcome, when one was requested and survived. */
+export type CompareResult = {
+  model: string;
+  assessment: MispricingAssessment;
+  /** The comparison run's own cloud cost — tracked separately on purpose. */
+  cost: number;
 };
 
 export type ScanResult = {
@@ -85,6 +103,8 @@ export type ScanResult = {
   toolCalls: ToolCallRecord[];
   /** Cloud-model turns spent. 0 when synthesis didn't run. */
   iterations: number;
+  /** Side-by-side comparison synthesis, when requested and it succeeded. */
+  compare: CompareResult | null;
   skipped: string | null;
   warnings: string[];
 };
@@ -289,6 +309,7 @@ export async function scanPrepared(
     crossFiling: null,
     toolCalls: [],
     iterations: 0,
+    compare: null,
     skipped: null,
     warnings: prepared.warnings,
   };
@@ -376,11 +397,39 @@ export async function scanPrepared(
     // is contaminated by hindsight.
     asOf: meta.filingDate,
   });
+
+  // The comparison leg. Same brief, same index, same as-of — the model is the
+  // only variable, which is what makes the side-by-side an experiment rather
+  // than two unrelated opinions. Its own tracker keeps the two costs honest
+  // (per-side cost is half the comparison), and a failure here downgrades to
+  // a warning: the primary assessment is the product, the B side is telemetry.
+  let compare: CompareResult | null = null;
+  if (opts.compareSynthesisModel) {
+    log(`comparison synthesis on ${opts.compareSynthesisModel}`);
+    const compareTracker = newCostTracker();
+    try {
+      const b = await synthesizeAssessment(brief, deps.index, compareTracker, {
+        ...opts.synthesis,
+        model: opts.compareSynthesisModel,
+        series,
+        asOf: meta.filingDate,
+      });
+      compare = {
+        model: opts.compareSynthesisModel,
+        assessment: b.assessment,
+        cost: summarizeCost(compareTracker).total,
+      };
+    } catch (e) {
+      log(`comparison synthesis failed (${(e as Error).message.slice(0, 120)}) — keeping primary only`);
+    }
+  }
+
   return {
     ...base,
     assessment: result.assessment,
     toolCalls: result.toolCalls,
     iterations: result.iterations,
+    compare,
   };
 }
 
@@ -452,6 +501,7 @@ export async function scanLatestPeriodic(
       crossFiling: null,
       toolCalls: [],
       iterations: 0,
+      compare: null,
       skipped: 'already indexed (pass force to re-run)',
       warnings: [],
     };
@@ -489,6 +539,7 @@ export async function scanPeriodicByRef(
       crossFiling: null,
       toolCalls: [],
       iterations: 0,
+      compare: null,
       skipped: 'already indexed (pass force to re-run)',
       warnings: [],
     };

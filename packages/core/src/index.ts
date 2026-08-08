@@ -131,6 +131,10 @@ export {
 // small-cap universe (EDGAR supplies the other half).
 export { screenQuotes, type ScreenQuote, type ScreenOptions } from './market-screen.js';
 
+// DeepSeek routing helpers — the adapter itself is wired inside llm.ts; these
+// are exported for the worker's compare-model resolution.
+export { isDeepSeekModel, resolveCompareModel } from './deepseek.js';
+
 // SIC sector classification from EDGAR — how the small-cap tech universe is
 // cut out of the ~10,000 registrants SEC knows about.
 export {

@@ -119,6 +119,7 @@ export {
   DEFAULT_SECTIONS,
   type ScanOptions,
   type ScanResult,
+  type CompareResult,
   type ScanDeps,
   type PreparedFiling,
 } from './pipeline.js';

@@ -108,6 +108,10 @@ function SignalCard({ s }: { s: RadarRow }) {
   const chip = analysisChip(s.jobStatus, s.verdict, s.conviction);
   const dir = DIRECTION[s.direction] ?? DIRECTION.bearish!;
   const cap = capLabel(s.marketCap);
+  // The side-by-side eval's headline output: when the comparison model reached
+  // a different verdict, say so on the card — those are the filings worth
+  // opening, and the whole reason the second synthesis runs.
+  const disagree = s.altVerdict != null && s.verdict != null && s.altVerdict !== s.verdict;
   return (
     <Link
       href={`/radar/${encodeURIComponent(s.accession)}`}
@@ -139,6 +143,14 @@ function SignalCard({ s }: { s: RadarRow }) {
         <span>filed {isoDate(s.filingDate)}</span>
         <span>seen {isoDate(s.firstSeenAt)}</span>
         <span className={`rounded-full border px-1.5 py-0.5 font-medium ${chip.cls}`}>{chip.label}</span>
+        {disagree ? (
+          <span
+            className="rounded-full border border-amber-300 bg-amber-50 px-1.5 py-0.5 font-medium text-amber-700"
+            title={`comparison model said ${s.altVerdict}`}
+          >
+            ⚖ models split
+          </span>
+        ) : null}
       </div>
     </Link>
   );

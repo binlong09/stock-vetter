@@ -174,8 +174,30 @@ pnpm radar-worker --reanalyze=ACC1 --model=... # A/B one filing across models
 Cost logs price each model at its own rates. Caveats: DeepSeek does not
 enforce tool schemas server-side (malformed submissions cost a retry
 iteration, handled automatically), and citation fidelity still rides on the
-`verify_quote` tool rather than the model. Judge it on a few `--reanalyze`
-A/Bs against stored Claude assessments before trusting it with the queue.
+`verify_quote` tool rather than the model.
+
+**Side-by-side comparison (default ON).** Every escalated filing runs the
+cloud synthesis twice — once on the primary model (whose verdict drives the
+feed, the digest, and auto-focus) and once on the other provider as a
+challenger. Same brief, same tools, same as-of cap: the model is the only
+variable. The worker logs both verdicts per job (`⚠ DISAGREE` when they
+split), the `/radar` feed marks disagreements with a `⚖ models split` chip,
+and the detail page renders the two assessments side by side with per-side
+cost. The comparison never drives anything and its failure never fails a job
+— a DeepSeek challenger without `DEEPSEEK_API_KEY` is skipped with a startup
+note, so default-on is safe before the key exists.
+
+```bash
+pnpm radar-worker --no-compare          # or RADAR_COMPARE=0 — primary only
+RADAR_COMPARE_MODEL=deepseek-v4-pro …   # pick a specific challenger
+```
+
+With a Claude primary the comparison adds ~$0.02/report (the DeepSeek leg);
+with a DeepSeek primary it adds the Claude leg (~$0.20), i.e. comparison mode
+always costs about what Claude-only did. When the verdicts have agreed long
+enough to convince you, set `RADAR_SYNTHESIS_MODEL=deepseek-chat` to swap the
+seats — the comparison then keeps auditing DeepSeek from the cheap side of
+the bill, or turn it off and pocket the full saving.
 
 ### Signal Tracker
 
