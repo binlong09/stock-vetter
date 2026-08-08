@@ -6,6 +6,7 @@ import {
   resolveCompareModel,
   toOpenAIMessages,
   toOpenAITools,
+  toOpenAIToolChoice,
   toAnthropicContent,
   toAnthropicUsage,
 } from './deepseek.js';
@@ -113,6 +114,17 @@ test('cache_control markers from the Anthropic path are dropped, not sent', () =
   const out = toOpenAIMessages(SYSTEM, messages);
   assert.equal(out[1]!.content, 'the brief');
   assert.equal(JSON.stringify(out).includes('cache_control'), false);
+});
+
+test('forced tool choice translates to the OpenAI function form', () => {
+  // The loop forces `submit` on its final turns; if this translation were
+  // dropped, DeepSeek would stay free to answer in prose there and the run
+  // would time out despite the forcing.
+  assert.deepEqual(toOpenAIToolChoice({ type: 'tool', name: 'submit' }), {
+    type: 'function',
+    function: { name: 'submit' },
+  });
+  assert.equal(toOpenAIToolChoice(undefined), undefined);
 });
 
 test('tools map to OpenAI function definitions with the schema as parameters', () => {

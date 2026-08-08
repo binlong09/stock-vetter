@@ -443,6 +443,23 @@ function rollConversationCache(messages: MessageParam[]): void {
   }
 }
 
+// Tell the model the iteration budget is spent. Appended to the newest user
+// turn (never pushed as a separate message — the conversation must keep
+// alternating roles). A hedged answer built from partial evidence is worth
+// something; a run that times out with the analysis already paid for is not.
+function appendFinalTurnNotice(messages: MessageParam[], submitName: string): void {
+  const notice =
+    `FINAL TURN: the research tools have been withdrawn; only ${submitName} remains. ` +
+    `Submit your answer now from what you have already gathered. Lower your confidence and ` +
+    `flag anything you could not verify rather than withholding an answer.`;
+  const last = messages[messages.length - 1]!;
+  if (typeof last.content === 'string') {
+    last.content = `${last.content}\n\n${notice}`;
+  } else {
+    (last.content as Array<{ type: 'text'; text: string }>).push({ type: 'text', text: notice });
+  }
+}
+
 export async function llmCallWithToolsJson<T>(opts: {
   stage: string;
   systemPrompt: string | CacheableSegment[];
@@ -478,11 +495,17 @@ export async function llmCallWithToolsJson<T>(opts: {
   ];
   const toolCalls: ToolCallRecord[] = [];
 
-  for (let iteration = 0; iteration < maxIterations; iteration++) {
-    // On the last permitted iteration, withhold every tool but `submit` so the
-    // model is forced to answer with what it has rather than being cut off
-    // mid-investigation with nothing to show.
-    const lastChance = iteration === maxIterations - 1;
+  // The loop runs one turn past maxIterations: the extra turn exists so a
+  // last-chance submission that fails Zod validation gets its correction pass
+  // instead of dying at the cap with the analysis already paid for. It is
+  // unreachable for a model that submits normally.
+  for (let iteration = 0; iteration <= maxIterations; iteration++) {
+    // On the final turns, withhold every tool but `submit`, force the choice
+    // (so prose can't burn the turn), and say out loud that research is over —
+    // a model cut off mid-investigation otherwise keeps trying to verify one
+    // more thing and ends with nothing to show.
+    const lastChance = iteration >= maxIterations - 1;
+    if (iteration === maxIterations - 1) appendFinalTurnNotice(messages, submitName);
     rollConversationCache(messages);
     const request = {
       model,
@@ -490,6 +513,7 @@ export async function llmCallWithToolsJson<T>(opts: {
       system: buildContentBlocks(opts.systemPrompt),
       messages,
       tools: lastChance ? [submitTool] : [...toAnthropicTools(opts.tools), submitTool],
+      ...(lastChance ? { tool_choice: { type: 'tool' as const, name: submitName } } : {}),
     };
     // deepseek-* models route through the OpenAI-compat adapter. It returns
     // Anthropic-shaped content blocks and usage, so everything below stays
@@ -593,7 +617,7 @@ export async function llmCallWithToolsJson<T>(opts: {
 
   throw new ToolLoopError(
     opts.stage,
-    `model did not submit an answer within ${maxIterations} iterations`,
+    `model did not submit an answer within ${maxIterations} iterations (even with the final turn forced to ${submitName})`,
     toolCalls,
   );
 }

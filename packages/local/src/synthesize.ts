@@ -270,7 +270,10 @@ export async function synthesizeAssessment(
     submitToolDescription:
       'Record your final mispricing assessment (long, short, or no-edge). Call this exactly once, after you ' +
       'have verified whatever figures the thesis depends on. Returning verdict "no-edge" is a complete and often correct answer.',
-    maxIterations: opts.maxIterations ?? 12,
+    // 16, not 12: a first live batch of dense small-cap 10-Qs blew the
+    // 12-iteration budget on ~1 in 4 escalations. Marginal iterations are
+    // cheap (the conversation prefix is cached); a burned synthesis is not.
+    maxIterations: opts.maxIterations ?? 16,
     maxTokens: opts.maxTokens ?? 8192,
     tracker,
     model: opts.model,
