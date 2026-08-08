@@ -46,8 +46,12 @@ export function resolveCompareModel(
 ): string | null {
   // The Anthropic default lives in llm.ts, which imports this module — the
   // literal here avoids the cycle and is pinned by a test.
+  //
+  // 'deepseek-v4-pro', not 'deepseek-chat': DeepSeek retired the -chat and
+  // -reasoner aliases on 2026-07-24, so the alias now 404s while the
+  // versioned id is the live one.
   const effectivePrimary = primary ?? 'claude-sonnet-4-6';
-  const compare = override ?? (isDeepSeekModel(effectivePrimary) ? 'claude-sonnet-4-6' : 'deepseek-chat');
+  const compare = override ?? (isDeepSeekModel(effectivePrimary) ? 'claude-sonnet-4-6' : 'deepseek-v4-pro');
   return compare === effectivePrimary ? null : compare;
 }
 

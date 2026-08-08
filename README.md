@@ -166,8 +166,8 @@ cheaper per report) via the OpenAI-compat adapter:
 
 ```bash
 # On the GPU box:
-DEEPSEEK_API_KEY=... RADAR_SYNTHESIS_MODEL=deepseek-chat pnpm radar-worker
-pnpm radar-worker --model=deepseek-chat        # flag form; overrides the env
+DEEPSEEK_API_KEY=... RADAR_SYNTHESIS_MODEL=deepseek-v4-pro pnpm radar-worker
+pnpm radar-worker --model=deepseek-v4-pro      # flag form; overrides the env
 pnpm radar-worker --reanalyze=ACC1 --model=... # A/B one filing across models
 ```
 
@@ -189,13 +189,13 @@ note, so default-on is safe before the key exists.
 
 ```bash
 pnpm radar-worker --no-compare          # or RADAR_COMPARE=0 — primary only
-RADAR_COMPARE_MODEL=deepseek-v4-pro …   # pick a specific challenger
+RADAR_COMPARE_MODEL=<model-id> …        # pick a specific challenger
 ```
 
 With a Claude primary the comparison adds ~$0.02/report (the DeepSeek leg);
 with a DeepSeek primary it adds the Claude leg (~$0.20), i.e. comparison mode
 always costs about what Claude-only did. When the verdicts have agreed long
-enough to convince you, set `RADAR_SYNTHESIS_MODEL=deepseek-chat` to swap the
+enough to convince you, set `RADAR_SYNTHESIS_MODEL=deepseek-v4-pro` to swap the
 seats — the comparison then keeps auditing DeepSeek from the cheap side of
 the bill, or turn it off and pocket the full saving.
 
