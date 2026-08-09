@@ -168,6 +168,14 @@ every live long thesis once a quarter for ~$0.20. Tune auto-focus with
 The view filters are views, never writes: `--direction=bullish` changes what
 you read and what the digest emails, and the sweep still persists everything.
 
+**Market-aware verdicts.** The synthesis prompt frames "mispriced" as a
+tradeability call, so the worker fetches a current market snapshot (price,
+cap, 52-week range, liquidity) per analyzed filing and appends it to the
+brief — the model judges "is this priced in" against the actual price
+instead of guessing from stale memory. Both comparison legs get the same
+snapshot. If the fetch fails, the prompt says so and instructs the model to
+flag any priced-in assumption in `unverifiedClaims`.
+
 **Synthesis on a cheaper model.** The deep-dive's cloud pass defaults to
 Claude; at universe-wide volume you can route it to DeepSeek V4 Pro (~12x
 cheaper per report) via the OpenAI-compat adapter:

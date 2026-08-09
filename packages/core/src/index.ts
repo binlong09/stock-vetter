@@ -133,6 +133,8 @@ export {
   screenQuotes,
   fetchBusinessSummary,
   trimBusinessSummary,
+  fetchMarketSnapshot,
+  type MarketSnapshot,
   type ScreenQuote,
   type ScreenOptions,
 } from './market-screen.js';

@@ -23,7 +23,7 @@ import { MispricingAssessment, type FilingBrief } from '@stock-vetter/schema';
 import type { LookbackIndex } from './lookback.js';
 import { renderBriefMarkdown } from './brief.js';
 import { computeRatios, type PeriodRatios } from './ratios.js';
-import type { SeriesSet } from '@stock-vetter/core';
+import type { SeriesSet, MarketSnapshot } from '@stock-vetter/core';
 
 export type SynthesisOptions = {
   /**
@@ -34,6 +34,14 @@ export type SynthesisOptions = {
   series?: SeriesSet | null;
   /** Period end of the filing under analysis — caps the history at as-of. */
   asOf?: string;
+  /**
+   * Current market context, fetched at analysis time. The verdict is a claim
+   * about the price, so the price goes in the prompt; without it the model
+   * either ignores requirement 4 (non-consensus) or answers it from stale
+   * training-data memory. null/undefined renders an explicit "no market data"
+   * note so the model knows to say when a judgment assumes a price.
+   */
+  market?: MarketSnapshot | null;
   model?: string;
   maxIterations?: number;
   maxTokens?: number;
@@ -227,6 +235,41 @@ const METRIC_KEYS = [
   'dilutedShares',
 ] as const;
 
+const fmtUsd = (n: number): string =>
+  n >= 1e9 ? `$${(n / 1e9).toFixed(2)}B` : n >= 1e6 ? `$${(n / 1e6).toFixed(1)}M` : `$${n.toFixed(2)}`;
+
+/**
+ * The market-context block appended to the brief. Exported for tests.
+ *
+ * When there is no snapshot the block still renders — saying so out loud —
+ * because the failure mode it guards against is silent: a model with no price
+ * and no admission of that fills the gap from training-data memory, which for
+ * a small cap is stale by definition.
+ */
+export function renderMarketSnapshot(m: MarketSnapshot | null | undefined): string {
+  const lines = ['## Market snapshot (fetched at analysis time — this is CURRENT data, not as-of-filing)'];
+  if (!m || m.price == null) {
+    lines.push(
+      'No market data is available for this run. You do not know the current price. ' +
+        'Do not fill the gap from memory — any judgment that something is "already priced in" ' +
+        'is an assumption here, and must be listed in `unverifiedClaims`.',
+    );
+    return lines.join('\n');
+  }
+  lines.push(`- Price: $${m.price.toFixed(2)}`);
+  if (m.marketCap != null) lines.push(`- Market cap: ${fmtUsd(m.marketCap)}`);
+  if (m.fiftyTwoWeekHigh != null && m.fiftyTwoWeekLow != null) {
+    const offHigh = ((m.fiftyTwoWeekHigh - m.price) / m.fiftyTwoWeekHigh) * 100;
+    lines.push(
+      `- 52-week range: $${m.fiftyTwoWeekLow.toFixed(2)}–$${m.fiftyTwoWeekHigh.toFixed(2)} ` +
+        `(currently ${offHigh.toFixed(0)}% below the high)`,
+    );
+  }
+  if (m.avgDollarVolume != null) lines.push(`- Average daily dollar volume: ${fmtUsd(m.avgDollarVolume)}`);
+  lines.push(`- Fetched: ${m.fetchedAt}`);
+  return lines.join('\n');
+}
+
 export type SynthesisResult = {
   assessment: MispricingAssessment;
   toolCalls: ToolCallRecord[];
@@ -263,7 +306,7 @@ export async function synthesizeAssessment(
     // The prompt is identical for every company in a run, so caching it turns
     // ~1,500 tokens of instructions into a cache read after the first filing.
     systemPrompt: [{ text: system, cache: true, ttl: '1h' }],
-    userMessage: renderBriefMarkdown(brief),
+    userMessage: `${renderBriefMarkdown(brief)}\n\n${renderMarketSnapshot(opts.market)}`,
     tools,
     schema: MispricingAssessment,
     submitToolName: 'submit_assessment',
