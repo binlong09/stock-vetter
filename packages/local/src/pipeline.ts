@@ -33,8 +33,10 @@ import {
   fetchFilingSectionsWithLayout,
   fetchFilingSectionsWithLayoutByRef,
   fetchSeriesSet,
+  fetchMarketSnapshot,
   newCostTracker,
   summarizeCost,
+  type MarketSnapshot,
   type CostTracker,
   type LayoutBlock,
   type FilingRef,
@@ -388,10 +390,23 @@ export async function scanPrepared(
     };
   }
 
+  // Current market context for the mispricing call. Fetched once and handed to
+  // BOTH synthesis legs so the A/B stays a single-variable experiment. Unlike
+  // the metric history (which is as-of-capped to avoid hindsight), this is
+  // deliberately "now" data: the verdict is "is this tradeable today". A
+  // failed fetch degrades to a snapshot-less prompt that says so explicitly.
+  let market: MarketSnapshot | null = null;
+  try {
+    market = await fetchMarketSnapshot(meta.ticker);
+  } catch (e) {
+    log(`market snapshot failed (${(e as Error).message.slice(0, 80)}) — synthesizing without price context`);
+  }
+
   log('synthesizing with the cloud model');
   const result = await synthesizeAssessment(brief, deps.index, deps.tracker, {
     ...opts.synthesis,
     series,
+    market,
     // Cap the metric history at the filing's own date. Without this, analyzing
     // a 2024 filing hands the model 2026 numbers and every conclusion it draws
     // is contaminated by hindsight.
@@ -412,6 +427,7 @@ export async function scanPrepared(
         ...opts.synthesis,
         model: opts.compareSynthesisModel,
         series,
+        market,
         asOf: meta.filingDate,
       });
       compare = {

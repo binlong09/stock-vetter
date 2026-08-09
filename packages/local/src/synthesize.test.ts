@@ -15,7 +15,12 @@ import { join } from 'node:path';
 import { newCostTracker } from '@stock-vetter/core';
 import type { FilingBrief } from '@stock-vetter/schema';
 import { LookbackIndex } from './lookback.js';
-import { buildVerificationTools, synthesizeAssessment, renderAssessmentMarkdown } from './synthesize.js';
+import {
+  buildVerificationTools,
+  synthesizeAssessment,
+  renderAssessmentMarkdown,
+  renderMarketSnapshot,
+} from './synthesize.js';
 import type { FilingChunk } from './chunk.js';
 
 const AR_TEXT =
@@ -415,6 +420,50 @@ test('a validation failure on the forced final turn gets one grace correction', 
         assert.deepEqual(seen[2].tool_choice, { type: 'tool', name: 'submit_assessment' });
       },
     );
+  });
+});
+
+// --- market snapshot -------------------------------------------------------
+
+const SNAPSHOT = {
+  ticker: 'TEST',
+  price: 4.1,
+  marketCap: 3.1e8,
+  fiftyTwoWeekHigh: 12.4,
+  fiftyTwoWeekLow: 3.6,
+  avgDollarVolume: 2.4e6,
+  fetchedAt: '2026-08-08T18:00:00Z',
+};
+
+test('the market snapshot renders price, cap, range position, and liquidity', () => {
+  const s = renderMarketSnapshot(SNAPSHOT);
+  assert.match(s, /Price: \$4\.10/);
+  assert.match(s, /Market cap: \$310\.0M/);
+  // The range position is the model's main evidence for "how much is priced
+  // in" — it must arrive computed, not as two raw numbers to misdivide.
+  assert.match(s, /\$3\.60–\$12\.40 \(currently 67% below the high\)/);
+  assert.match(s, /dollar volume: \$2\.4M/);
+});
+
+test('a missing snapshot says out loud that the price is unknown', () => {
+  // The silent failure mode this guards: no price and no admission of it,
+  // and the model answers "already priced in" from stale training memory.
+  for (const empty of [null, undefined, { ...SNAPSHOT, price: null }]) {
+    const s = renderMarketSnapshot(empty);
+    assert.match(s, /No market data is available/);
+    assert.match(s, /Do not fill the gap from memory/);
+    assert.match(s, /unverifiedClaims/);
+  }
+});
+
+test('the snapshot reaches the model appended to the brief', async () => {
+  await withIndex(async (idx) => {
+    await withAnthropic([{ content: [submitBlock()] }], async (seen) => {
+      await synthesizeAssessment(BRIEF, idx, newCostTracker(), { market: SNAPSHOT });
+      const userMsg = JSON.stringify(seen[0].messages[0]);
+      assert.match(userMsg, /Market snapshot/);
+      assert.match(userMsg, /67% below the high/);
+    });
   });
 });
 

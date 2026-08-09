@@ -159,3 +159,45 @@ export async function fetchBusinessSummary(symbol: string): Promise<string | nul
   };
   return trimBusinessSummary(res.assetProfile?.longBusinessSummary);
 }
+
+// --- point-in-time market snapshot -------------------------------------------
+
+export type MarketSnapshot = {
+  ticker: string;
+  price: number | null;
+  marketCap: number | null;
+  fiftyTwoWeekHigh: number | null;
+  fiftyTwoWeekLow: number | null;
+  /** price × 3-month average share volume. */
+  avgDollarVolume: number | null;
+  /** ISO timestamp of the fetch — this is "now" data, not as-of-filing data. */
+  fetchedAt: string;
+};
+
+/**
+ * Current market context for one symbol, for the synthesis stage.
+ *
+ * The mispricing verdict is a claim about the PRICE, so the model needs the
+ * price — otherwise "is this already priced in" gets answered from stale
+ * training-data memory or not at all. Deliberately current rather than
+ * as-of-filing: the verdict is "is this tradeable now", and the reader acts
+ * now. Throws on transport errors; callers treat the snapshot as optional.
+ */
+export async function fetchMarketSnapshot(symbol: string): Promise<MarketSnapshot | null> {
+  const res = await yahooFinance.quote(symbol);
+  const q = (Array.isArray(res) ? res[0] : res) as
+    | (RawQuote & { fiftyTwoWeekHigh?: number; fiftyTwoWeekLow?: number })
+    | undefined;
+  if (!q) return null;
+  const price = q.regularMarketPrice ?? null;
+  const avgVolume = q.averageDailyVolume3Month ?? q.averageDailyVolume10Day ?? null;
+  return {
+    ticker: symbol.toUpperCase(),
+    price,
+    marketCap: q.marketCap ?? null,
+    fiftyTwoWeekHigh: q.fiftyTwoWeekHigh ?? null,
+    fiftyTwoWeekLow: q.fiftyTwoWeekLow ?? null,
+    avgDollarVolume: price != null && avgVolume != null ? price * avgVolume : null,
+    fetchedAt: new Date().toISOString(),
+  };
+}
