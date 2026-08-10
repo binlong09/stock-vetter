@@ -52,6 +52,19 @@ Set `direction` to `short` for `mispriced-short`, `long` for `mispriced-long`, a
 
 `watchlist` is the right answer when 1 and 2 hold but 3 or 4 do not — a real, material change in either direction that you cannot yet trade.
 
+## The long side, with the same rigor
+
+This pipeline's ancestry is forensic short-selling, and its instincts skew that way. Correct for it deliberately: a genuine positive mispricing is worth exactly as much as a genuine negative one, and in an under-covered universe good news goes unpriced just as readily as bad. The brief may carry positive categories (`understated-earnings`, `cash-generation`, `guidance-raise`, `margin-expansion`, `deleveraging`, `backlog-growth`, `customer-win`) — treat them with the same seriousness as their bearish mirrors, and verify them the same way.
+
+The long patterns worth real work:
+
+- **Understated earnings.** Reported GAAP depressed by a charge that is verifiably one-time — use the tools to confirm it is absent from prior years before building on normalized numbers. This is the mirror image of the classic short, and it is the single most common way a cheap stock is actually cheap.
+- **An inflection the price hasn't met.** CFO turning positive, margins crossing a threshold, a segment reaching scale — check with `get_metric_history` that the turn is new (a three-year-old improvement is priced), then check the snapshot: a stock near its 52-week low while the fundamentals just inflected is the setup; a stock that already doubled on it is not.
+- **Insider conviction plus confirming fundamentals.** When the brief notes open-market insider buying and the filing independently shows the business improving, those corroborate each other — two different informed judgments pointing the same way.
+- **Skepticism still applies, pointed the other direction.** For a long, the thing to disprove is that the improvement is cosmetic: a margin gain from a reserve release, "one-time" costs that appear every year, backlog growth from one unprofitable contract. The counter-thesis for a long is the short case, and it deserves your best version of it.
+
+A long thesis needs everything a short needs — the falsifiable claim, the quoted evidence, the dated catalyst, the non-consensus argument from the snapshot. Do not lower the bar out of generosity, and do not raise it out of habit.
+
 ## Verifying before you assert
 
 You have tools that read the filing corpus stored locally. Use them. The brief is a compression produced by a small model, and while every quote in it was mechanically checked against the source text, the *interpretation* attached to those quotes was not.

@@ -56,6 +56,17 @@ export const FlagCategory = z.enum([
   'management', // CFO/CAO/controller departures
   'guidance', // withdrawn, cut, or conspicuously absent
   'accounting-estimate-change', // useful lives, discount rates, assumptions
+  // Positive mirror categories. The taxonomy above is named for deterioration
+  // because the detectors were built for it; these give genuine green flags a
+  // first-class name instead of being shoehorned into 'other' — which is how
+  // a good quarter used to die at triage with a low score.
+  'understated-earnings', // GAAP depressed by a verifiably one-time item; normalized picture better
+  'margin-expansion', // margins improving with a stated mechanism, not just a good quarter
+  'cash-generation', // CFO/FCF inflecting positive, or running ahead of net income
+  'guidance-raise', // raised or newly initiated guidance
+  'deleveraging', // debt paid down, covenant headroom widening, refinancing on better terms
+  'backlog-growth', // backlog, RPO, or bookings accelerating ahead of revenue
+  'customer-win', // a named major customer, contract, or partnership
   'other',
 ]);
 export type FlagCategory = z.infer<typeof FlagCategory>;
@@ -245,6 +256,10 @@ export const RadarSignalKind = z.enum([
   'buyback',
   'inflection',
   'uplisting',
+  // ≥2 independent bullish kinds on one name inside a month. Not a detector —
+  // a coincidence detector: insiders buying while fundamentals inflect is a
+  // different fact than either alone.
+  'bullish-composite',
 ]);
 export type RadarSignalKind = z.infer<typeof RadarSignalKind>;
 

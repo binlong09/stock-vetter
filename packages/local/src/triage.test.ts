@@ -312,3 +312,28 @@ test('an absent cross-filing analysis changes nothing about the score', () => {
   // neither should invent or remove points.
   assert.equal(withNull.score, withEmpty.score);
 });
+
+test('a filing full of good news clears the bar like a filing full of bad news', () => {
+  // The green-flag symmetry contract. Before positive categories existed, a
+  // quarter where earnings were depressed by a genuine one-timer while cash
+  // generation inflected read as "few loud flags" and died here — the long
+  // side of the radar starving at the gate.
+  const d = triage(
+    brief({
+      flags: [
+        flag({ category: 'understated-earnings', severity: 'high', claim: 'GAAP loss driven by one-time impairment absent from prior years' }),
+        flag({ category: 'cash-generation', severity: 'medium', claim: 'CFO positive for the first time, ahead of net income' }),
+      ],
+    }),
+  );
+  assert.equal(d.escalate, true);
+});
+
+test('the bullish mirror scores like its bearish counterpart', () => {
+  // understated-earnings (weight 4) mirrors revenue-recognition (weight 4):
+  // the same severity must produce the same score, or "green flags matter
+  // equally" is a comment, not a property.
+  const bear = triage(brief({ flags: [flag({ category: 'revenue-recognition', severity: 'high' })] }));
+  const bull = triage(brief({ flags: [flag({ category: 'understated-earnings', severity: 'high' })] }));
+  assert.equal(bull.score, bear.score);
+});

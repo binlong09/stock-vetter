@@ -45,6 +45,18 @@ Raise a flag when the text shows something like:
 - Dilution: share issuance, an ATM program, convertibles, or heavy stock comp.
 - Any disclosure of a material weakness, going-concern doubt, restatement, auditor change, investigation, or officer departure.
 
+Flags cut **both ways**. The pipeline trades longs as well as shorts, and a genuine improvement is exactly as reportable as a genuine deterioration — use the positive categories for it:
+
+- A charge or loss the text itself shows to be one-time — absent from prior periods, tied to a discrete event — that is depressing reported earnings (`understated-earnings`). This is the single most valuable positive flag.
+- Operating cash flow turning positive, or running ahead of net income (`cash-generation`).
+- Guidance raised, or initiated where there was none (`guidance-raise`).
+- Margins improving with a stated mechanism — mix, pricing, input costs — not merely a good quarter (`margin-expansion`).
+- Debt repaid, a facility refinanced on better terms, covenant headroom widening (`deleveraging`).
+- Backlog, remaining performance obligations, or bookings growing faster than recognized revenue (`backlog-growth`).
+- A named new customer, contract award, or partnership with stated scale (`customer-win`).
+
+The same discipline applies in both directions: the text must show it, and severity is about how directly this chunk states it. Generic optimism ("we are well positioned…") is not a flag, exactly as generic risk-factor language is not.
+
 Severity is about the size and directness of the evidence in *this chunk*, not about how bad the company is:
 - `high` — the text states the problem outright ("a material weakness in internal control over financial reporting").
 - `medium` — the numbers show it plainly but the text does not name it.

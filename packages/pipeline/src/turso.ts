@@ -288,7 +288,7 @@ export async function enqueueMissingRadarJobs(): Promise<number> {
           LEFT JOIN radar_jobs j ON j.accession = sr.accession
           WHERE j.accession IS NULL
             AND sr.severity IN ('critical', 'high')
-            AND sr.kind NOT IN ('offering', 'late-filing', 'ownership', 'insider-buy', 'uplisting')
+            AND sr.kind NOT IN ('offering', 'late-filing', 'ownership', 'insider-buy', 'uplisting', 'bullish-composite')
             AND (sr.focus = 1 OR sr.key NOT LIKE '%:8k:2.02')`,
     args: [new Date().toISOString()],
   });
@@ -451,6 +451,64 @@ export async function reanalyzeDoneRadarJobs(accessions?: string[]): Promise<num
   }
   const res = await client.execute(`UPDATE radar_jobs SET ${clear} WHERE status='done'`);
   return res.rowsAffected;
+}
+
+export type BullishConfluence = {
+  ticker: string;
+  cik: string;
+  /** Distinct bullish kinds seen in the window, e.g. ['insider-buy','inflection']. */
+  kinds: string[];
+  /** The newest contributing signal — the composite signal hangs off it. */
+  latestAccession: string;
+  latestForm: string;
+  latestFilingDate: string;
+};
+
+/**
+ * Tickers with ≥2 independent bullish signal kinds inside the trailing window
+ * — insiders buying while fundamentals inflect is a different fact than
+ * either alone. Excludes tickers that already got a bullish-composite signal
+ * in the window, so the sweep emits each confluence once, not daily.
+ */
+export async function findBullishConfluence(sinceDays = 30): Promise<BullishConfluence[]> {
+  if (!isTursoConfigured()) return [];
+  await migrate();
+  const client = getTursoClient();
+  if (!client) return [];
+  const since = new Date(Date.now() - sinceDays * 86400_000).toISOString().slice(0, 10);
+  const res = await client.execute({
+    sql: `SELECT ticker, cik, kind, accession, form, filing_date FROM short_radar
+          WHERE kind IN ('insider-buy', 'buyback', 'inflection', 'uplisting')
+            AND filing_date >= ?
+            AND ticker NOT IN (
+              SELECT ticker FROM short_radar WHERE kind = 'bullish-composite' AND filing_date >= ?
+            )
+          ORDER BY filing_date`,
+    args: [since, since],
+  });
+  const byTicker = new Map<string, { cik: string; kinds: Set<string>; latest: { accession: string; form: string; filingDate: string } }>();
+  for (const r of res.rows) {
+    const t = String(r.ticker);
+    const cur = byTicker.get(t) ?? {
+      cik: String(r.cik),
+      kinds: new Set<string>(),
+      latest: { accession: String(r.accession), form: String(r.form), filingDate: String(r.filing_date) },
+    };
+    cur.kinds.add(String(r.kind));
+    // Rows arrive filing-date ascending, so the last one seen is the newest.
+    cur.latest = { accession: String(r.accession), form: String(r.form), filingDate: String(r.filing_date) };
+    byTicker.set(t, cur);
+  }
+  return [...byTicker.entries()]
+    .filter(([, v]) => v.kinds.size >= 2)
+    .map(([ticker, v]) => ({
+      ticker,
+      cik: v.cik,
+      kinds: [...v.kinds].sort(),
+      latestAccession: v.latest.accession,
+      latestForm: v.latest.form,
+      latestFilingDate: v.latest.filingDate,
+    }));
 }
 
 export type RadarCompany = {

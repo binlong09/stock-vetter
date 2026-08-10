@@ -168,6 +168,16 @@ every live long thesis once a quarter for ~$0.20. Tune auto-focus with
 The view filters are views, never writes: `--direction=bullish` changes what
 you read and what the digest emails, and the sweep still persists everything.
 
+**Green-flag parity.** The extraction taxonomy carries positive categories
+(`understated-earnings`, `cash-generation`, `guidance-raise`, …) that triage
+scores like their bearish mirrors, so a filing full of good news escalates
+the same way a filing full of bad news does. Bullish signals whose source
+documents can't be parsed (Form 4 insider clusters, uplistings) — and the
+`bullish-composite` signal emitted when ≥2 green-flag kinds land on one name
+inside 30 days — queue a deep dive on the company's **latest 10-Q/10-K**
+instead (capped at 5 per sweep, ~$0.22 each). Turn that spend off with
+`RADAR_BULLISH_DEEPDIVE=0` or `pnpm radar --no-bullish-deepdive`.
+
 **Market-aware verdicts.** The synthesis prompt frames "mispriced" as a
 tradeability call, so the worker fetches a current market snapshot (price,
 cap, 52-week range, liquidity) per analyzed filing and appends it to the

@@ -60,6 +60,7 @@ const KIND_LABEL: Record<string, string> = {
   buyback: 'buyback',
   inflection: 'inflection',
   uplisting: 'uplisting',
+  'bullish-composite': 'bullish confluence',
 };
 
 // Which way the signal cuts. Small-cap catalysts genuinely go both ways — a
