@@ -14,3 +14,6 @@ fixtures/
 
 # Local model-comparison / caching experiment scratch (not production data)
 experiments/
+
+# Fine-tuning trajectory capture (radar-worker writes these; local disk only)
+data/training/

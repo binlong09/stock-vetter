@@ -423,6 +423,43 @@ test('a validation failure on the forced final turn gets one grace correction', 
   });
 });
 
+test('the full trajectory comes back for fine-tuning capture', async () => {
+  await withIndex(async (idx) => {
+    await withAnthropic(
+      [
+        {
+          content: [
+            { type: 'text', text: 'Verifying the DSO quote first.' },
+            {
+              type: 'tool_use',
+              id: 'tu_1',
+              name: 'verify_quote',
+              input: { quote: 'Days sales outstanding increased to 78 days from 61 days' },
+            },
+          ],
+        },
+        { content: [submitBlock()] },
+      ],
+      async () => {
+        const r = await synthesizeAssessment(BRIEF, idx, newCostTracker());
+        assert.match(r.transcript.system, /mispricing/i);
+        const msgs = r.transcript.messages as Array<{ role: string; content: unknown }>;
+        // A trainable trajectory is the WHOLE conversation: the brief in, the
+        // intermediate tool turn, and — the part the loop never pushes onto
+        // its own message list — the final assistant turn with the submit.
+        assert.equal(msgs[0]!.role, 'user');
+        const last = msgs.at(-1)! as { role: string; content: Array<{ type: string; name?: string }> };
+        assert.equal(last.role, 'assistant');
+        assert.ok(
+          last.content.some((b) => b.type === 'tool_use' && b.name === 'submit_assessment'),
+          'the final submit turn is present',
+        );
+        assert.equal(JSON.stringify(msgs).includes('cache_control'), false, 'transport markers stripped');
+      },
+    );
+  });
+});
+
 // --- market snapshot -------------------------------------------------------
 
 const SNAPSHOT = {

@@ -110,11 +110,16 @@ async function runJob(
   // honest either way: PRICING carries entries for both providers.
   const synthesisModel = arg('model') ?? process.env.RADAR_SYNTHESIS_MODEL;
   const compareModel = resolveCompareConfig(synthesisModel).model;
+  // Trajectory capture (fine-tuning data) is on by default: every synthesis
+  // this box pays for leaves behind its full reasoning transcript in
+  // data/training/ (gitignored, local disk only). RADAR_CAPTURE=0 disables.
+  const captureDir = process.env.RADAR_CAPTURE === '0' ? undefined : (process.env.RADAR_CAPTURE_DIR ?? 'data/training');
   const opts = {
     noSynthesis: false,
     force: true,
     ...(synthesisModel ? { synthesis: { model: synthesisModel } } : {}),
     ...(compareModel ? { compareSynthesisModel: compareModel } : {}),
+    ...(captureDir ? { captureDir } : {}),
     onProgress: (m: string) => err(`    ${m}`),
   };
   const result: ScanResult = job.form.startsWith('8-K')

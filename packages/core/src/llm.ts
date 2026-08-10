@@ -443,6 +443,19 @@ function rollConversationCache(messages: MessageParam[]): void {
   }
 }
 
+// Deep-copy a conversation with cache_control markers removed — they're
+// billing/transport annotations, not content, and they churn per run.
+function stripCacheControl(messages: MessageParam[]): MessageParam[] {
+  const copy = JSON.parse(JSON.stringify(messages)) as MessageParam[];
+  for (const m of copy) {
+    if (!Array.isArray(m.content)) continue;
+    for (const block of m.content) {
+      if (block && typeof block === 'object') delete (block as { cache_control?: unknown }).cache_control;
+    }
+  }
+  return copy;
+}
+
 // Tell the model the iteration budget is spent. Appended to the newest user
 // turn (never pushed as a separate message — the conversation must keep
 // alternating roles). A hedged answer built from partial evidence is worth
@@ -473,7 +486,7 @@ export async function llmCallWithToolsJson<T>(opts: {
   tracker: CostTracker;
   model?: string;
   onToolCall?: (record: ToolCallRecord) => void;
-}): Promise<{ value: T; toolCalls: ToolCallRecord[]; iterations: number }> {
+}): Promise<{ value: T; toolCalls: ToolCallRecord[]; iterations: number; transcript: MessageParam[] }> {
   const model = opts.model ?? process.env.ANTHROPIC_MODEL ?? DEFAULT_MODEL;
   const maxIterations = opts.maxIterations ?? 12;
   const submitName = opts.submitToolName ?? 'submit';
@@ -550,7 +563,23 @@ export async function llmCallWithToolsJson<T>(opts: {
     const submit = toolUses.find((t) => t.name === submitName);
     if (submit) {
       const parsed = opts.schema.safeParse(submit.input);
-      if (parsed.success) return { value: parsed.data, toolCalls, iterations: iteration + 1 };
+      if (parsed.success) {
+        return {
+          value: parsed.data,
+          toolCalls,
+          iterations: iteration + 1,
+          // The full conversation including the final submit turn (which is
+          // never pushed onto `messages` in the success path). This is the
+          // training-data surface: everything a model would need to learn the
+          // PROCESS — which tools, in what order, reasoning between calls —
+          // not just the final answer. Cache markers are transport detail,
+          // stripped so the transcript is stable across cache configurations.
+          transcript: stripCacheControl([
+            ...messages,
+            { role: 'assistant', content: resp.content },
+          ]),
+        };
+      }
       // The API validates against the schema we gave it, so this is rare — but
       // Zod refinements (min/max, custom checks) aren't expressible in JSON
       // Schema and can still fail. Hand it back and let the model correct.
