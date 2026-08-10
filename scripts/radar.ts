@@ -32,11 +32,13 @@
 import 'dotenv/config';
 import { readFile } from 'node:fs/promises';
 import { computeRadarSignals, capTier, type WatchlistEntry } from '@stock-vetter/local';
-import { isTursoConfigured, isMailerConfigured, sendEmail } from '@stock-vetter/core';
+import { isTursoConfigured, isMailerConfigured, sendEmail, listFilings } from '@stock-vetter/core';
 import {
   upsertRadarSignals,
   upsertRadarCompanies,
   enqueueMissingRadarJobs,
+  enqueueRadarJobs,
+  findBullishConfluence,
   listAutoFocusTickers,
   insiderStore,
 } from '@stock-vetter/pipeline';
@@ -343,6 +345,65 @@ async function main(): Promise<void> {
     // names. See enqueueMissingRadarJobs for the full rationale.
     const queued = await enqueueMissingRadarJobs();
     if (queued) process.stderr.write(`queued: ${queued} new deep-dive job(s)\n`);
+
+    // Bullish confluence (D): ≥2 independent green-flag kinds on one name in
+    // 30 days becomes its own critical signal — insiders buying while
+    // fundamentals inflect is a different fact than either alone.
+    const confluences = await findBullishConfluence();
+    const compositeSignals: RadarSignal[] = confluences.map((c) => ({
+      key: `${c.latestAccession}:bullish-composite`,
+      ticker: c.ticker,
+      cik: c.cik,
+      accession: c.latestAccession,
+      form: c.latestForm,
+      filingDate: c.latestFilingDate,
+      kind: 'bullish-composite' as const,
+      severity: 'critical' as const,
+      direction: 'bullish' as const,
+      headline: `Bullish confluence: ${c.kinds.join(' + ')} within 30 days`,
+      detail:
+        `Independent bullish signals of ${c.kinds.length} kinds (${c.kinds.join(', ')}) ` +
+        `landed on ${c.ticker} inside a 30-day window. Each alone is a lead; together they corroborate.`,
+      marketCap: watchlist.find((w) => w.ticker.toUpperCase() === c.ticker)?.marketCap ?? null,
+      focus: focusTickers.has(c.ticker),
+    }));
+    const newComposites = compositeSignals.length ? await upsertRadarSignals(compositeSignals) : [];
+    for (const s of newComposites) process.stderr.write(`confluence: ${s.ticker} — ${s.headline}\n`);
+
+    // Bullish deep-dives (B): insider-buy, uplisting, and confluence signals
+    // point at documents the box can't parse (Form 4s, 8-A12Bs), so instead
+    // of queueing those, queue the company's latest periodic filing — the
+    // question "insiders just bet six figures; what do the fundamentals say?"
+    // is answered by the 10-Q, not the Form 4. Off switch: RADAR_BULLISH_DEEPDIVE=0
+    // or --no-bullish-deepdive. Capped per sweep so a busy Form 4 day can't
+    // flood the queue; each queued job costs one synthesis (~$0.22).
+    const bullishDeepdive =
+      arg('no-bullish-deepdive') == null && process.env.RADAR_BULLISH_DEEPDIVE !== '0';
+    if (bullishDeepdive) {
+      const triggerKinds = new Set(['insider-buy', 'uplisting', 'bullish-composite']);
+      const triggerTickers = [
+        ...new Set(
+          [...newSignals, ...newComposites].filter((s) => triggerKinds.has(s.kind)).map((s) => s.ticker),
+        ),
+      ].slice(0, 5);
+      for (const ticker of triggerTickers) {
+        try {
+          const refs = await listFilings(ticker, { forms: ['10-Q', '10-K'] });
+          const latest = refs.sort((a, b) => b.filingDate.localeCompare(a.filingDate))[0];
+          if (!latest) continue;
+          const n = await enqueueRadarJobs([
+            { accession: latest.accession, ticker, form: latest.form, filingDate: latest.filingDate },
+          ]);
+          if (n) {
+            process.stderr.write(
+              `bullish deep-dive: queued ${ticker} ${latest.form} ${latest.accession} (green-flag trigger)\n`,
+            );
+          }
+        } catch (e) {
+          process.stderr.write(`bullish deep-dive: ${ticker} lookup failed (${(e as Error).message.slice(0, 80)})\n`);
+        }
+      }
+    }
   } else if (persist) {
     process.stderr.write('Turso not configured — printing only (set TURSO_DATABASE_URL to persist)\n');
   }

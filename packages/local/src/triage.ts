@@ -43,6 +43,19 @@ const CATEGORY_WEIGHT: Record<FlagCategory, number> = {
   'customer-concentration': 1,
   'supplier-concentration': 1,
   'margin': 1,
+  // Positive categories score like their bearish mirrors — a filing full of
+  // good news must be able to clear the same bar a filing full of bad news
+  // clears, or the long side of the radar starves at this gate.
+  // 'understated-earnings' is the highest: GAAP masking a better business is
+  // the classic long mispricing, exactly as revenue-recognition games masking
+  // a worse one are the classic short.
+  'understated-earnings': 4,
+  'cash-generation': 3,
+  'guidance-raise': 3,
+  'margin-expansion': 2,
+  deleveraging: 2,
+  'backlog-growth': 2,
+  'customer-win': 2,
   other: 1,
 };
 
