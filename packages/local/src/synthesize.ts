@@ -274,6 +274,13 @@ export type SynthesisResult = {
   assessment: MispricingAssessment;
   toolCalls: ToolCallRecord[];
   iterations: number;
+  /**
+   * The full agent conversation (brief+snapshot user turn through the final
+   * submit), plus the system prompt it ran under. This is fine-tuning data:
+   * a local model learns the verification PROCESS from these trajectories,
+   * not just the shape of the answer.
+   */
+  transcript: { system: string; messages: unknown[] };
 };
 
 /**
@@ -301,7 +308,7 @@ export async function synthesizeAssessment(
     },
   );
 
-  const { value, toolCalls, iterations } = await llmCallWithToolsJson({
+  const { value, toolCalls, iterations, transcript } = await llmCallWithToolsJson({
     stage: `synthesis-${brief.ticker}`,
     // The prompt is identical for every company in a run, so caching it turns
     // ~1,500 tokens of instructions into a cache read after the first filing.
@@ -323,11 +330,21 @@ export async function synthesizeAssessment(
     onToolCall: opts.onToolCall,
   });
 
-  return { assessment: value, toolCalls, iterations };
+  return {
+    assessment: value,
+    toolCalls,
+    iterations,
+    transcript: { system, messages: transcript },
+  };
 }
 
 /** Render an assessment for the terminal or a fixture file. */
-export function renderAssessmentMarkdown(brief: FilingBrief, r: SynthesisResult): string {
+export function renderAssessmentMarkdown(
+  brief: FilingBrief,
+  // The transcript isn't rendered, so callers that only carry the result
+  // fields (scan.ts persists them without the conversation) stay valid.
+  r: Omit<SynthesisResult, 'transcript'>,
+): string {
   const a = r.assessment;
   const L: string[] = [];
   L.push(

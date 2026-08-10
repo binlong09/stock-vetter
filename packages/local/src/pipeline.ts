@@ -27,6 +27,8 @@
 //     historical filings against later data looks like a brilliant strategy
 //     and is not one.
 
+import { appendFile, mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
 import {
   fetchAndParseFiling,
   fetchEightK,
@@ -82,8 +84,35 @@ export type ScanOptions = {
    * data point about the challenger, not about the filing.
    */
   compareSynthesisModel?: string;
+  /**
+   * Directory for fine-tuning trajectory capture. When set, every completed
+   * synthesis (primary AND comparison) appends one JSONL record — system
+   * prompt, brief, market snapshot, full tool-use conversation, final
+   * assessment — to `<dir>/<YYYY-MM>.jsonl`. This is the raw material for
+   * distilling the synthesis stage into a local model; without capture, each
+   * report's reasoning process is paid for once and thrown away.
+   */
+  captureDir?: string;
   onProgress?: (message: string) => void;
 };
+
+// One captured trajectory. Append-only JSONL, one file per month — big enough
+// to not thrash the filesystem, small enough that a bad month is deletable.
+// Capture must never fail a scan: the trajectory is a byproduct, the
+// assessment is the product.
+async function captureTrajectory(
+  dir: string,
+  record: Record<string, unknown>,
+  log: (m: string) => void,
+): Promise<void> {
+  try {
+    await mkdir(dir, { recursive: true });
+    const file = join(dir, `${new Date().toISOString().slice(0, 7)}.jsonl`);
+    await appendFile(file, `${JSON.stringify(record)}\n`, 'utf-8');
+  } catch (e) {
+    log(`trajectory capture failed (${(e as Error).message.slice(0, 80)}) — continuing`);
+  }
+}
 
 /** The comparison leg's outcome, when one was requested and survived. */
 export type CompareResult = {
@@ -413,6 +442,34 @@ export async function scanPrepared(
     asOf: meta.filingDate,
   });
 
+  // Trajectory capture for fine-tuning. The record is self-contained: a
+  // training pipeline needs nothing but this line to reconstruct the exact
+  // conversation the model had, and the verdict fields make curation (keep
+  // the agreements, audit the disagreements) a jq one-liner.
+  const capture = (model: string, r: { assessment: MispricingAssessment; iterations: number; transcript: { system: string; messages: unknown[] } }) =>
+    opts.captureDir
+      ? captureTrajectory(
+          opts.captureDir,
+          {
+            capturedAt: new Date().toISOString(),
+            ticker: meta.ticker,
+            accession: meta.accession,
+            form: meta.form,
+            filingDate: meta.filingDate,
+            model,
+            verdict: r.assessment.verdict,
+            conviction: r.assessment.conviction,
+            iterations: r.iterations,
+            market,
+            system: r.transcript.system,
+            messages: r.transcript.messages,
+            assessment: r.assessment,
+          },
+          log,
+        )
+      : Promise.resolve();
+  await capture(opts.synthesis?.model ?? 'claude-sonnet-4-6', result);
+
   // The comparison leg. Same brief, same index, same as-of — the model is the
   // only variable, which is what makes the side-by-side an experiment rather
   // than two unrelated opinions. Its own tracker keeps the two costs honest
@@ -435,6 +492,7 @@ export async function scanPrepared(
         assessment: b.assessment,
         cost: summarizeCost(compareTracker).total,
       };
+      await capture(opts.compareSynthesisModel, b);
     } catch (e) {
       log(`comparison synthesis failed (${(e as Error).message.slice(0, 120)}) — keeping primary only`);
     }
