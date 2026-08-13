@@ -13,10 +13,16 @@ import { RadarTabs } from '../tabs';
 // session — so this page is roughly as live as the radar itself.
 export const revalidate = 300;
 
+// Cents matter at the default $100-a-position measuring stick and are noise at
+// a larger PAPER_NOTIONAL, so the precision follows the magnitude.
 function money(x: number | null | undefined): string {
   if (x == null || !Number.isFinite(x)) return 'n/a';
-  const sign = x < 0 ? '−' : '';
-  return `${sign}$${Math.abs(x).toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+  const abs = Math.abs(x);
+  const digits = abs < 1000 ? 2 : 0;
+  return `${x < 0 ? '−' : ''}$${abs.toLocaleString('en-US', {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  })}`;
 }
 
 const upDown = (x: number | null | undefined): string =>
@@ -167,8 +173,9 @@ export default async function PaperPage({
 
       <p className="mt-2 text-xs text-slate-400">
         One rule, applied without discretion: every deep-dive verdict of{' '}
-        <span className="text-emerald-600">mispriced-long</span> is bought at{' '}
-        {money(positions[0]?.notional ?? 10000)} and held. The fill is the first daily close at or
+        <span className="text-emerald-600">mispriced-long</span> is bought at $
+        {(positions[0]?.notional ?? 100).toLocaleString('en-US', { maximumFractionDigits: 0 })} and
+        held. The fill is the first daily close at or
         after the verdict — the price you could actually have gotten by acting on it when you saw
         it. Returns use split- and dividend-adjusted closes, and each position is measured against{' '}
         {benchmark} over its own holding window. Nothing here is a decision anyone made, which is

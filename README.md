@@ -185,7 +185,7 @@ instead (capped at 5 per sweep, ~$0.22 each). Turn that spend off with
 `RADAR_BULLISH_DEEPDIVE=0` or `pnpm radar --no-bullish-deepdive`.
 
 **Paper track record (`/radar/paper`).** Every deep-dive verdict of
-`mispriced-long` opens a mock long — $10,000, equal weight, held — filled at
+`mispriced-long` opens a mock long — $100, equal weight, held — filled at
 the **first daily close at or after the verdict**. No discretion anywhere in
 the path: positions are derived from `radar_jobs` rather than entered by hand,
 because a track record built from the picks someone chose to act on measures
@@ -204,8 +204,11 @@ comparison from "how often do they disagree" into "whose picks made money".
 
 It is paper: no slippage, no spread, and small-cap liquidity is ignored — a
 $200M name with $300k of daily turnover fills instantly here and would not in
-life. Tune with `PAPER_NOTIONAL` (default 10000), `PAPER_BENCHMARK` (default
-IWM), `PAPER_TRACK_ALT=0` (stop tracking the challenger), `PAPER_MARK_MIN_HOURS`
+life. The size is a measuring stick, not a portfolio: every figure the book
+reports is a percentage, so $100 a position says the same thing about the
+pipeline that $100,000 would. Tune with `PAPER_NOTIONAL` (default 100),
+`PAPER_BENCHMARK` (default IWM), `PAPER_TRACK_ALT=0` (stop tracking the
+challenger), `PAPER_MARK_MIN_HOURS`
 (default 4 — how stale a ticker's marks may get before the sweep re-fetches
 them; `pnpm paper` always forces), or `PAPER_TRACK=0` (stop the sweep
 refreshing the book at all).

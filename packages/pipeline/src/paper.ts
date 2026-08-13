@@ -24,10 +24,15 @@ import { fetchDailyBars, getTursoClient, isTursoConfigured, migrate } from '@sto
 /** The verdict that triggers a mock buy. The one input to the whole feature. */
 const BUY_VERDICT = 'mispriced-long';
 
-/** Dollars per position. Equal weight: the record then measures hit rate, not sizing. */
+/**
+ * Dollars per position. Equal weight: the record then measures hit rate, not
+ * sizing. The absolute number is arbitrary — every figure the book reports is
+ * a percentage or a scale multiple of it — so it is set small deliberately,
+ * to read as a measuring stick rather than as a portfolio anyone holds.
+ */
 export function paperNotional(): number {
-  const n = Number(process.env.PAPER_NOTIONAL ?? 10_000);
-  return Number.isFinite(n) && n > 0 ? n : 10_000;
+  const n = Number(process.env.PAPER_NOTIONAL ?? 100);
+  return Number.isFinite(n) && n > 0 ? n : 100;
 }
 
 /**

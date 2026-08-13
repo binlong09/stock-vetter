@@ -21,7 +21,8 @@
  *   pnpm paper --leg=all             # both, side by side
  *   pnpm paper close TICKER --reason="thesis broke"
  *
- * Sizing and benchmark: PAPER_NOTIONAL (default 10000), PAPER_BENCHMARK
+ * Sizing and benchmark: PAPER_NOTIONAL (default 100 — the size is a measuring
+ * stick, not a portfolio; every figure printed is a percentage), PAPER_BENCHMARK
  * (default IWM). PAPER_TRACK_ALT=0 stops the challenger leg being tracked.
  * The radar sweep calls the same refresh, so this CLI is for reading the book
  * and for the rare manual close — not something you need to schedule.
@@ -59,8 +60,17 @@ const pct = (x: number | null, digits = 1): string =>
 /** Unsigned — a win rate is a share, not a change, and "+100%" reads as a double. */
 const rate = (x: number | null): string => (x == null ? 'n/a' : `${(x * 100).toFixed(0)}%`);
 const usd = (x: number | null): string => (x == null ? 'n/a' : `$${x.toFixed(2)}`);
-const money = (x: number | null): string =>
-  x == null ? 'n/a' : `${x < 0 ? '-' : ''}$${Math.abs(x).toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+// Cents matter at the default $100-a-position measuring stick, and are noise at
+// a larger PAPER_NOTIONAL — so the precision follows the magnitude.
+const money = (x: number | null): string => {
+  if (x == null) return 'n/a';
+  const abs = Math.abs(x);
+  const digits = abs < 1000 ? 2 : 0;
+  return `${x < 0 ? '-' : ''}$${abs.toLocaleString('en-US', {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  })}`;
+};
 
 function printSummary(label: string, s: PortfolioSummary): void {
   out(`\n${label}\n${'═'.repeat(label.length)}\n`);
