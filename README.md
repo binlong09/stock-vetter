@@ -9,17 +9,36 @@ Four research tools that share one codebase:
 
 All four run as a CLI on your laptop (or a scheduled runner). A small read-only Next.js viewer (`apps/web/`, on Vercel free tier) reads the results on your phone. The pipelines are **not** deployed — only the viewer.
 
-For operational depth — costs, web-viewer setup/deploy, cache management, reading the verdict — see **[USAGE.md](USAGE.md)**. For design rationale and build history see the spec docs: **[oldSPEC.md](oldSPEC.md)** (Stock Vetter), **[SPEC.md](SPEC.md)** (Signal Tracker build plan), **[SHORTSPEC.md](SHORTSPEC.md)** (Short-Side Scanner), and **[HANDOFF.md](HANDOFF.md)** (packaging overview). This file is the orientation: how to run it, then how each tool actually works.
+For operational depth — costs, web-viewer setup/deploy, cache management, reading the verdict — see **[USAGE.md](USAGE.md)**. For design rationale and build history see the spec docs: **[oldSPEC.md](oldSPEC.md)** (Stock Vetter), **[SPEC.md](SPEC.md)** (Signal Tracker build plan), and **[HANDOFF.md](HANDOFF.md)** (packaging overview). The Short-Side Scanner has no spec doc — its rationale lives in the header comment of each module under `packages/local/src/` (`pipeline.ts` for the ordering decisions, `triage.ts` for the gate, `lookback.ts` for the retrieval design) and in the [Radar — methodology](#radar--methodology) section below. This file is the orientation: how to run it, then how each tool actually works.
 
 ---
 
 ## Setup
 
+### Prerequisites
+
+| | Requirement | Why |
+|---|---|---|
+| **Node** | ≥ 20 (`engines` in `package.json`); the CI workflows run 22 | Everything runs TypeScript directly through `tsx` — there is no build step to run |
+| **pnpm** | 9.15.0, pinned by `packageManager` | `corepack enable && corepack prepare pnpm@9.15.0 --activate` if you don't have it |
+| **Turso CLI** | optional | Only needed to create the database the first time — see [First-time database setup](#first-time-database-setup) |
+| **Ollama + a GPU** | optional; Short-Side Scanner and `pnpm radar-worker` only | The reference box is one 32GB-class card (RTX 5090) running `qwen3:32b`. Nothing else in the repo needs a GPU |
+| **Disk** | a few hundred MB anywhere; **tens of GB** on the GPU box | `.cache/` holds SEC sections and LLM outputs and is safe to delete; `.cache/lookback.db` (the local filing index) is the one that grows, which is why `LOOKBACK_DB_PATH` exists |
+
+Everything except the local-model tier runs on a plain laptop — including the
+whole Radar, which is EDGAR plus arithmetic.
+
 ```bash
 pnpm install
 cp .env.example .env      # then fill in keys (see below)
-pnpm typecheck            # tsc -b across the workspace
+pnpm typecheck            # tsc -b over packages/*/src + scripts/
+pnpm test                 # tsx --test over packages/*/src/*.test.ts + apps/web
 ```
+
+There is **no build step** — every CLI runs the TypeScript directly through
+`tsx`, and `tsc` is only ever asked to typecheck (`noEmit`). The root
+`tsconfig.json` covers `packages/*/src` and `scripts/`; `apps/web` has its own,
+so typecheck it separately with `pnpm --filter @stock-vetter/web typecheck`.
 
 **Environment** (`.env`):
 
@@ -32,6 +51,128 @@ pnpm typecheck            # tsc -b across the workspace
 | `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN` | web viewer + tracker state | Without these, the analyze CLI is fixtures-only and the tracker uses a local cursor cache |
 
 The scheduled tracker cron (`.github/workflows/signal-tracker.yml`) reads these as GitHub Actions **secrets**, not from `.env`. Email-digest variables (`AUTH_RESEND_KEY`, `EMAIL_FROM`, `SIGNAL_DIGEST_TO`, `SIGNAL_TRACKER_BASE_URL`) are optional — without them the run still works, it just sends no email.
+
+**Who needs what.** None of this is all-or-nothing. Each tool needs a different
+slice of the setup, and you can stand one up without touching the others:
+
+| | Keys | Turso | GPU / Ollama | Scheduled? |
+|---|---|---|---|---|
+| Stock Vetter (`analyze-ticker`) | `ANTHROPIC_API_KEY`, `SEC_USER_AGENT`; `ALPHAVANTAGE_API_KEY` for `--transcript` | optional — fixtures-only without it | no | no, you run it |
+| Signal Tracker (`track`) | `ANTHROPIC_API_KEY`, `FMP_API_KEY`, `SEC_USER_AGENT` | recommended — it holds the authoritative cursors | no | yes, `signal-tracker.yml` daily |
+| Radar (`radar`, `build-smallcap`) | `SEC_USER_AGENT` only | required — dedup + the signal feed | no | yes, `short-radar.yml` 5×/day |
+| Radar deep-dive (`radar-worker`) | `ANTHROPIC_API_KEY` and/or `DEEPSEEK_API_KEY` | required — it drains a Turso queue | **yes** | no, you run it on the GPU box |
+| Short-Side Scanner (`scan`) | `ANTHROPIC_API_KEY`, unless `--no-synthesis` | no | **yes** | no |
+| Web viewer (`apps/web`) | `AUTH_SECRET`, `AUTH_RESEND_KEY`, `EMAIL_FROM`, `CRON_SECRET` | required — it reads nothing else | n/a | Vercel cron, EOD prices |
+
+The Radar is by far the cheapest thing here to stand up: an SEC user-agent
+string and a Turso database, no model of any kind, no GPU.
+
+**The rest of the environment.** Every variable below has a working default;
+`.env.example` documents each one inline with its footguns.
+
+| Variable | Default | What it does |
+|---|---|---|
+| `DEEPSEEK_API_KEY` | — | Enables DeepSeek as a synthesis model, and as the default side-by-side challenger |
+| `RADAR_SYNTHESIS_MODEL` | Claude | Primary model for the deep-dive's cloud pass |
+| `RADAR_COMPARE`, `RADAR_COMPARE_MODEL` | on, "the other provider" | Side-by-side challenger (see below) |
+| `RADAR_AUTO_FOCUS`, `RADAR_AUTO_FOCUS_DAYS`, `RADAR_AUTO_FOCUS_MIN_CONVICTION` | on, 180, 0 | Auto-promotion into the focus list |
+| `RADAR_DIGEST_TO`, `RADAR_BASE_URL` | — | Radar digest email recipient and the link base for it |
+| `OLLAMA_HOST`, `OLLAMA_MODEL`, `OLLAMA_NUM_CTX`, `OLLAMA_CONCURRENCY`, `OLLAMA_EMBED_MODEL` | `127.0.0.1:11434`, `qwen3:32b`, 16384, 1, `nomic-embed-text` | The local tier. `OLLAMA_NUM_CTX` is load-bearing: Ollama silently truncates an over-length prompt rather than erroring |
+| `LOCAL_BACKEND` | `ollama` | Set to `openai` to talk to llama.cpp / vLLM / LM Studio's OpenAI-compatible surface instead |
+| `LOOKBACK_DB_PATH` | `.cache/lookback.db` | The local filing index — tens of GB, keep it on the GPU box |
+| `SEC_MIN_INTERVAL_MS` | 125 | EDGAR pacing. SEC's limit is 10 req/s and exceeding it earns a silent ten-minute IP block |
+| `STOCK_VETTER_CACHE_DIR` | `.cache` | Root of the filesystem cache |
+
+### First-time database setup
+
+Only needed once, and only for the tools that want Turso (everything but a
+fixtures-only `analyze-ticker` and a `--no-persist` radar sweep). There is no
+separate migration command — `migrate()` in `packages/core/src/turso.ts` applies
+`packages/core/migrations/*.sql` idempotently on every CLI that writes, so
+creating the database and running one command is the whole bootstrap:
+
+```bash
+brew install tursodatabase/tap/turso      # or see https://docs.turso.tech
+turso auth login
+turso db create stock-vetter
+turso db show stock-vetter --url          # → TURSO_DATABASE_URL
+turso db tokens create stock-vetter       # → TURSO_AUTH_TOKEN
+```
+
+Put both in the repo-root `.env`, then:
+
+```bash
+pnpm push-fixtures                        # creates the schema, backfills any existing fixtures/
+pnpm allow-email you@example.com "owner"  # seed the viewer's sign-in allowlist BEFORE you deploy
+```
+
+Both are idempotent. Skipping the second one is how you lock yourself out of
+your own viewer — sign-in fails closed on an empty `allowed_emails` table.
+
+---
+
+## How the four tools connect
+
+They share one repo, one set of SEC/market adapters, and one database — but
+they answer four different questions, and only two of them are wired to each
+other directly.
+
+```
+  EDGAR daily index ─▶  Radar               deterministic sweep, cloud cron
+                        packages/local/src/radar.ts
+                              │
+                              │ enqueues each flagged filing (radar_jobs in Turso)
+                              ▼
+  EDGAR full text ──▶  Radar worker / Short-Side Scanner        ← needs the GPU
+                        local model reads → triage → cloud synthesis
+                        packages/local/src/pipeline.ts
+                              │
+                              │ every `mispriced-long` verdict auto-promotes its
+                              └─▶ ticker into the FOCUS list, which changes what
+                                  the next Radar sweep bothers to enqueue
+
+  EDGAR + FMP + AV ─▶  Signal Tracker       cursor-gated daily cron
+                        packages/signals/
+
+  EDGAR + Yahoo ────▶  Stock Vetter         on demand, one ticker at a time
+                        packages/pipeline/
+
+  all four ─────────▶  Turso (libSQL) ─────▶ apps/web  (read-only viewer)
+```
+
+**The one real loop** is Radar → deep-dive → focus list → Radar. That is the
+discovery funnel: a few hundred names you have never heard of get swept
+cheaply, the loud ones get read by a model, and the ones a model says are
+mispriced earn their way onto the short list that gets read every quarter.
+
+**Stock Vetter and the Signal Tracker are coupled by you, not by code.** You
+read a decision card, form a view, and write that view into `data/theses.json`
+as a falsifiable claim with tripwires. They share machinery — the same reverse
+DCF, the same extract → critique → judge shape, the same prompt-hashed LLM
+cache — but no artifact flows automatically between them. (The tracker builds
+its own reverse DCF from companyfacts at evaluation time; it does not read
+`fixtures/<TICKER>/reverse-dcf.json`.)
+
+**What each tool writes.** Turso is the shared bus. With one exception, each
+table has a single producer:
+
+| Tool | Filesystem | Turso tables |
+|---|---|---|
+| Stock Vetter | `fixtures/<TICKER>/` | `tickers`, `primary_source_runs`, `financials`, `videos`, `analyst_cards` |
+| Signal Tracker | `fixtures/theses/` | `signal_cursors`, `thesis_status`, `signals`, `evaluations`, `theses`, `signal_run_lock` |
+| Radar | — (prints; `--no-persist` to skip Turso) | `short_radar`, `radar_companies`, `radar_jobs`, `insider_purchases`, `insider_filings_seen` |
+| Deep-dive / Scanner | `fixtures/short/<TICKER>/<accession>/`, `.cache/lookback.db` | `radar_jobs` (results + the comparison columns) |
+| `pnpm allow-email` | — | `allowed_emails` (the viewer's sign-in allowlist) |
+| Web viewer | — | reads all of the above; writes only `quotes` and the Auth.js tables |
+
+The exception is `normalized_transcripts`, which lives in `core` and is written
+by whichever tool normalized the call first — Stock Vetter's `--transcript`
+pass or the tracker's `av-transcript` feed. Normalizing a transcript is the
+expensive part, so it is deliberately done once and shared.
+
+Schema lives in `packages/core/migrations/*.sql` and is applied idempotently by
+`migrate()` in `packages/core/src/turso.ts` — every CLI that writes calls it, so
+there is no separate migration step.
 
 ---
 
@@ -60,28 +201,29 @@ pnpm push-fixtures NVDA
 pnpm allow-email someone@example.com
 ```
 
-Adding a ticker is just: append it to `data/tickers.json`, run `analyze-ticker`, done — the push to the viewer is automatic. (See [USAGE.md](USAGE.md) for the full add-a-ticker / add-a-reader / deploy flows.)
+Adding a ticker is just: append it to `data/tickers.json`, run `analyze-ticker`, done — the push to the viewer is automatic. (See [Common tasks](#common-tasks-step-by-step) below for the step-by-step, and [USAGE.md](USAGE.md) for the full add-a-ticker / add-a-reader / deploy flows.)
 
 **Cost:** ~$1.45 per fresh ticker (~$2 with an analyst video); $0 on cached re-runs. Cost is logged to stderr; the pipeline warns above $0.75 and aborts above $1.50 per run.
 
 ### Short-Side Scanner
 
 Needs [Ollama](https://ollama.com) running locally with a model pulled
-(`ollama pull qwen3:32b && ollama pull nomic-embed-text`). See
-**[SHORTSPEC.md](SHORTSPEC.md)** for the design and the tuning knobs.
+(`ollama pull qwen3:32b && ollama pull nomic-embed-text`) on a machine with a
+32GB-class GPU. `scripts/scan.ts`'s header lists every flag; the design
+rationale is in the module headers under `packages/local/src/`.
 
 ```bash
 # One company's latest 10-K, end to end
-pnpm short-scan NVDA
+pnpm scan NVDA
 
-pnpm short-scan NVDA --form=10-Q
-pnpm short-scan NVDA --8k --since=2026-06-01   # every 8-K since a date
-pnpm short-scan NVDA --no-synthesis            # local tier only, no cloud spend
-pnpm short-scan NVDA --index-only              # fetch + index, no model calls
+pnpm scan NVDA --form=10-Q
+pnpm scan NVDA --8k --since=2026-06-01   # every 8-K since a date
+pnpm scan NVDA --no-synthesis            # local tier only, no cloud spend
+pnpm scan NVDA --index-only              # fetch + index, no model calls
 
 # Build the universe (slow, weekly at most), then sweep it
 pnpm build-universe --top=2000
-pnpm short-scan --universe=data/universe.json --since=2026-07-01
+pnpm scan --universe=data/universe.json --since=2026-07-01
 
 # Inspect the local index — the same retrieval the cloud model gets
 pnpm lookback stats
@@ -100,6 +242,33 @@ pnpm trends NVDA --metric=dso
 Results land in `fixtures/short/<TICKER>/<accession>/` as `brief.md` (what the
 local tier extracted plus the cross-filing trends), `triage.json` (why it did or
 didn't escalate), and `assessment.md` (the thesis, if it escalated).
+
+**How one filing moves through it** (`packages/local/src/pipeline.ts`):
+
+```
+EDGAR → layout render → boilerplate strip → chunk       deterministic
+      → index into the local lookback store             deterministic
+      → per-chunk extraction under a rigid schema       LOCAL model (GPU)
+      → cross-filing trends, composites, recurrence     deterministic (XBRL)
+      → aggregate into one brief                        deterministic
+      → triage: score the brief, escalate or don't      deterministic
+      → synthesis, only if triage said so               CLOUD model ($)
+```
+
+Three orderings are deliberate and worth knowing before changing anything. The
+filing is indexed **before** extraction and **even when triage declines** — the
+index is what quote-verification reads, and this year's boring 10-K is next
+year's comparison baseline. Triage runs **after** extraction, because there is
+no way to know a filing is boring without reading it and reading it is the
+nearly-free part; what triage saves is cloud spend and your attention. And every
+cross-filing number is computed **as of the filing's date**, never today's, so a
+backfill can't score historical filings against data that didn't exist yet.
+
+Triage itself is plain arithmetic on purpose — auditable, stable between runs,
+and impossible to talk out of its answer. It weights each flag by category and
+escalates above a threshold (default 12, `--threshold=N`), which is what keeps
+the cloud bill proportional to the interesting minority of filings rather than
+to the universe.
 
 The trend detectors are tuned to be quiet — a healthy large cap should produce
 few or no findings. If a name like KO lights up across six detectors, suspect a
@@ -230,10 +399,405 @@ pnpm evaluate-signals
 ### Web viewer (local)
 
 ```bash
-cd apps/web && pnpm dev      # http://localhost:3000
+cd apps/web
+cp .env.example .env         # TURSO_*, AUTH_SECRET, AUTH_RESEND_KEY, EMAIL_FROM, CRON_SECRET
+pnpm dev                     # http://localhost:3000
 ```
 
+Generate `AUTH_SECRET` with `openssl rand -base64 32` and `CRON_SECRET` with
+`openssl rand -hex 32`. Sign-in is magic-link email against an allowlist that
+lives in the `allowed_emails` **Turso table**, not an env var — so seed yourself
+first with `pnpm allow-email you@example.com` or you'll be locked out of your
+own local dev server (it fails closed on an empty table). Local dev and
+production read the same table, so adding a reader needs no redeploy.
+
+**What it shows.** Everything is read-only: the viewer never calls a model,
+never calls Yahoo on the request path, and costs nothing per page view because
+every page renders JSON the CLIs already wrote.
+
+| Route | What's on it |
+|---|---|
+| `/` | Dashboard — every analyzed ticker sorted by score, tappable verdict-bucket filter chips, 2-line summaries, and both prices per row ("$612 today · was $598 on May 10") |
+| `/ticker/[ticker]` | The decision card: verdict, weighted score, the six-dimension table with uncertainty dots, valuation context, analyst-vs-primary findings — then a collapsible **deep view** with per-dimension 3-pass reasoning, citations with grep-match-tier badges, triple-sample spread, the reverse-DCF sensitivity grid, historical financials, and the 10-Q change section |
+| `/ticker/[ticker]/video/[videoId]` | One analyst video's card: extracted thesis with YouTube-timestamp citations, the pipeline's score of the video, the four critique angles |
+| `/theses` | Signal Tracker status — every thesis with a green/amber/red chip, tripped ones first, plus a **Run now** button that fires the tracker workflow via `workflow_dispatch` (needs `GH_DISPATCH_TOKEN`; refuses with 409 if a run already holds the Turso lock) |
+| `/theses/[thesisId]` | One thesis: its claim, each watch-item with its tripwire and current state, the reverse DCF used as the quantitative anchor, and a "recent activity" log of the events that were evaluated |
+| `/radar` | The radar feed with view chips — **All / ★ Focus / ▲ Green flags / ▼ Warnings** — plus ticker search. Each row carries direction, severity, cap, and the company's name and description; a `⚖ models split` chip marks a filing where the two synthesis models disagreed |
+| `/radar/[accession]` | One deep-dive: the mispricing verdict and conviction, the thesis, and — when the comparison ran — the primary and challenger assessments side by side with per-side cost |
+| `/signin` | The only unauthenticated page. Everything else redirects here |
+
 Full deploy instructions (Vercel, magic-link auth, EOD-price cron) are in [USAGE.md](USAGE.md).
+
+### Scheduled runs (GitHub Actions)
+
+Two of the four tools are meant to run unattended, and they do it from a plain
+checkout of this repo — nothing is deployed. If you fork or clone this, the
+crons stay dormant until you add the secrets below under **Settings → Secrets
+and variables → Actions**; a missing secret doesn't fail the run loudly, it
+just makes the run smaller (no digest, no consensus data).
+
+| Workflow | Cadence (UTC) | What it runs | Secrets it reads |
+|---|---|---|---|
+| `signal-tracker.yml` | daily 06:30 | `pnpm fetch-dram-price --days 45` (best-effort, never fails the job), then `pnpm track --holder cron --since <14 days ago>` | `ANTHROPIC_API_KEY`, `FMP_API_KEY`, `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `SEC_USER_AGENT`; optional `AUTH_RESEND_KEY`, `EMAIL_FROM`, `SIGNAL_DIGEST_TO`, `SIGNAL_TRACKER_BASE_URL` |
+| `short-radar.yml` | 07:00 backstop + 13/16/19/22 on weekdays | `pnpm radar` — `--days=3` overnight (authoritative, self-heals a throttled run), `--days=1` intraday | `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `SEC_USER_AGENT`; optional `AUTH_RESEND_KEY`, `EMAIL_FROM`, `RADAR_DIGEST_TO`, `SIGNAL_TRACKER_BASE_URL` (passed in as `RADAR_BASE_URL`) |
+| `smallcap-universe.yml` | Sunday 06:00 | `pnpm build-smallcap`, then commits `data/watchlist-smallcap.json` back to the repo | `SEC_USER_AGENT` |
+
+Four things about them are worth knowing before you wonder why nothing is
+happening:
+
+- **The intraday radar runs no-op until the universe exists.** Without
+  `data/watchlist-smallcap.json`, `pnpm radar` falls back to the legacy
+  large-cap watchlist — right for a manual run, wrong four times a day — so the
+  intraday crons skip with a warning annotation. **Run "Rebuild small-cap
+  universe" once** (`workflow_dispatch`) to start them. The 07:00 backstop
+  always runs.
+- **`smallcap-universe` needs `contents: write`** (it has it) because the
+  watchlist has to be in the repo for the radar's checkout to see it. It skips
+  the commit when only the `builtAt` timestamp moved, so the commit history is
+  a real audit trail of what entered and left the universe.
+- **Every workflow takes `workflow_dispatch` inputs** for the cases you'd
+  otherwise need a laptop for: `since` / `allow_backlog` on the tracker,
+  `since` / `watchlist` on the radar, and the three cap/liquidity filters on
+  the universe build.
+- **The viewer's "Run now" button** on `/theses` fires `signal-tracker.yml`
+  through the same `workflow_dispatch`. It needs a fine-grained PAT with
+  *Actions: write* on your fork, set as `GH_DISPATCH_TOKEN` in the **Vercel**
+  project — server-side only, the browser never sees it. Unset, the route
+  returns 503 and the button is inert; the cron still runs on schedule.
+
+The GPU-side work (`pnpm scan`, `pnpm radar-worker`) is deliberately **not**
+scheduled here: a hosted runner has no GPU, and the queue it drains is durable
+in Turso, so the box can be off for a week without losing anything.
+
+### The rest of the CLI
+
+Everything above is what you run day to day. The remaining entry points in
+`scripts/` are development, verification, and one-off harnesses — listed here
+so you know they exist rather than because you'll need them on day one.
+
+| Command | What it's for |
+|---|---|
+| `pnpm run-pipeline <youtube-url>` | The analyst-video pipeline on a single URL, printed to stdout (`--json`, `--debug`). This is the standalone form of what `analyze-ticker` runs per configured video |
+| `pnpm tsx scripts/render-card.ts <card.json>` | Re-render a saved `DecisionCard` JSON as markdown — markdown and JSON from one paid run, not two |
+| `pnpm eval` | Video-pipeline regression harness over `scripts/eval-cases.json`: runs each case and scores the verdict against the `yourView` you recorded (`✓` / `partial` / `✗`). Costs real money — it runs the pipeline |
+| `pnpm evaluate-signals` | The tracker's offline evaluator: same extract → critique → judge, bounded to a `--since` window, writing `fixtures/theses/<id>.md`. **No persistence** — cursors and tripwire status are untouched, which is what makes it safe to run beside the cron |
+| `pnpm fetch-dram-price` | Writes this month's DRAM price direction into `data/manual-events.json` (idempotent per month). The one automated `manual`-feed watch-item; the daily cron runs it |
+| `pnpm test-coldstart-widen` | Deterministic proof of the cold-start auto-widen rule in `track.ts`. No network |
+| `pnpm build-watchlist AAPL MSFT …` | Builds a `{tickers:[{ticker,cik}]}` watchlist from scratch. `add-watchlist` appends to an existing one; this one creates it |
+| `pnpm tsx scripts/verify-citations.ts <TICKER>` | Grep-checks every quote in `fixtures/<TICKER>/primary-source-checklist.json` against the cited source file; exits non-zero if any quote can't be located |
+| `pnpm tsx scripts/verify-parser.ts <TICKER> 10-K` | Parser byte-identity harness — a SHA256 over the parsed sections, so a parser change can be proven not to move existing output |
+| `pnpm tsx scripts/compare-pass1-models.ts <TICKER>` | Pass-1 model comparison (score deltas, citation verify rate, counter-evidence depth) |
+| `pnpm tsx scripts/probe-llamacpp.ts <TICKER> 10-K 5` | Temporary probe for OpenAI-compatible local servers, superseded by `LOCAL_BACKEND=openai` |
+
+---
+
+## The `data/` files
+
+Everything you configure by hand lives in `data/`. Each file is plain JSON
+carrying a leading `_doc` key that restates its own contract — the convention
+throughout the repo. `data/theses.json` is Zod-validated on load (`ThesesFile`
+in `packages/schema/src/types.ts`) and will fail loudly on a bad shape; the
+others are read leniently.
+
+| File | Hand-edited? | Read by |
+|---|---|---|
+| `tickers.json` | yes | `analyze-ticker` |
+| `theses.json` | yes | `track` |
+| `manual-events.json` | yes (and by `fetch-dram-price`) | `track` |
+| `focus-list.json` | yes | `radar` |
+| `watchlist-smallcap.json` | **no** — generated by `build-smallcap` | `radar` |
+| `watchlist.json` | via `add-watchlist`/`build-watchlist` | `radar --watchlist=…` |
+| `universe.json` | **no** — generated by `build-universe` | `scan --universe=…` |
+| `parser-coverage.md` | yes | nothing — it's your notebook of which tickers parsed cleanly |
+
+### `tickers.json` — what Stock Vetter analyzes
+
+An object keyed by **uppercase ticker**. The minimum entry is an empty video
+list. `notes` is a reminder for you and is never read by the pipeline.
+
+```json
+{
+  "_doc": "Ticker → analyst content URLs. Hand-curated.",
+  "KO": {
+    "videos": [],
+    "notes": "Coca-Cola — no analyst videos configured; primary-source only"
+  },
+  "MSFT": {
+    "videos": ["https://www.youtube.com/watch?v=WtoMBbTkHjU"]
+  }
+}
+```
+
+Each configured video runs the per-video pipeline (~$0.60) and produces a card
+the meta-card can synthesize against. Leave `videos: []` unless you actually
+want the cross-source comparison — most tickers should start that way.
+
+### `theses.json` — what the Signal Tracker watches
+
+`{ "_doc": …, "theses": [ … ] }`. Every field below is required except `_doc`.
+
+| Field | Meaning |
+|---|---|
+| `id` | Stable slug. It's the cursor key, the CLI argument (`pnpm track <id>`), and the `/theses/[thesisId]` URL — renaming it resets the thesis's history |
+| `claim` | The falsifiable one-liner the tracker argues with |
+| `tickers` | Uppercase; these are the tickers whose filings and estimates get fetched |
+| `entities` | Non-ticker dependencies ("TSMC", "hyperscaler capex"). Documentation for the evaluator's prompt, not a feed |
+| `watchItems[]` | At least one. See below |
+
+A watch-item needs `id`, `label`, `sources`, `feed`, `tripwire`, and
+`tripwireDirection`:
+
+- `sources` — one or more of `sec-8k`, `sec-10q`, `sec-10k`, `fmp-estimates`, `fmp-revisions`, `av-transcript`, `manual`. This is the zero-token pre-filter: an event from a source not listed here never reaches the LLM.
+- `feed` — `auto` (a feed adapter populates it) or `manual` (you hand-enter the event, for things our tier can't reach: foreign filers like TSMC, industry price prints).
+- `tripwire` — free-form English. The threshold is deliberately prose, not a number; the judge reads it.
+- `tripwireDirection` — `weakens`, `strengthens`, or `either`.
+
+See the `NVDA-margin-durability` example in [Signal Tracker — methodology](#signal-tracker--methodology) below for a complete entry.
+
+### `manual-events.json` — hand-entered events
+
+A bare JSON **array** (no wrapper object). Used where no feed covers the
+source. `payload.thesisId` routes the event to a specific thesis; without it,
+the event matches on ticker.
+
+```json
+[
+  {
+    "id": "dram-price-2026-08",
+    "ticker": "MU",
+    "date": "2026-08-05",
+    "title": "DRAM contract price Aug 2026: 3Q26 contract +13-18% QoQ (TrendForce)",
+    "url": "https://www.trendforce.com/price/dram/dram_spot",
+    "payload": { "thesisId": "DRAM-memory-growth", "direction": "up" },
+    "note": "Optional provenance for your future self."
+  }
+]
+```
+
+`id` becomes the dedup key (`manual:<id>`), so an entry is evaluated exactly
+once no matter how many runs see it. A missing or unreadable file is not an
+error — the tracker treats it as "no manual events".
+
+### `focus-list.json` — the names you actually act on
+
+```json
+{
+  "_doc": "The MANUAL half of the focus list.",
+  "tickers": ["RKLB", "POET"]
+}
+```
+
+An empty `tickers` array is fine and is the right starting point: the other
+half of the focus list is automatic — any ticker a deep-dive flagged
+`mispriced-long` in the last `RADAR_AUTO_FOCUS_DAYS` is unioned in at sweep
+time. Add a manual entry when you want earnings-quarter deep-dives on a name
+regardless of what the model said about it.
+
+### `watchlist-smallcap.json` / `watchlist.json` — what the Radar sweeps
+
+Generated, not hand-written — but worth understanding, because two fields
+change the Radar's behaviour:
+
+```json
+{
+  "builtAt": "2026-08-07T22:23:41.817Z",
+  "filters": { "marketCap": [50000000, 2000000000], "minPrice": 1, "minAvgDollarVolume": 1000000 },
+  "count": 220,
+  "tickers": [
+    {
+      "ticker": "POET",
+      "cik": "0001437424",
+      "name": "POET TECHNOLOGIES INC.",
+      "marketCap": 1537776896,
+      "avgDollarVolume": 278989269.57,
+      "sic": "3674",
+      "sicDescription": "Semiconductors & Related Devices",
+      "sector": "Semiconductors & electronic components",
+      "description": "…"
+    }
+  ]
+}
+```
+
+- **`cik` is load-bearing.** It's the only field the EDGAR daily-index sweep joins on; `ticker` is for display. A wrong CIK means the name is silently never swept.
+- **`marketCap` decides materiality.** Below $2B the Radar promotes the cap-relative 8-K items one severity notch. An entry with **no** `marketCap` (the legacy `watchlist.json` shape) gets the old large-cap behaviour unchanged — which is exactly what you want if you point the Radar at a hand-built list.
+- `name` and `description` are what the `/radar` feed prints so an unfamiliar ticker means something; until a rebuild populates them the SIC label stands in.
+
+---
+
+## Common tasks, step by step
+
+### Analyze a new ticker
+
+1. Add it to `data/tickers.json` with `{"videos": []}` (see above).
+2. `pnpm analyze-ticker AAPL` — 3–5 minutes, ~$1.45 on a cold ticker.
+3. Read `fixtures/AAPL/decision-card.md`. The full artifact tree (checklist, reverse DCF, parsed 10-K sections, proxy text) is documented in [USAGE.md](USAGE.md).
+4. If `TURSO_*` is set the push is automatic — it appears on the dashboard within ~5 minutes (pages cache for 300s). If it isn't, `pnpm push-fixtures AAPL` later does the same thing without re-analyzing.
+
+The EOD price on the dashboard comes from a separate Vercel cron; a
+just-analyzed ticker shows "analyzed at $X" until the next 22:00 UTC run, or
+until you poke `/api/cron/eod-prices` by hand (see [USAGE.md](USAGE.md)).
+
+### Add a new thesis
+
+1. Append a thesis object to `theses` in `data/theses.json`. Give it watch-items whose `sources` you can actually feed — an item watching `fmp-estimates` needs `FMP_API_KEY`, and one watching `manual` needs you to write the events.
+2. `pnpm track <thesis-id> --no-eval` first. This ingests and diffs without spending anything, and prints the events that *would* be evaluated — the cheapest way to find out that your `sources` list is wrong.
+3. `pnpm track <thesis-id>` to evaluate for real.
+4. A brand-new thesis has an empty cursor, so it auto-widens to a **one-year** backfill on purpose — a filing older than the steady-state window shouldn't be missed just because the thesis is new. If that produces more than **8** (event × watch-item) pairs the run **refuses and does not advance the cursor**, printing the estimated cost. That's the cold-start guard. Re-run with `--allow-backlog` to accept the bill deliberately, or with `--no-widen --since 2026-06-01` to take a narrower first bite (on a cold start `--since` alone is overridden by the widen).
+5. Once it's healthy, leave it to the daily cron. Use `--reset` to clear a cursor and re-examine the backlog after editing a tripwire.
+
+Watch the direction of the cursor: `--dry-run` evaluates without persisting
+anything, which is what you want while you're still tuning the prose of a
+tripwire.
+
+### Add a name to the Radar
+
+For the generated small-cap universe, you don't — you widen the filters and
+rebuild (`pnpm build-smallcap --min-cap=…`), or pin the name so it survives
+every rebuild:
+
+```bash
+pnpm build-smallcap --pin=RKLB,SPCX
+```
+
+For a hand-built list, append to it without rebuilding — this resolves the CIK
+from EDGAR for you, skips names already present, and touches nothing else:
+
+```bash
+pnpm add-watchlist TSLA AMZN                          # → data/watchlist.json
+pnpm add-watchlist RKLB --file=data/watchlist-smallcap.json
+```
+
+Then sweep it: `pnpm radar --watchlist=data/watchlist.json`.
+
+One caveat on the second form: `add-watchlist` writes only `{ticker, cik}`, so
+a name added this way to the small-cap file carries no `marketCap` and gets the
+**large-cap** severity behaviour until the next `build-smallcap` rebuild
+overwrites the file. `--pin` is the durable way to keep a name in that
+universe.
+
+### Promote a name to the focus list
+
+Add the ticker to `tickers` in `data/focus-list.json`. It takes effect on the
+next sweep — focus signals sort first, get their own digest section, and are
+the only names whose routine earnings releases queue a deep-dive. You usually
+*don't* need to do this: a `mispriced-long` verdict promotes a ticker
+automatically for `RADAR_AUTO_FOCUS_DAYS` (180 by default).
+
+### Add a reader to the web viewer
+
+```bash
+pnpm allow-email someone@example.com "optional note"
+pnpm allow-email --list
+pnpm allow-email --remove someone@example.com
+```
+
+No env change and no redeploy — the allowlist is a Turso table, and it takes
+effect on their next sign-in attempt.
+
+---
+
+## What it costs
+
+Every LLM call is priced at its model's own rates and logged to stderr. The two
+CLIs that can run away — `analyze-ticker` and `track` — carry a hard cost guard:
+**warn above $0.75, abort above $1.50 per run**.
+
+| | Typical cost | Notes |
+|---|---|---|
+| Stock Vetter, fresh ticker | **~$1.45** | ~$2.05 with one analyst video. Pass 1 is ~$0.67 of it |
+| Stock Vetter, cached re-run | **$0** | Filesystem cache; a prompt edit invalidates only the passes downstream of it |
+| Signal Tracker, steady-state day | **cents** | Cursor-gated — a day with no new filings costs nothing |
+| Signal Tracker, per evaluated pair | ~$0.06 | The cold-start guard uses this to estimate a backlog |
+| Radar sweep | **$0** in model spend | EDGAR + arithmetic. Only GitHub Actions minutes |
+| `build-smallcap` / `build-universe` | **$0** | Slow (minutes) but free; weekly at most |
+| Deep-dive synthesis, Claude | ~$0.20/report | Only the ~15% of filings triage escalates |
+| Deep-dive synthesis, DeepSeek V4 Pro | ~$0.02/report | ~12× cheaper; same brief, same tools |
+| Side-by-side comparison (default on) | +~$0.02 or +~$0.20 | It adds *the other* model's leg — so comparison mode costs about what Claude-only did |
+| Local model tier (`scan`, `radar-worker`) | electricity | Free once the GPU is bought — which is the entire reason it exists |
+| Turso + Vercel + Resend | **$0** | All free tier at this scale; see [USAGE.md](USAGE.md) |
+
+A 20–30 ticker Stock Vetter exploration budget is ~$30–45. The Radar plus a
+Claude deep-dive tier is the expensive combination at universe scale, which is
+what the triage gate and the focus-only earnings rule exist to bound.
+
+---
+
+## Troubleshooting
+
+**`SEC fetch failed: 403`, or EDGAR requests hanging for ten minutes.** SEC's
+fair-access limit is 10 req/s per IP and exceeding it earns a ten-minute block
+that is invisible in the response body. Every EDGAR call goes through one
+rate-limited chain paced at 125ms (`SEC_MIN_INTERVAL_MS`); if you're seeing
+403s, another process on the same egress IP is probably also hitting EDGAR.
+Also confirm `SEC_USER_AGENT` is set to a real `"Name email"` string — SEC
+rejects requests without one, and the built-in fallback is a placeholder.
+
+**The Radar workflow exits 2.** Not a failure. Exit 2 means one or more days
+couldn't be fetched (throttling); the next run's overlapping window re-reads
+them and the Turso dedup makes the overlap free. The workflow deliberately
+warns rather than failing.
+
+**The intraday Radar runs say they were skipped.** `data/watchlist-smallcap.json`
+doesn't exist yet, so the sweep would have fallen back to the legacy large-cap
+list — which is the thing the small-cap refocus moved away from. Run the
+"Rebuild small-cap universe" workflow once (or `pnpm build-smallcap` locally and
+commit the result). The 07:00 UTC backstop is unaffected.
+
+**The "Run now" button on `/theses` returns 503.** `GH_DISPATCH_TOKEN` isn't set
+on the Vercel project. It's a fine-grained PAT with *Actions: write* on your
+fork of this repo — see [Scheduled runs](#scheduled-runs-github-actions). A 409
+means something different: a run already holds the Turso lock.
+
+**`pnpm track` refuses to evaluate a new thesis.** That's the cold-start guard,
+not a bug — see "Add a new thesis" above. `--allow-backlog` overrides it.
+
+**A manual `pnpm track` says the lock is held.** The daily cron is the
+authoritative writer and takes a Turso run-lock so a manual run can't race it.
+Wait for it, or use `--dry-run`, which doesn't persist.
+
+**Nothing shows up in the web viewer.** Three things to check in order: are
+`TURSO_DATABASE_URL`/`TURSO_AUTH_TOKEN` set in the **repo-root** `.env` (the
+CLI's push is a silent no-op without them — it logs a warning and the local run
+still succeeds); did the push land (`pnpm push-fixtures <TICKER>` is idempotent
+and safe to re-run); and are you inside the 300-second page cache. If sign-in
+itself fails, the `allowed_emails` table is empty — it fails closed by design.
+
+**Missing env var, generally.** The failure modes are deliberately different
+per key: no `ANTHROPIC_API_KEY` fails immediately; no `TURSO_*` degrades to
+fixtures-only and a local cursor cache; no `FMP_API_KEY` loses consensus and
+revision events but not SEC ones; no email variables mean no digest and an
+otherwise-normal run. Nothing silently produces a *wrong* answer — it produces
+a smaller one, and says so.
+
+**FMP says an endpoint is restricted.** The adapters raise a distinct
+`FmpTierError` on a 402/403-with-tier-message so a plan limitation reports as
+"this series is not in your FMP tier" rather than as a hard failure. Consensus
+estimates are annual-only on the Starter tier, and the ratings bull-index is a
+*proxy* for estimate revisions, not real revision data — the `dataQuality`
+string on every affected Event says so, and it propagates into the Signal.
+
+**Ollama returns confident nonsense.** Almost always `num_ctx`. Ollama's
+default context is 4096 and it does **not** error on an over-length prompt — it
+silently drops the front of it (where the table header and section heading
+live) and answers anyway, schema-valid and wrong. Every request here pins
+`OLLAMA_NUM_CTX` (default 16384) and refuses to send a prompt that wouldn't
+fit; run `pnpm calibrate-tokens` to measure the real chars-per-token ratio for
+your model rather than trusting the deliberately over-estimating default.
+
+**Cache confusion.** The filesystem cache is under `.cache/` (override with
+`STOCK_VETTER_CACHE_DIR`), keyed by namespace, and safe to delete wholesale.
+LLM cache keys include a hash of the prompt text, so editing a file under
+`prompts/` invalidates exactly the affected pass and everything downstream of
+it — you do not need to clear anything by hand after a prompt edit. SEC data is
+keyed by accession, so a newly filed 10-K re-fetches automatically. The one
+directory worth keeping is `.cache/lookback.db` — rebuildable from EDGAR, but
+slowly. Per-namespace clearing recipes are in [USAGE.md](USAGE.md).
+
+**A healthy company lights up six trend detectors.** Suspect an XBRL concept
+mapping before suspecting fraud. `pnpm trends <TICKER>` prints the underlying
+series with no GPU and no model, which is the fastest way to see whether the
+input or the detector is wrong.
 
 ---
 
@@ -451,16 +1015,26 @@ stock-vetter/
 │   ├── theses.json                # theses + tripwires the Signal Tracker watches
 │   ├── watchlist-smallcap.json    # small-cap tech universe the radar sweeps (pnpm build-smallcap)
 │   ├── focus-list.json            # the ~30-50 names you actually trade
-│   └── watchlist.json             # legacy large-cap radar watchlist
+│   ├── watchlist.json             # legacy large-cap radar watchlist
+│   ├── manual-events.json         # hand-entered events for `manual` watch-items
+│   └── parser-coverage.md         # which tickers have parsed cleanly, and what broke
 ├── prompts/                # every LLM prompt as a .md file (never inlined in code)
 ├── fixtures/<TICKER>/      # per-ticker analysis output (cards, SEC sections, DCF)
-├── scripts/                # CLI entry points (analyze-ticker, track, …)
+├── fixtures/short/<TICKER>/<accession>/   # deep-dive output: brief.md, triage.json, assessment.md
+├── .cache/                 # gitignored: SEC sections, snapshots, LLM outputs, lookback.db
+├── scripts/                # CLI entry points (analyze-ticker, track, radar, scan, …)
 ├── packages/
 │   ├── schema/             # Zod schemas + inferred types (shared, depends on nothing)
-│   ├── core/               # SEC/FMP/AV adapters, LLM client, cache, reverse DCF, Turso
-│   ├── pipeline/           # Stock Vetter passes: extract/critique/score/meta-card/delta
-│   └── signals/            # Signal Tracker: feeds, diff, evaluate, theses, digest, persistence
+│   ├── core/               # SEC/FMP/AV/Yahoo adapters, LLM + DeepSeek clients, cache,
+│   │                       #   reverse DCF, XBRL, Turso client, mailer
+│   │   └── migrations/     # the Turso schema — applied idempotently by migrate()
+│   ├── pipeline/           # Stock Vetter passes: extract/critique/score/meta-card/delta,
+│   │                       #   plus the radar job queue and Turso writers
+│   ├── signals/            # Signal Tracker: feeds, diff, evaluate, theses, digest, persistence
+│   └── local/              # Short-Side Scanner AND the Radar: chunking, local-model
+│                           #   extraction, lookback index, triage, synthesis, detectors
 ├── apps/web/               # read-only Next.js viewer (Vercel) — the only deployed piece
+├── .github/workflows/      # signal-tracker (daily), short-radar (5×/day), smallcap-universe (weekly)
 ├── README.md               # this file
 ├── USAGE.md                # operating guide: costs, deploy, cache, reading the verdict
 ├── oldSPEC.md              # Stock Vetter project spec (build history)
@@ -468,4 +1042,75 @@ stock-vetter/
 └── HANDOFF.md              # packaging / handoff overview
 ```
 
-Dependency direction is acyclic: `schema ← core ← {pipeline, signals}`; `apps/web` reads from Turso only.
+Dependency direction is acyclic: `schema ← core ← {pipeline, signals, local}`; `apps/web` reads from Turso only.
+
+```
+                    ┌──────────────────┐
+                    │ @stock-vetter/   │   Zod schemas + inferred types.
+                    │      schema      │   Depends on nothing but zod. The
+                    └────────▲─────────┘   single source of truth for shapes,
+                             │             imported by both halves.
+                    ┌────────┴─────────┐
+                    │ @stock-vetter/   │   Everything that talks to the outside
+                    │       core       │   world: EDGAR (rate-limited), FMP,
+                    └───▲────▲─────▲───┘   Alpha Vantage, Yahoo, Anthropic,
+                        │    │     │       DeepSeek, Turso, the filesystem
+        ┌───────────────┘    │     └──────────────┐   cache, the mailer.
+        │                    │                    │
+┌───────┴────────┐  ┌────────┴───────┐  ┌─────────┴──────┐
+│    pipeline    │  │    signals     │  │     local      │
+│  Stock Vetter  │  │ Signal Tracker │  │ Scanner + Radar│
+│  + radar jobs  │  │                │  │                │
+└───────┬────────┘  └────────┬───────┘  └────────┬───────┘
+        │                    │                   │
+        └────────────────────┴───────────────────┘
+                             │
+                    ┌────────┴─────────┐
+                    │    scripts/      │   Every CLI. The only layer allowed to
+                    │  (the CLI layer) │   read argv, print, or write fixtures.
+                    └──────────────────┘
+
+  apps/web ──▶ @stock-vetter/schema  (types only) ──▶ Turso  (read-only)
+```
+
+`apps/web` deliberately does **not** depend on `core`, `pipeline`, `signals`, or
+`local` — it imports types from `schema` and reads rows from Turso, which is
+what keeps the deployed surface incapable of spending money.
+
+**Which prompt drives which pass.** Every file under `prompts/` is loaded by
+name through `loadPrompt()` (`packages/core/src/prompts.ts`, where `PromptName`
+is the exhaustive list). Nothing else in the repo contains a system prompt:
+
+| Prompt file(s) | Loaded by |
+|---|---|
+| `primary-source-checklist.md`, `primary-source-skeptic.md`, `primary-source-judge.md` | Stock Vetter's three passes — extract/score, skeptic, judge (`pipeline/src/primary-source.ts`) |
+| `meta-card.md` | The meta-card synthesis: verdict, weighted score, cross-source findings |
+| `tenq-delta.md` | The additive 10-Q-vs-10-K change pass |
+| `extract.md`, `score.md` | The analyst-video pipeline's extract and score stages |
+| `critique-consistency.md`, `critique-stress-test.md`, `critique-comps.md`, `critique-missing-risks.md` | The four critique angles run against a video card (`pipeline/src/critique.ts`) |
+| `critique-value-checklist.md` | The value-checklist critique of a video thesis |
+| `normalize.md` | Earnings-call transcript normalization — shared by the vetter and the tracker's `av-transcript` feed |
+| `signal-extract.md`, `signal-critique.md`, `signal-judge.md` | Signal Tracker evaluation of one (event × watch-item) pair |
+| `local-chunk-extract.md` | The local model's per-chunk extraction under the rigid schema |
+| `synthesis.md` | The deep-dive's cloud pass — the only prompt either synthesis model sees |
+
+**Working on the code.** Tests are colocated (`packages/*/src/*.test.ts`) and
+run under `tsx --test`; `pnpm test` runs all of them plus `apps/web`, and a
+single file is `pnpm tsx --test packages/local/src/triage.test.ts`. The suite is
+offline and free — pure functions over fixtures, and the local-model client's
+tests stand up a throwaway HTTP server on localhost rather than calling a real
+Ollama, so no key and no GPU are needed to run it. Two rules are worth knowing
+before your first change: a new shared type goes in `packages/schema/src` (the
+sibling packages import it from there, never from each other), and a database
+change is a **new numbered file** in `packages/core/migrations/` — `migrate()`
+sorts them, records applied versions in `schema_migrations`, and skips what's
+already there, so editing an already-applied migration changes nothing on a
+database that has run it.
+
+A few conventions that explain why the code looks the way it does:
+
+- **Prompts are files, never string literals.** Everything under `prompts/` is a `.md` file loaded at runtime, and the LLM cache key includes a hash of the prompt text. That makes a prompt edit a reviewable diff *and* an automatic, surgical cache invalidation.
+- **Deterministic before probabilistic.** Every tool computes what arithmetic can compute before a model sees anything — the reverse DCF, the XBRL trends, the triage score, the radar detectors, the tripwire mapping. The model is asked only for the judgment that genuinely needs one, which is what makes the cost curves in the table above hold.
+- **Zod at every boundary.** External responses and LLM outputs are both parsed, never trusted. A malformed LLM output raises `LLMValidationError` with the stage name rather than propagating a plausible-looking wrong object.
+- **The cheap filter runs first.** In the universe builder (size → tradability → sector), in the tracker (cursor → zero-token mapping → LLM), in the scanner (index → local model → triage → cloud). The ordering is the cost model.
+- **Cost guards are in the CLI, not the library.** `analyze-ticker` and `track` own the warn/abort thresholds, so a library caller can't inherit a surprise ceiling.
