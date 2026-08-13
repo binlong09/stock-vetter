@@ -70,6 +70,25 @@ export async function listPaperMarks(tickers: string[]): Promise<Map<string, Pri
   return out;
 }
 
+/**
+ * Past `mispriced-long` verdicts with no position yet — what a backfill would
+ * open. The empty state needs this to tell two very different situations
+ * apart: "no deep-dive has ever called a long" (nothing to do but wait) and
+ * "seven of them have, and the book just hasn't been refreshed" (one command).
+ */
+export async function countBackfillableVerdicts(): Promise<number> {
+  try {
+    const res = await db().execute(
+      `SELECT COUNT(*) AS n FROM radar_jobs j
+        WHERE j.verdict = 'mispriced-long'
+          AND NOT EXISTS (SELECT 1 FROM paper_positions p WHERE p.id = j.accession || ':primary')`,
+    );
+    return Number(res.rows[0]?.n ?? 0);
+  } catch {
+    return 0;
+  }
+}
+
 /** Company names for the held tickers, so a row isn't just a symbol. */
 export async function companyNamesByTicker(tickers: string[]): Promise<Map<string, string>> {
   const out = new Map<string, string>();

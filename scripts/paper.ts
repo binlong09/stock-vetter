@@ -159,10 +159,16 @@ async function main(): Promise<void> {
 
   const positions = await listPaperPositions();
   if (!positions.length) {
+    // A refresh ran just above (unless this was `report`), and it backfills
+    // every past verdict — so an empty book here means there is genuinely
+    // nothing to buy yet, not that the book is behind.
     out(
-      'No mock positions yet.\n\n' +
-        'They open themselves: every radar deep-dive that returns mispriced-long becomes one\n' +
-        `(${money(paperNotional())} equal weight, benchmarked to ${paperBenchmark()}).\n`,
+      'No mock positions.\n\n' +
+        (cmd === 'report'
+          ? 'This printed from stored rows without refreshing. Run `pnpm paper` to open and\nprice every past mispriced-long verdict.\n'
+          : 'No deep-dive has returned mispriced-long yet — every past verdict was checked, and\n' +
+            'there was nothing to buy. The first long that lands opens a position ' +
+            `(${money(paperNotional())} equal\nweight, benchmarked to ${paperBenchmark()}).\n`),
     );
     return;
   }

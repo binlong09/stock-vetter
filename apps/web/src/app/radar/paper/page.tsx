@@ -5,7 +5,12 @@ import {
   type PortfolioSummary,
   type PositionValuation,
 } from '@stock-vetter/schema';
-import { listPaperPositions, listPaperMarks, companyNamesByTicker } from '@/paper-queries';
+import {
+  listPaperPositions,
+  listPaperMarks,
+  companyNamesByTicker,
+  countBackfillableVerdicts,
+} from '@/paper-queries';
 import { isoDate, pct, signedPct, usd } from '@/lib/format';
 import { RadarTabs } from '../tabs';
 
@@ -135,6 +140,10 @@ export default async function PaperPage({
   const names = await companyNamesByTicker([...new Set(all.map((p) => p.ticker))]);
 
   const positions = all.filter((p) => p.leg === leg);
+  // Only asked when the primary book is empty, which is the only case the
+  // count describes — the challenger's backfill is a different question.
+  const backfillable =
+    positions.length === 0 && leg === 'primary' ? await countBackfillableVerdicts() : 0;
   const { valuations, summary } = buildPortfolio(positions, marks, benchmark);
   const hasAlt = all.some((p) => p.leg === 'alt');
   // The challenger's book, summarized, so the model comparison can be read as
@@ -205,10 +214,28 @@ export default async function PaperPage({
       ) : null}
 
       {positions.length === 0 ? (
-        <p className="mt-4 rounded-lg border border-slate-200 bg-white px-3.5 py-6 text-sm text-slate-500">
-          No mock positions yet. They open themselves — the next deep-dive that returns
-          mispriced-long becomes one, and the sweep prices it on its next run.
-        </p>
+        <div className="mt-4 rounded-lg border border-slate-200 bg-white px-3.5 py-6 text-sm text-slate-500">
+          {backfillable > 0 ? (
+            <>
+              <p className="text-slate-700">
+                {backfillable} past {backfillable === 1 ? 'verdict is' : 'verdicts are'} waiting to
+                be bought.
+              </p>
+              <p className="mt-1.5">
+                The book backfills — those longs open at their own historical entry price the next
+                time the sweep runs, or immediately with{' '}
+                <code className="rounded bg-slate-100 px-1 py-0.5 text-[12px]">pnpm paper</code>.
+                Nothing is lost by having started late.
+              </p>
+            </>
+          ) : (
+            <p>
+              No mock positions yet, and no past mispriced-long verdict to backfill. They open
+              themselves — the next deep-dive that calls a long becomes one, and the sweep prices it
+              on its next run.
+            </p>
+          )}
+        </div>
       ) : (
         <>
           {models ? (
