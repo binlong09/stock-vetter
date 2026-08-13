@@ -50,6 +50,17 @@ export {
   type PushTickerInput,
 } from './turso.js';
 export {
+  refreshPaperPortfolio,
+  openMissingPaperPositions,
+  listPaperPositions,
+  listPaperMarks,
+  closePaperPositions,
+  paperBenchmark,
+  paperNotional,
+  type PaperRefreshResult,
+  type OpenedPaperPosition,
+} from './paper.js';
+export {
   loadTickerFixtures,
   hasDecisionCard,
   type LoadedTickerFixtures,

@@ -29,7 +29,8 @@
     "build-smallcap": "tsx scripts/build-smallcap-watchlist.ts",
     "add-watchlist": "tsx scripts/add-watchlist.ts",
     "radar": "tsx scripts/radar.ts",
-    "radar-worker": "tsx scripts/radar-worker.ts"
+    "radar-worker": "tsx scripts/radar-worker.ts",
+    "paper": "tsx scripts/paper.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

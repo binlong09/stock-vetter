@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { listRadarSignals, type RadarRow } from '@/radar-queries';
 import { RadarFeed } from './radar-feed';
+import { RadarTabs } from './tabs';
 
 // Reflects whatever the last daily sweep wrote to Turso.
 export const revalidate = 300;
@@ -49,7 +50,9 @@ export default async function RadarPage({
         </span>
       </div>
 
-      <div className="mt-2 flex flex-wrap gap-1.5">
+      <RadarTabs active="signals" />
+
+      <div className="mt-3 flex flex-wrap gap-1.5">
         {VIEWS.map((v) => {
           const active = view === v.key;
           const n =

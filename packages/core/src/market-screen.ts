@@ -201,3 +201,52 @@ export async function fetchMarketSnapshot(symbol: string): Promise<MarketSnapsho
     fetchedAt: new Date().toISOString(),
   };
 }
+
+// --- daily price history ------------------------------------------------------
+
+export type DailyBar = {
+  /** Trading date, YYYY-MM-DD. */
+  asOf: string;
+  /** Raw close — what a share cost that day. */
+  close: number;
+  /**
+   * Split- and dividend-adjusted close. THE field to compute returns from down
+   * here: reverse splits are routine below $2B, and a 1-for-10 measured on raw
+   * closes reads as a +900% winner. Falls back to `close` when Yahoo omits it.
+   */
+  adjClose: number;
+};
+
+/**
+ * Daily bars for one symbol from `since` (inclusive) to now, oldest first.
+ *
+ * The whole window is re-fetched rather than appended to, on purpose: Yahoo
+ * re-adjusts historical `adjclose` when a split or dividend happens, so a
+ * series stitched together from incremental fetches would mix adjustment
+ * bases and quietly mis-state every return that spans the event.
+ *
+ * Returns [] for a symbol Yahoo has no bars for (delisted, renamed, or a
+ * ticker that never traded); throws on transport errors so callers can retry.
+ */
+export async function fetchDailyBars(symbol: string, since: Date): Promise<DailyBar[]> {
+  const res = await yahooFinance.chart(symbol, {
+    period1: since,
+    interval: '1d',
+    // Ask for the corporate-action events; this is also what makes Yahoo
+    // return the adjclose series alongside the raw one.
+    events: 'div|split',
+  });
+  const out: DailyBar[] = [];
+  for (const q of res.quotes ?? []) {
+    const close = q.close;
+    if (close == null || !Number.isFinite(close)) continue; // a halted / no-trade session
+    const adj = q.adjclose;
+    out.push({
+      asOf: q.date.toISOString().slice(0, 10),
+      close,
+      adjClose: adj != null && Number.isFinite(adj) && adj > 0 ? adj : close,
+    });
+  }
+  out.sort((a, b) => a.asOf.localeCompare(b.asOf));
+  return out;
+}

@@ -5,7 +5,7 @@ Four research tools that share one codebase:
 - **Stock Vetter** — type a ticker, get one decision card. Fetches the latest 10-K, DEF 14A proxy, 10-Q, SEC companyfacts, and current price; runs a three-pass primary-source value-investing checklist; computes a reverse DCF and historical valuation context; optionally folds in analyst-video or earnings-call analysis; and produces a verdict + 1–10 weighted score.
 - **Signal Tracker** — write a one-line investment thesis with explicit tripwires, then let a daily cron watch SEC filings, consensus estimates, and earnings calls for the events that would confirm or break it. You get an email only when a tripwire actually flips.
 - **Short-Side Scanner** — point a local GPU at the top ~2,000 US companies and read every 10-K, 10-Q, and 8-K they file, looking for the quantitative tells that precede a repricing downward. A local Qwen model does the bulk reading under a rigid schema with every claim quote-verified; a deterministic layer computes multi-quarter ratio trends straight from the companies' own XBRL; a gate then decides which ~15% of filings are worth the Claude API and your attention. Requires Ollama on a machine with a decent GPU.
-- **Radar** — the always-on, no-GPU tier of the scanner, pointed at **small-cap tech** ($50M–$2B, liquidity-filtered) rather than the mega caps that quant desks already read within seconds of the wire. It sweeps EDGAR several times a day for the deterministic catalysts that actually move a company this size: shelf registrations and takedowns, listing and late-filing notices, activist stakes, open-market insider buying clusters, buybacks, uplistings, fundamental inflections (first profit or free cash flow after a loss run, revenue growth accelerating), share-count expansion, months of cash left, and 8-K items scored *relative to market cap*. No model and no GPU — EDGAR plus arithmetic — and each hit is enqueued for the scanner's deep-dive tier.
+- **Radar** — the always-on, no-GPU tier of the scanner, pointed at **small-cap tech** ($50M–$2B, liquidity-filtered) rather than the mega caps that quant desks already read within seconds of the wire. It sweeps EDGAR several times a day for the deterministic catalysts that actually move a company this size: shelf registrations and takedowns, listing and late-filing notices, activist stakes, open-market insider buying clusters, buybacks, uplistings, fundamental inflections (first profit or free cash flow after a loss run, revenue growth accelerating), share-count expansion, months of cash left, and 8-K items scored *relative to market cap*. No model and no GPU — EDGAR plus arithmetic — and each hit is enqueued for the scanner's deep-dive tier. Every deep-dive verdict of `mispriced-long` is then bought on paper at the next close and marked against the Russell 2000, so the pipeline keeps its own scorecard.
 
 All four run as a CLI on your laptop (or a scheduled runner). A small read-only Next.js viewer (`apps/web/`, on Vercel free tier) reads the results on your phone. The pipelines are **not** deployed — only the viewer.
 
@@ -139,6 +139,12 @@ pnpm radar --no-persist                      # compute + print only
 
 # Drain the deep-dive queue on the GPU box (focus-list filings only)
 pnpm radar-worker
+
+# The mock-buy book: what the mispriced-long verdicts actually made
+pnpm paper                    # refresh prices, open anything new, print the book
+pnpm paper report             # print from stored marks only (no network)
+pnpm paper --leg=all          # primary and challenger books side by side
+pnpm paper close TBCH --reason="thesis broke"
 ```
 
 New signals are deduped into Turso by key, so overlapping windows are free and
@@ -177,6 +183,32 @@ documents can't be parsed (Form 4 insider clusters, uplistings) — and the
 inside 30 days — queue a deep dive on the company's **latest 10-Q/10-K**
 instead (capped at 5 per sweep, ~$0.22 each). Turn that spend off with
 `RADAR_BULLISH_DEEPDIVE=0` or `pnpm radar --no-bullish-deepdive`.
+
+**Paper track record (`/radar/paper`).** Every deep-dive verdict of
+`mispriced-long` opens a mock long — $10,000, equal weight, held — filled at
+the **first daily close at or after the verdict**. No discretion anywhere in
+the path: positions are derived from `radar_jobs` rather than entered by hand,
+because a track record built from the picks someone chose to act on measures
+the operator, not the pipeline. The book self-heals like the deep-dive queue —
+the sweep opens what's missing (including verdicts that predate the feature,
+backfilled and priced from history), re-fetches each held name's daily series,
+and fills anything that was waiting on a close.
+
+Returns come off **split- and dividend-adjusted** closes, which is not a detail
+down here: reverse splits are routine below $2B, and a 1-for-10 measured on raw
+prices reads as a +900% winner. Each position is scored against **IWM over its
+own holding window**, so the headline number is "+23.4%, and small caps did
++5.3%" rather than a return you can't interpret. The challenger model's
+`mispriced-long` calls get their own shadow book, which turns the side-by-side
+comparison from "how often do they disagree" into "whose picks made money".
+
+It is paper: no slippage, no spread, and small-cap liquidity is ignored — a
+$200M name with $300k of daily turnover fills instantly here and would not in
+life. Tune with `PAPER_NOTIONAL` (default 10000), `PAPER_BENCHMARK` (default
+IWM), `PAPER_TRACK_ALT=0` (stop tracking the challenger), `PAPER_MARK_MIN_HOURS`
+(default 4 — how stale a ticker's marks may get before the sweep re-fetches
+them; `pnpm paper` always forces), or `PAPER_TRACK=0` (stop the sweep
+refreshing the book at all).
 
 **Market-aware verdicts.** The synthesis prompt frames "mispriced" as a
 tradeability call, so the worker fetches a current market snapshot (price,
@@ -457,6 +489,12 @@ Everything above is arithmetic over filer-tagged data. No model, no GPU. What
 the radar produces is a *candidate list*; each flagged filing is enqueued for
 the deep-dive tier (`pnpm radar-worker` on the GPU box), which is where a model
 judges whether it's actually mispriced and on what catalyst.
+
+And then the verdicts get marked to market. Every `mispriced-long` becomes a
+mock long at the next close and is tracked against IWM (`/radar/paper`, `pnpm
+paper`), so the honest question about all of the above — does any of it find
+money — is answered by a number that nobody curates rather than by how good
+the assessments read.
 
 ---
 

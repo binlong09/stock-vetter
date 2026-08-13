@@ -134,6 +134,8 @@ export {
   fetchBusinessSummary,
   trimBusinessSummary,
   fetchMarketSnapshot,
+  fetchDailyBars,
+  type DailyBar,
   type MarketSnapshot,
   type ScreenQuote,
   type ScreenOptions,

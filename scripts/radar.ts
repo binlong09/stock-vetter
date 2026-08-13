@@ -41,6 +41,7 @@ import {
   findBullishConfluence,
   listAutoFocusTickers,
   insiderStore,
+  refreshPaperPortfolio,
 } from '@stock-vetter/pipeline';
 import type { RadarSignal } from '@stock-vetter/schema';
 
@@ -402,6 +403,41 @@ async function main(): Promise<void> {
         } catch (e) {
           process.stderr.write(`bullish deep-dive: ${ticker} lookup failed (${(e as Error).message.slice(0, 80)})\n`);
         }
+      }
+    }
+
+    // The mock-buy book. Every deep-dive verdict of `mispriced-long` becomes a
+    // fixed-size paper long, filled at the first close at or after the verdict
+    // — so the pipeline accumulates a track record nobody has to maintain. The
+    // sweep is where it lives because this is the loop that already runs
+    // several times a day with Turso credentials and network; the worker box
+    // produces the verdicts and needn't know they're being traded.
+    //
+    // Self-healing like the queue above: it opens whatever is missing
+    // (including verdicts that predate the feature), re-fetches each held
+    // name's adjusted series, and fills anything that was waiting on a close.
+    // A failure here is never allowed to fail a sweep — the signals are the
+    // product, the scorecard is the commentary.
+    if (process.env.PAPER_TRACK !== '0') {
+      try {
+        const paper = await refreshPaperPortfolio();
+        for (const o of paper.opened) {
+          process.stderr.write(`paper: bought ${o.ticker} (${o.leg}) on the ${o.verdictAt.slice(0, 10)} mispriced-long verdict\n`);
+        }
+        for (const f of paper.filled) {
+          process.stderr.write(`paper: filled ${f.ticker} at $${f.entryPrice.toFixed(2)} (${f.entryDate})\n`);
+        }
+        if (paper.marked.length || paper.skipped.length) {
+          process.stderr.write(
+            `paper: marked ${paper.marked.length} ticker(s)` +
+              `${paper.skipped.length ? `, ${paper.skipped.length} still fresh` : ''}\n`,
+          );
+        }
+        if (paper.unpriced.length) {
+          process.stderr.write(`paper: ⚠ no price data for ${paper.unpriced.join(', ')}\n`);
+        }
+      } catch (e) {
+        process.stderr.write(`paper: refresh failed (${(e as Error).message.slice(0, 100)}) — book is stale, sweep is fine\n`);
       }
     }
   } else if (persist) {
